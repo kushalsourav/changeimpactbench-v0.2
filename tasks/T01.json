@@ -1,0 +1,158 @@
+{
+  "id": "T01",
+  "title": "Dormant parser bug activated by selective policy rollout",
+  "context": "A regional authorization control-plane policy was rolled out at 09:10. The tenant_id is optional in the policy schema. Earlier parser releases incorrectly call .strip() on tenant_id without checking null, but only when a new policy is enabled. Regional stacks remain isolated except for the explicit dependency graph. All services and dependency edges are listed.",
+  "semantics": "A policy-REGION locally crashes if rollout_enabled is true AND parser_version is strictly below 28 AND tenant_id is null or the empty/whitespace string. When rollout_enabled is false, the previous working snapshot remains active. A parser_version of 28 or higher correctly accepts a null tenant_id. Otherwise that policy node is healthy. This is the only local failure mechanism.",
+  "facts": {
+    "regions": {
+      "us": {
+        "parser_version": 28,
+        "rollout_enabled": true,
+        "tenant_id": null
+      },
+      "eu": {
+        "parser_version": 27,
+        "rollout_enabled": true,
+        "tenant_id": null
+      },
+      "apac": {
+        "parser_version": 27,
+        "rollout_enabled": false,
+        "tenant_id": "c22"
+      }
+    },
+    "topology": [
+      {
+        "id": "policy-us",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "policy-eu",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "policy-apac",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "gateway-us",
+        "needs_all": [
+          "policy-us"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "gateway-eu",
+        "needs_all": [
+          "policy-eu"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "gateway-apac",
+        "needs_all": [
+          "policy-apac"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "checkout-eu",
+        "needs_all": [
+          "gateway-eu"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "metrics-global",
+        "needs_all": [
+          "gateway-us",
+          "gateway-eu"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "merchant-portal",
+        "needs_all": [],
+        "needs_any": [
+          "gateway-us",
+          "gateway-eu"
+        ]
+      },
+      {
+        "id": "mobile-apac",
+        "needs_all": [
+          "gateway-apac"
+        ],
+        "needs_any": []
+      }
+    ]
+  },
+  "hypotheses": [
+    {
+      "id": "H01",
+      "description": "The US gateway has a missing tenant and therefore crashes."
+    },
+    {
+      "id": "H02",
+      "description": "The APAC gateway is unhealthy because its policy rollout is disabled."
+    },
+    {
+      "id": "H03",
+      "description": "The EU policy enables an older null-unsafe parser with a null tenant field."
+    },
+    {
+      "id": "H04",
+      "description": "All regions use a null-unsafe parser irrespective of version."
+    }
+  ],
+  "actions": [
+    {
+      "id": "A01",
+      "cost": 1,
+      "path": [
+        "regions",
+        "apac",
+        "tenant_id"
+      ],
+      "value": "apac-prod",
+      "meaning": "Fill APAC tenant_id"
+    },
+    {
+      "id": "A02",
+      "cost": 2,
+      "path": [
+        "regions",
+        "eu",
+        "rollout_enabled"
+      ],
+      "value": false,
+      "meaning": "Revert EU to its known-healthy prior policy snapshot"
+    },
+    {
+      "id": "A03",
+      "cost": 3,
+      "path": [
+        "regions",
+        "eu",
+        "parser_version"
+      ],
+      "value": 28,
+      "meaning": "Upgrade the EU policy parser"
+    },
+    {
+      "id": "A04",
+      "cost": 1,
+      "path": [
+        "regions",
+        "eu",
+        "tenant_id"
+      ],
+      "value": "eu-prod",
+      "meaning": "Set EU policy tenant_id to a nonblank valid identifier"
+    }
+  ],
+  "provenance": "Inspired by the general failure mechanism in the 2025-06-12 Google Cloud Service Control incident; facts and names are entirely fabricated."
+}

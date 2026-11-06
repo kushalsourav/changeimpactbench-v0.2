@@ -1,0 +1,11 @@
+{
+  "failed_services": [
+    "actions-runner",
+    "billing-sync",
+    "coding-agent",
+    "queue-east",
+    "workflow-east"
+  ],
+  "root_cause": "H02",
+  "fix_id": "A04"
+}

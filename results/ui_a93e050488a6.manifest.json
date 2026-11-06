@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "experiment_id": "a93e050488a6",
+  "output_file": "ui_a93e050488a6.jsonl",
+  "created_utc": "2026-11-03T09:46:41.275616+00:00",
+  "models": [
+    "nvidia/nemotron-3-ultra-550b-a55b:free"
+  ],
+  "tasks": [
+    "T08",
+    "T09"
+  ],
+  "benchmark_version": "advanced-v0.5",
+  "trials": 1,
+  "max_tokens": 8000,
+  "reasoning_effort": "low",
+  "delay_seconds": 4.0,
+  "temperature": 0.0,
+  "requests_planned": 2
+}

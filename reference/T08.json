@@ -1,0 +1,20 @@
+{
+  "failed_services": [
+    "api-north",
+    "api-west",
+    "audit-west",
+    "auth-north",
+    "export-jobs",
+    "gateway-north",
+    "invoices",
+    "ledger-west",
+    "payments-router",
+    "read-west",
+    "reconciler-west",
+    "risk-service",
+    "settlement",
+    "telemetry-west"
+  ],
+  "root_cause": "H04",
+  "fix_id": "A03"
+}

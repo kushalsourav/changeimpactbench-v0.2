@@ -1,0 +1,18 @@
+{
+  "failed_services": [
+    "auditor-north",
+    "auth-north",
+    "billing-north",
+    "fraud-control",
+    "ingest-north",
+    "invoicing",
+    "policy-north",
+    "queue-north",
+    "receipt-api",
+    "settlement",
+    "support-north",
+    "tax-report"
+  ],
+  "root_cause": "H04",
+  "fix_id": "A03"
+}

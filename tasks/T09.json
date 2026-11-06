@@ -1,0 +1,633 @@
+{
+  "id": "T09",
+  "benchmark_version": "advanced-v0.5",
+  "title": "Stale DNS failover combined with retry-amplified socket exhaustion",
+  "context": "A regional endpoint fails over at 06:20 UTC. West has cached an old address, and retries have increased concurrency pressure in east. A traffic dashboard incorrectly claims all edge nodes are down. Use the AFTER configuration and dependency graph to identify actual impact and a safe complete repair.",
+  "semantics": "A resolver fails when pinned_old_target is true AND cache_ttl_s > failover_age_s. A proxy fails when sessions * retry_attempts > fd_limit; equality is healthy. Local rules use product operands for that multiplication. Observations are not extra failure rules.",
+  "facts": {
+    "state": {
+      "resolvers": {
+        "west": {
+          "pinned_old_target": true,
+          "cache_ttl_s": 900,
+          "failover_age_s": 340
+        },
+        "east": {
+          "pinned_old_target": false,
+          "cache_ttl_s": 900,
+          "failover_age_s": 340
+        },
+        "south": {
+          "pinned_old_target": true,
+          "cache_ttl_s": 120,
+          "failover_age_s": 340
+        }
+      },
+      "proxies": {
+        "east": {
+          "sessions": 44,
+          "retry_attempts": 3,
+          "fd_limit": 120
+        },
+        "west": {
+          "sessions": 40,
+          "retry_attempts": 2,
+          "fd_limit": 100
+        },
+        "south": {
+          "sessions": 30,
+          "retry_attempts": 2,
+          "fd_limit": 100
+        }
+      }
+    },
+    "timeline": [
+      "06:18 primary west endpoint becomes unreachable",
+      "06:19 east retry attempts increased from two to three",
+      "06:20 after-state captured"
+    ],
+    "observations": [
+      "A dashboard aggregates a regional 503 burst as a global outage",
+      "The south edge successfully serves independent synthetic transactions",
+      "West checkout timeouts continue after load balancer failover"
+    ],
+    "local_rules": [
+      {
+        "service": "resolver-west",
+        "when": {
+          "all": [
+            {
+              "left": {
+                "path": [
+                  "state",
+                  "resolvers",
+                  "west",
+                  "pinned_old_target"
+                ]
+              },
+              "op": "eq",
+              "right": {
+                "literal": true
+              }
+            },
+            {
+              "left": {
+                "path": [
+                  "state",
+                  "resolvers",
+                  "west",
+                  "cache_ttl_s"
+                ]
+              },
+              "op": "gt",
+              "right": {
+                "path": [
+                  "state",
+                  "resolvers",
+                  "west",
+                  "failover_age_s"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "service": "resolver-east",
+        "when": {
+          "all": [
+            {
+              "left": {
+                "path": [
+                  "state",
+                  "resolvers",
+                  "east",
+                  "pinned_old_target"
+                ]
+              },
+              "op": "eq",
+              "right": {
+                "literal": true
+              }
+            },
+            {
+              "left": {
+                "path": [
+                  "state",
+                  "resolvers",
+                  "east",
+                  "cache_ttl_s"
+                ]
+              },
+              "op": "gt",
+              "right": {
+                "path": [
+                  "state",
+                  "resolvers",
+                  "east",
+                  "failover_age_s"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "service": "resolver-south",
+        "when": {
+          "all": [
+            {
+              "left": {
+                "path": [
+                  "state",
+                  "resolvers",
+                  "south",
+                  "pinned_old_target"
+                ]
+              },
+              "op": "eq",
+              "right": {
+                "literal": true
+              }
+            },
+            {
+              "left": {
+                "path": [
+                  "state",
+                  "resolvers",
+                  "south",
+                  "cache_ttl_s"
+                ]
+              },
+              "op": "gt",
+              "right": {
+                "path": [
+                  "state",
+                  "resolvers",
+                  "south",
+                  "failover_age_s"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "service": "proxy-east",
+        "when": {
+          "left": {
+            "product": [
+              {
+                "path": [
+                  "state",
+                  "proxies",
+                  "east",
+                  "sessions"
+                ]
+              },
+              {
+                "path": [
+                  "state",
+                  "proxies",
+                  "east",
+                  "retry_attempts"
+                ]
+              }
+            ]
+          },
+          "op": "gt",
+          "right": {
+            "path": [
+              "state",
+              "proxies",
+              "east",
+              "fd_limit"
+            ]
+          }
+        }
+      },
+      {
+        "service": "proxy-west",
+        "when": {
+          "left": {
+            "product": [
+              {
+                "path": [
+                  "state",
+                  "proxies",
+                  "west",
+                  "sessions"
+                ]
+              },
+              {
+                "path": [
+                  "state",
+                  "proxies",
+                  "west",
+                  "retry_attempts"
+                ]
+              }
+            ]
+          },
+          "op": "gt",
+          "right": {
+            "path": [
+              "state",
+              "proxies",
+              "west",
+              "fd_limit"
+            ]
+          }
+        }
+      },
+      {
+        "service": "proxy-south",
+        "when": {
+          "left": {
+            "product": [
+              {
+                "path": [
+                  "state",
+                  "proxies",
+                  "south",
+                  "sessions"
+                ]
+              },
+              {
+                "path": [
+                  "state",
+                  "proxies",
+                  "south",
+                  "retry_attempts"
+                ]
+              }
+            ]
+          },
+          "op": "gt",
+          "right": {
+            "path": [
+              "state",
+              "proxies",
+              "south",
+              "fd_limit"
+            ]
+          }
+        }
+      }
+    ],
+    "topology": [
+      {
+        "id": "resolver-west",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "resolver-east",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "resolver-south",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "proxy-east",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "proxy-west",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "proxy-south",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "connect-west",
+        "needs_all": [
+          "resolver-west"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "connect-east",
+        "needs_all": [
+          "resolver-east"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "connect-south",
+        "needs_all": [
+          "resolver-south"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "edge-west",
+        "needs_all": [
+          "connect-west",
+          "proxy-west"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "edge-east",
+        "needs_all": [
+          "connect-east",
+          "proxy-east"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "edge-south",
+        "needs_all": [
+          "connect-south",
+          "proxy-south"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "route-primary",
+        "needs_all": [],
+        "needs_any": [],
+        "needs_at_least": {
+          "count": 2,
+          "of": [
+            "edge-west",
+            "edge-east",
+            "edge-south"
+          ]
+        }
+      },
+      {
+        "id": "route-backup",
+        "needs_all": [],
+        "needs_any": [
+          "edge-west",
+          "edge-south"
+        ]
+      },
+      {
+        "id": "checkout-west",
+        "needs_all": [
+          "edge-west"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "checkout-east",
+        "needs_all": [
+          "edge-east"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "checkout-south",
+        "needs_all": [
+          "edge-south"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "fraud-check",
+        "needs_all": [],
+        "needs_any": [],
+        "needs_at_least": {
+          "count": 2,
+          "of": [
+            "checkout-west",
+            "checkout-east",
+            "checkout-south"
+          ]
+        }
+      },
+      {
+        "id": "billing-core",
+        "needs_all": [
+          "route-primary"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "billing-fallback",
+        "needs_all": [
+          "route-backup"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "order-api",
+        "needs_all": [
+          "route-primary",
+          "fraud-check"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "order-history",
+        "needs_all": [],
+        "needs_any": [
+          "checkout-west",
+          "checkout-south"
+        ]
+      },
+      {
+        "id": "cashout",
+        "needs_all": [
+          "order-api"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "status-edge",
+        "needs_all": [],
+        "needs_any": [
+          "edge-east",
+          "edge-south"
+        ]
+      },
+      {
+        "id": "receipt-index",
+        "needs_all": [
+          "billing-core"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "retry-worker",
+        "needs_all": [
+          "edge-east"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "risk-bridge",
+        "needs_all": [
+          "fraud-check"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "admin-ui",
+        "needs_all": [],
+        "needs_any": [
+          "billing-core",
+          "billing-fallback"
+        ]
+      },
+      {
+        "id": "audit-api",
+        "needs_all": [
+          "billing-core"
+        ],
+        "needs_any": []
+      }
+    ]
+  },
+  "hypotheses": [
+    {
+      "id": "H01",
+      "description": "Every edge is unavailable from a global DNS-zone mismatch."
+    },
+    {
+      "id": "H02",
+      "description": "West resolver is still pinned to the old target while east proxy exceeds its descriptor budget because of retry fan-out."
+    },
+    {
+      "id": "H03",
+      "description": "Only east proxy overload is real; the west DNS cache has already expired."
+    },
+    {
+      "id": "H04",
+      "description": "West proxy and south proxy are both over their descriptor caps; DNS is healthy."
+    },
+    {
+      "id": "H05",
+      "description": "Only the west DNS target is stale; east remains below its connection budget."
+    }
+  ],
+  "actions": [
+    {
+      "id": "A02",
+      "cost": 2,
+      "meaning": "Increase only east proxy descriptor limit to 135.",
+      "changes": [
+        {
+          "path": [
+            "state",
+            "proxies",
+            "east",
+            "fd_limit"
+          ],
+          "value": 135
+        }
+      ]
+    },
+    {
+      "id": "A05",
+      "cost": 5,
+      "meaning": "Evict stale west DNS and enlarge east descriptor limit.",
+      "changes": [
+        {
+          "path": [
+            "state",
+            "resolvers",
+            "west",
+            "pinned_old_target"
+          ],
+          "value": false
+        },
+        {
+          "path": [
+            "state",
+            "proxies",
+            "east",
+            "fd_limit"
+          ],
+          "value": 135
+        }
+      ]
+    },
+    {
+      "id": "A04",
+      "cost": 4,
+      "meaning": "Fast descriptor redistribution: fix west DNS and east cap while reducing west cap to 70.",
+      "changes": [
+        {
+          "path": [
+            "state",
+            "resolvers",
+            "west",
+            "pinned_old_target"
+          ],
+          "value": false
+        },
+        {
+          "path": [
+            "state",
+            "proxies",
+            "east",
+            "fd_limit"
+          ],
+          "value": 135
+        },
+        {
+          "path": [
+            "state",
+            "proxies",
+            "west",
+            "fd_limit"
+          ],
+          "value": 70
+        }
+      ]
+    },
+    {
+      "id": "A01",
+      "cost": 1,
+      "meaning": "Evict stale pinned west DNS target.",
+      "changes": [
+        {
+          "path": [
+            "state",
+            "resolvers",
+            "west",
+            "pinned_old_target"
+          ],
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "A03",
+      "cost": 9,
+      "meaning": "Wait out west TTL by setting failover age to 901 and raise east cap to 200.",
+      "changes": [
+        {
+          "path": [
+            "state",
+            "resolvers",
+            "west",
+            "failover_age_s"
+          ],
+          "value": 901
+        },
+        {
+          "path": [
+            "state",
+            "proxies",
+            "east",
+            "fd_limit"
+          ],
+          "value": 200
+        }
+      ]
+    }
+  ],
+  "provenance": "Original fictional/synthetic dossier, production-inspired failure mechanisms. All data invented; no private logs. Author verification required."
+}

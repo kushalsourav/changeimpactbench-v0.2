@@ -1,0 +1,17 @@
+{
+  "failed_services": [
+    "api-north",
+    "audit-api",
+    "batch-east",
+    "client-north",
+    "history-west",
+    "job-east",
+    "mail-jobs",
+    "onboarding",
+    "persist-west",
+    "risk-events",
+    "writer-west"
+  ],
+  "root_cause": "H01",
+  "fix_id": "A04"
+}

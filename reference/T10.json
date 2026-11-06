@@ -1,0 +1,22 @@
+{
+  "failed_services": [
+    "audit-read",
+    "billing",
+    "compactor-west",
+    "journal-west",
+    "leader-north",
+    "query-api",
+    "read-quorum",
+    "recovery-ops",
+    "replay-east",
+    "replay-north",
+    "replica-east",
+    "restore-api",
+    "retention",
+    "settlement",
+    "snapshots",
+    "writer-north"
+  ],
+  "root_cause": "H05",
+  "fix_id": "A02"
+}

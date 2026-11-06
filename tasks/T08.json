@@ -1,0 +1,658 @@
+{
+  "id": "T08",
+  "benchmark_version": "advanced-v0.5",
+  "title": "Overlapping certificate rotation and ledger fencing during regional failover",
+  "context": "At 14:10 UTC a certificate rotation and unrelated ledger fence advance occurred. Central health says the front door stayed available; regional settlement is impaired. One east API path remains healthy. Identify the full unavailable set, the combined local cause, and cheapest complete repair.",
+  "semantics": "Strict gateways reject issuer_epoch > trusted_through_epoch. Fenced ledgers reject applied_epoch < required_epoch. Equal epoch values are healthy. Each local_rules entry expresses the full predicate; the rules and graph are authoritative, not monitoring prose. All repairs are atomic and must restore every node without new failures.",
+  "facts": {
+    "state": {
+      "gateways": {
+        "north": {
+          "issuer_epoch": 8,
+          "trusted_through_epoch": 7,
+          "strict_tls": true
+        },
+        "east": {
+          "issuer_epoch": 8,
+          "trusted_through_epoch": 8,
+          "strict_tls": true
+        },
+        "south": {
+          "issuer_epoch": 7,
+          "trusted_through_epoch": 7,
+          "strict_tls": true
+        }
+      },
+      "ledgers": {
+        "west": {
+          "applied_epoch": 11,
+          "required_epoch": 12,
+          "enforce_fence": true
+        },
+        "east": {
+          "applied_epoch": 13,
+          "required_epoch": 12,
+          "enforce_fence": true
+        },
+        "south": {
+          "applied_epoch": 12,
+          "required_epoch": 12,
+          "enforce_fence": true
+        }
+      }
+    },
+    "timeline": [
+      "14:08 north issuer epoch advanced to 8",
+      "14:09 west ledger fencing threshold advanced to 12",
+      "14:10 after-state snapshot captured"
+    ],
+    "observations": [
+      "14:12 status page healthy because failover-router still routes east",
+      "14:13 west reconciler errors labeled transient DB timeouts",
+      "14:14 settlement unavailable while global-search still answers"
+    ],
+    "local_rules": [
+      {
+        "service": "gateway-north",
+        "when": {
+          "all": [
+            {
+              "left": {
+                "path": [
+                  "state",
+                  "gateways",
+                  "north",
+                  "strict_tls"
+                ]
+              },
+              "op": "eq",
+              "right": {
+                "literal": true
+              }
+            },
+            {
+              "left": {
+                "path": [
+                  "state",
+                  "gateways",
+                  "north",
+                  "issuer_epoch"
+                ]
+              },
+              "op": "gt",
+              "right": {
+                "path": [
+                  "state",
+                  "gateways",
+                  "north",
+                  "trusted_through_epoch"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "service": "gateway-east",
+        "when": {
+          "all": [
+            {
+              "left": {
+                "path": [
+                  "state",
+                  "gateways",
+                  "east",
+                  "strict_tls"
+                ]
+              },
+              "op": "eq",
+              "right": {
+                "literal": true
+              }
+            },
+            {
+              "left": {
+                "path": [
+                  "state",
+                  "gateways",
+                  "east",
+                  "issuer_epoch"
+                ]
+              },
+              "op": "gt",
+              "right": {
+                "path": [
+                  "state",
+                  "gateways",
+                  "east",
+                  "trusted_through_epoch"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "service": "gateway-south",
+        "when": {
+          "all": [
+            {
+              "left": {
+                "path": [
+                  "state",
+                  "gateways",
+                  "south",
+                  "strict_tls"
+                ]
+              },
+              "op": "eq",
+              "right": {
+                "literal": true
+              }
+            },
+            {
+              "left": {
+                "path": [
+                  "state",
+                  "gateways",
+                  "south",
+                  "issuer_epoch"
+                ]
+              },
+              "op": "gt",
+              "right": {
+                "path": [
+                  "state",
+                  "gateways",
+                  "south",
+                  "trusted_through_epoch"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "service": "ledger-west",
+        "when": {
+          "all": [
+            {
+              "left": {
+                "path": [
+                  "state",
+                  "ledgers",
+                  "west",
+                  "enforce_fence"
+                ]
+              },
+              "op": "eq",
+              "right": {
+                "literal": true
+              }
+            },
+            {
+              "left": {
+                "path": [
+                  "state",
+                  "ledgers",
+                  "west",
+                  "applied_epoch"
+                ]
+              },
+              "op": "lt",
+              "right": {
+                "path": [
+                  "state",
+                  "ledgers",
+                  "west",
+                  "required_epoch"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "service": "ledger-east",
+        "when": {
+          "all": [
+            {
+              "left": {
+                "path": [
+                  "state",
+                  "ledgers",
+                  "east",
+                  "enforce_fence"
+                ]
+              },
+              "op": "eq",
+              "right": {
+                "literal": true
+              }
+            },
+            {
+              "left": {
+                "path": [
+                  "state",
+                  "ledgers",
+                  "east",
+                  "applied_epoch"
+                ]
+              },
+              "op": "lt",
+              "right": {
+                "path": [
+                  "state",
+                  "ledgers",
+                  "east",
+                  "required_epoch"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "service": "ledger-south",
+        "when": {
+          "all": [
+            {
+              "left": {
+                "path": [
+                  "state",
+                  "ledgers",
+                  "south",
+                  "enforce_fence"
+                ]
+              },
+              "op": "eq",
+              "right": {
+                "literal": true
+              }
+            },
+            {
+              "left": {
+                "path": [
+                  "state",
+                  "ledgers",
+                  "south",
+                  "applied_epoch"
+                ]
+              },
+              "op": "lt",
+              "right": {
+                "path": [
+                  "state",
+                  "ledgers",
+                  "south",
+                  "required_epoch"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "topology": [
+      {
+        "id": "gateway-north",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "gateway-east",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "gateway-south",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "ledger-west",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "ledger-east",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "ledger-south",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "auth-north",
+        "needs_all": [
+          "gateway-north"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "auth-east",
+        "needs_all": [
+          "gateway-east"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "auth-south",
+        "needs_all": [
+          "gateway-south"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "read-west",
+        "needs_all": [
+          "ledger-west"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "read-east",
+        "needs_all": [
+          "ledger-east"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "read-south",
+        "needs_all": [
+          "ledger-south"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "api-north",
+        "needs_all": [
+          "auth-north",
+          "read-west"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "api-east",
+        "needs_all": [
+          "auth-east",
+          "read-east"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "api-west",
+        "needs_all": [
+          "auth-south",
+          "read-west"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "failover-router",
+        "needs_all": [],
+        "needs_any": [
+          "api-north",
+          "api-east"
+        ]
+      },
+      {
+        "id": "payments-router",
+        "needs_all": [],
+        "needs_any": [],
+        "needs_at_least": {
+          "count": 2,
+          "of": [
+            "api-north",
+            "api-east",
+            "api-west"
+          ]
+        }
+      },
+      {
+        "id": "reconciler-west",
+        "needs_all": [
+          "read-west"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "settlement",
+        "needs_all": [
+          "payments-router",
+          "reconciler-west"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "billing-api",
+        "needs_all": [],
+        "needs_any": [
+          "api-north",
+          "api-east"
+        ]
+      },
+      {
+        "id": "global-search",
+        "needs_all": [],
+        "needs_any": [
+          "api-west",
+          "api-east"
+        ]
+      },
+      {
+        "id": "audit-west",
+        "needs_all": [
+          "ledger-west"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "audit-east",
+        "needs_all": [
+          "ledger-east"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "reporting",
+        "needs_all": [],
+        "needs_any": [],
+        "needs_at_least": {
+          "count": 2,
+          "of": [
+            "audit-west",
+            "audit-east",
+            "auth-south"
+          ]
+        }
+      },
+      {
+        "id": "invoices",
+        "needs_all": [
+          "settlement"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "global-status",
+        "needs_all": [
+          "failover-router"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "telemetry-west",
+        "needs_all": [
+          "api-west"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "export-jobs",
+        "needs_all": [
+          "settlement"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "risk-service",
+        "needs_all": [
+          "auth-north"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "front-door",
+        "needs_all": [],
+        "needs_any": [
+          "failover-router",
+          "payments-router"
+        ]
+      }
+    ]
+  },
+  "hypotheses": [
+    {
+      "id": "H01",
+      "description": "Only the west ledger fence is stale; all TLS trust stores accept the new issuer."
+    },
+    {
+      "id": "H02",
+      "description": "A common certificate expiry simultaneously invalidated all regional gateways."
+    },
+    {
+      "id": "H03",
+      "description": "North TLS trust lag is the sole direct defect; west ledger is current."
+    },
+    {
+      "id": "H04",
+      "description": "North gateway trust lags its issuer rotation AND west ledger is below required fencing epoch; redundant east paths mask some symptoms."
+    },
+    {
+      "id": "H05",
+      "description": "The reporting quorum is itself a local failure independent of all gateway and ledger rules."
+    }
+  ],
+  "actions": [
+    {
+      "id": "A04",
+      "cost": 4,
+      "meaning": "Rapid shared trust-store redistribution and west replay; east loses new-issuer trust.",
+      "changes": [
+        {
+          "path": [
+            "state",
+            "gateways",
+            "north",
+            "trusted_through_epoch"
+          ],
+          "value": 8
+        },
+        {
+          "path": [
+            "state",
+            "ledgers",
+            "west",
+            "applied_epoch"
+          ],
+          "value": 12
+        },
+        {
+          "path": [
+            "state",
+            "gateways",
+            "east",
+            "trusted_through_epoch"
+          ],
+          "value": 7
+        }
+      ]
+    },
+    {
+      "id": "A01",
+      "cost": 1,
+      "meaning": "Update only the north gateway trust store.",
+      "changes": [
+        {
+          "path": [
+            "state",
+            "gateways",
+            "north",
+            "trusted_through_epoch"
+          ],
+          "value": 8
+        }
+      ]
+    },
+    {
+      "id": "A05",
+      "cost": 8,
+      "meaning": "Reissue north certificate for old epoch and replay west ledger.",
+      "changes": [
+        {
+          "path": [
+            "state",
+            "gateways",
+            "north",
+            "issuer_epoch"
+          ],
+          "value": 7
+        },
+        {
+          "path": [
+            "state",
+            "ledgers",
+            "west",
+            "applied_epoch"
+          ],
+          "value": 12
+        }
+      ]
+    },
+    {
+      "id": "A03",
+      "cost": 5,
+      "meaning": "Apply north trust update and west ledger replay together.",
+      "changes": [
+        {
+          "path": [
+            "state",
+            "gateways",
+            "north",
+            "trusted_through_epoch"
+          ],
+          "value": 8
+        },
+        {
+          "path": [
+            "state",
+            "ledgers",
+            "west",
+            "applied_epoch"
+          ],
+          "value": 12
+        }
+      ]
+    },
+    {
+      "id": "A02",
+      "cost": 2,
+      "meaning": "Replay only the west ledger fence to the required epoch.",
+      "changes": [
+        {
+          "path": [
+            "state",
+            "ledgers",
+            "west",
+            "applied_epoch"
+          ],
+          "value": 12
+        }
+      ]
+    }
+  ],
+  "provenance": "Original fictional/synthetic dossier, production-inspired failure mechanisms. All data invented; no private logs. Author verification required."
+}

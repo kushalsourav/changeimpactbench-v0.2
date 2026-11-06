@@ -1,0 +1,10 @@
+{
+  "failed_services": [
+    "customer-health",
+    "regional-support-west",
+    "security-west",
+    "sensor-west"
+  ],
+  "root_cause": "H03",
+  "fix_id": "A02"
+}

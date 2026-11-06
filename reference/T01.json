@@ -1,0 +1,10 @@
+{
+  "failed_services": [
+    "checkout-eu",
+    "gateway-eu",
+    "metrics-global",
+    "policy-eu"
+  ],
+  "root_cause": "H03",
+  "fix_id": "A04"
+}

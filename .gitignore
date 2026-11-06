@@ -1,0 +1,12 @@
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+.pytest_cache/
+web/node_modules/
+web/.next/
+web/*.tsbuildinfo
+results/*.jsonl
+results/*.log
+results/*.summary.json

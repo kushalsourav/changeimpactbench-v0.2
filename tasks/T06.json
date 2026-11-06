@@ -1,0 +1,411 @@
+{
+  "id": "T06",
+  "benchmark_version": "advanced-v0.4",
+  "title": "Compound rollout failure: null-policy parser and reservation overcommit",
+  "context": "Two configuration changes reached the north cluster at 09:15 UTC: a policy rollout and an independent queue-reservation update. West still uses a cached policy and south has a newer parser. An aggregated dashboard alert says global ingestion is offline, but this alert may be overbroad. Determine the exact outage and lowest-cost complete fix from the supplied facts.",
+  "semantics": "A policy-REGION fails locally iff rollout_enabled AND parser_version < required_parser_version AND tenant_id is null. A queue-REGION fails locally iff batch_reservations + interactive_reservations exceeds capacity (equality is healthy). No other local checks exist. needs_all is mandatory; needs_any is redundant OR. Use fixed-point propagation. For repairs, recompute every node from the modified AFTER facts, including services that were healthy before.",
+  "facts": {
+    "regions": {
+      "north": {
+        "rollout_enabled": true,
+        "parser_version": 2,
+        "required_parser_version": 3,
+        "tenant_id": null
+      },
+      "south": {
+        "rollout_enabled": true,
+        "parser_version": 3,
+        "required_parser_version": 3,
+        "tenant_id": null
+      },
+      "west": {
+        "rollout_enabled": false,
+        "parser_version": 2,
+        "required_parser_version": 3,
+        "tenant_id": null
+      }
+    },
+    "pools": {
+      "north": {
+        "capacity": 100,
+        "batch_reservations": 84,
+        "interactive_reservations": 23
+      },
+      "south": {
+        "capacity": 100,
+        "batch_reservations": 80,
+        "interactive_reservations": 10
+      },
+      "east": {
+        "capacity": 100,
+        "batch_reservations": 40,
+        "interactive_reservations": 60
+      }
+    },
+    "observations": [
+      "Global ingestion unavailable (aggregated alert, may be overbroad)",
+      "North authentication and receipt probes failing",
+      "South ingestion probe healthy"
+    ],
+    "topology": [
+      {
+        "id": "policy-north",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "policy-south",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "policy-west",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "queue-north",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "queue-south",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "queue-east",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "auth-north",
+        "needs_all": [
+          "policy-north"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "auth-south",
+        "needs_all": [
+          "policy-south"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "auth-west",
+        "needs_all": [
+          "policy-west"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "ingest-north",
+        "needs_all": [
+          "queue-north",
+          "auth-north"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "ingest-south",
+        "needs_all": [
+          "queue-south",
+          "auth-south"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "ingest-east",
+        "needs_all": [
+          "queue-east",
+          "auth-south"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "edge-north",
+        "needs_all": [],
+        "needs_any": [
+          "ingest-north",
+          "ingest-south"
+        ]
+      },
+      {
+        "id": "edge-east",
+        "needs_all": [],
+        "needs_any": [
+          "ingest-east",
+          "ingest-south"
+        ]
+      },
+      {
+        "id": "auditor-north",
+        "needs_all": [
+          "queue-north"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "auditor-south",
+        "needs_all": [
+          "queue-south"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "audit-global",
+        "needs_all": [],
+        "needs_any": [
+          "auditor-north",
+          "auditor-south"
+        ]
+      },
+      {
+        "id": "billing-north",
+        "needs_all": [
+          "ingest-north"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "billing-east",
+        "needs_all": [
+          "ingest-east"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "billing-south",
+        "needs_all": [
+          "ingest-south"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "payments-api",
+        "needs_all": [
+          "edge-north",
+          "edge-east"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "receipt-api",
+        "needs_all": [
+          "billing-north"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "settlement",
+        "needs_all": [
+          "billing-north",
+          "billing-south"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "status-api",
+        "needs_all": [],
+        "needs_any": [
+          "billing-north",
+          "billing-south"
+        ]
+      },
+      {
+        "id": "fraud-control",
+        "needs_all": [
+          "auth-north"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "ops-console",
+        "needs_all": [],
+        "needs_any": [
+          "edge-north",
+          "edge-east"
+        ]
+      },
+      {
+        "id": "invoicing",
+        "needs_all": [
+          "payments-api",
+          "billing-north"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "support-north",
+        "needs_all": [
+          "receipt-api"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "notifications",
+        "needs_all": [],
+        "needs_any": [
+          "billing-north",
+          "billing-east"
+        ]
+      },
+      {
+        "id": "tax-report",
+        "needs_all": [
+          "settlement",
+          "audit-global"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "support-west",
+        "needs_all": [
+          "auth-west"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "dashboard",
+        "needs_all": [
+          "status-api",
+          "ops-console"
+        ],
+        "needs_any": []
+      }
+    ]
+  },
+  "hypotheses": [
+    {
+      "id": "H01",
+      "description": "Only an unpatched north parser is responsible; all queue pools are within capacity."
+    },
+    {
+      "id": "H02",
+      "description": "Only queue overcommit is responsible; the north policy parser is compatible."
+    },
+    {
+      "id": "H03",
+      "description": "The west cached rollout causes all regions to reject the policy."
+    },
+    {
+      "id": "H04",
+      "description": "Two independent local failures co-occur: north legacy null-policy parser during rollout AND north queue reservation overcommit."
+    },
+    {
+      "id": "H05",
+      "description": "The south parser and east queue both fail because their values equal the required boundaries."
+    }
+  ],
+  "actions": [
+    {
+      "id": "A01",
+      "cost": 1,
+      "meaning": "Pause the north policy rollout; keep queue reservations unchanged.",
+      "changes": [
+        {
+          "path": [
+            "regions",
+            "north",
+            "rollout_enabled"
+          ],
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "A02",
+      "cost": 2,
+      "meaning": "Increase north queue capacity to 110 without changing policy.",
+      "changes": [
+        {
+          "path": [
+            "pools",
+            "north",
+            "capacity"
+          ],
+          "value": 110
+        }
+      ]
+    },
+    {
+      "id": "A03",
+      "cost": 4,
+      "meaning": "Pause north policy rollout and increase north queue capacity to 110.",
+      "changes": [
+        {
+          "path": [
+            "regions",
+            "north",
+            "rollout_enabled"
+          ],
+          "value": false
+        },
+        {
+          "path": [
+            "pools",
+            "north",
+            "capacity"
+          ],
+          "value": 110
+        }
+      ]
+    },
+    {
+      "id": "A04",
+      "cost": 3,
+      "meaning": "Emergency capacity redistribution: pause north rollout, raise north capacity to 110 and lower east capacity to 95.",
+      "changes": [
+        {
+          "path": [
+            "regions",
+            "north",
+            "rollout_enabled"
+          ],
+          "value": false
+        },
+        {
+          "path": [
+            "pools",
+            "north",
+            "capacity"
+          ],
+          "value": 110
+        },
+        {
+          "path": [
+            "pools",
+            "east",
+            "capacity"
+          ],
+          "value": 95
+        }
+      ]
+    },
+    {
+      "id": "A05",
+      "cost": 7,
+      "meaning": "Upgrade north parser to version 3 and increase north queue capacity to 110.",
+      "changes": [
+        {
+          "path": [
+            "regions",
+            "north",
+            "parser_version"
+          ],
+          "value": 3
+        },
+        {
+          "path": [
+            "pools",
+            "north",
+            "capacity"
+          ],
+          "value": 110
+        }
+      ]
+    }
+  ],
+  "provenance": "Original synthetic incident inspired by independent control-plane and workload-reservation failure mechanisms; not real production logs."
+}

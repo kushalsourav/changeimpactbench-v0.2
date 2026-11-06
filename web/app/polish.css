@@ -1,0 +1,278 @@
+/* v0.3.1 layout and evidence-first polish, with no motion. */
+html,
+body {
+  font-family: Roboto, system-ui, sans-serif;
+  font-size: 14px;
+}
+
+h1,
+h2,
+h3,
+.nav-label,
+.brand-copy {
+  font-family: 'Google Sans', Roboto, system-ui, sans-serif;
+}
+
+.appbar-context {
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.document-meta,
+.stat small,
+.panel-footer,
+.evidence-footer,
+.fig-caption,
+.label,
+.list-button small,
+.service-node .service-sub,
+.record-button span,
+.badge {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.block-code,
+pre,
+code,
+.mono {
+  font-size: 13px;
+}
+
+.stat.featured {
+  border-top: 3px solid var(--primary);
+  padding-top: 13px;
+}
+
+.stat small {
+  color: var(--ink-muted);
+}
+
+.grid-2 > .panel,
+.grid-11 > .panel,
+.grid-3 > .panel {
+  min-width: 0;
+}
+
+.panel-content > .row-gap:last-child {
+  padding-bottom: 12px;
+}
+
+.panel-content .summary-line {
+  gap: 16px;
+}
+
+.panel-content .progress {
+  margin-top: 8px;
+  margin-bottom: 10px;
+}
+
+.panel-footer {
+  margin-top: 4px;
+  padding: 12px 16px;
+}
+
+.fig-caption {
+  padding-top: 9px;
+  padding-bottom: 12px;
+}
+
+.chart {
+  height: 300px;
+  min-height: 270px;
+}
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 34px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%235F6368' stroke-width='1.8'%3E%3Cpath d='m3 6 5 5 5-5'/%3E%3C/svg%3E");
+  background-size: 16px 16px;
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+
+.lab-evidence-selector {
+  border-bottom: 1px solid var(--rule);
+  padding: 0 0 12px;
+  margin-bottom: 12px;
+}
+
+.lab-evidence-selector label {
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.lab-evidence-selector select {
+  flex: 1 1 260px;
+  min-width: 160px;
+  max-width: 100%;
+}
+
+.lab-trial-proof {
+  border-left: 3px solid var(--primary);
+  background: var(--primary-tint);
+  padding: 12px;
+  display: grid;
+  gap: 12px;
+}
+
+.lab-trial-proof small {
+  display: block;
+  color: var(--ink-muted);
+}
+
+.topology-shell {
+  height: clamp(420px, 43vw, 570px);
+  min-height: 420px;
+}
+
+.service-node .service-name {
+  overflow-wrap: anywhere;
+}
+
+.legend {
+  padding: 10px 12px;
+  font-size: 12px;
+  gap: 8px 14px;
+  max-height: 96px;
+  overflow-y: auto;
+}
+
+.list-buttons {
+  max-height: 520px;
+  overflow-y: auto;
+}
+
+.grid-3 {
+  grid-template-columns: minmax(205px, 240px) minmax(0, 1fr) minmax(225px, 275px);
+}
+
+/* Match the flat, static Material-style states on all devices. */
+*,
+*::before,
+*::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+
+@media (max-width: 1200px) {
+  .grid-3 {
+    grid-template-columns: minmax(205px, 240px) minmax(0, 1fr);
+  }
+  .grid-3 > :last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 900px) {
+  .grid-3,
+  .grid-11,
+  .grid-2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .grid-3 > :last-child {
+    grid-column: auto;
+  }
+  .topology-shell {
+    height: 450px;
+  }
+}
+
+@media (max-width: 560px) {
+  .topology-shell {
+    height: 400px;
+  }
+  .chart {
+    height: 315px;
+  }
+}
+
+/* v0.4.1: compact, evidence-first end-to-end frontend workflow. */
+.research-flow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--primary);
+  padding: 12px 16px;
+  background: var(--paper);
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-bottom: 16px;
+}
+.research-flow > span {
+  font-weight: 600;
+}
+.model-catalog-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.model-catalog-toolbar input {
+  flex: 1 1 230px;
+  min-width: 0;
+}
+.select-list {
+  max-height: 430px;
+  overflow-y: auto;
+}
+.select-list .check-row strong {
+  font-size: 13px;
+  line-height: 1.4;
+}
+.select-list .check-row small {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.selection-summary {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr);
+  gap: 8px 16px;
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.selection-summary > strong {
+  color: var(--ink-muted);
+  font-weight: 600;
+}
+.appbar select {
+  width: min(360px, 28vw);
+  min-width: 190px;
+  text-overflow: ellipsis;
+}
+@media (max-width: 900px) {
+  .appbar select {
+    width: min(320px, 40vw);
+  }
+}
+
+.workflow-next {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.workflow-next .button {
+  font-size: 12px;
+}
+
+/* v0.6: flat, auditable agent tool transcript; no animation or decorative cards. */
+.agent-event {
+  border: 1px solid var(--border, #dadce0);
+  border-radius: 3px;
+  padding: 12px 14px;
+  background: var(--surface, transparent);
+}
+.agent-event .toolbar { margin-bottom: 8px; }
+.agent-event .muted { display: block; margin: 5px 0; }

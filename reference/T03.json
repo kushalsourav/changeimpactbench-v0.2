@@ -1,0 +1,10 @@
+{
+  "failed_services": [
+    "bot-filter-eu",
+    "edge-eu",
+    "feature-eu",
+    "regional-checkout-eu"
+  ],
+  "root_cause": "H04",
+  "fix_id": "A03"
+}

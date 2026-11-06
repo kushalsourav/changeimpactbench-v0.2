@@ -1,0 +1,27 @@
+{
+  "schema_version": 2,
+  "condition": "agentic",
+  "agentic_source_hashes": {
+    "agentic.py": "5ab76f00df641ada47f3df91f8668fa4c62c369c64a0afcc0a0dafd3fffd8692",
+    "oracle.py": "d7a4c4a8746cbd8fe80215eb6cb33b64aed9f000d15fa3fd82b04d3f57b3ef98",
+    "run_agentic.py": "418cb1574b3843075451c18f216a8f2d2a249b83500a5057db37bd1b532f8330"
+  },
+  "max_agent_turns": 24,
+  "planned_provider_requests_are_upper_bound": true,
+  "experiment_id": "6f255d897690",
+  "output_file": "ui_6f255d897690.jsonl",
+  "created_utc": "2026-11-03T11:30:20.288929+00:00",
+  "models": [
+    "nvidia/nemotron-3-ultra-550b-a55b:free"
+  ],
+  "tasks": [
+    "AG08"
+  ],
+  "benchmark_version": "agentic-ag08-v1",
+  "trials": 1,
+  "max_tokens": 8000,
+  "reasoning_effort": "low",
+  "delay_seconds": 4.0,
+  "temperature": 0.0,
+  "requests_planned": 24
+}

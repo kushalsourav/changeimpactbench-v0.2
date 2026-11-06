@@ -1,0 +1,162 @@
+{
+  "id": "T02",
+  "title": "Route withdrawn by a dormant policy gate",
+  "context": "A DNS edge provider introduced a per-zone export community change during a normal networking rollout. One route-policy release interprets no-export as a hard suppression; an older release ignores it. No unspecified routing failover exists beyond needs_any links shown. Route nodes represent BGP advertisements, not servers.",
+  "semantics": "A route-ZONE node is locally down if export_enabled is false, OR if policy_version >= 2 AND community belongs to blocked_communities. Version 1 ignores blocked_communities, but still honors export_enabled. Otherwise it advertises successfully. Consumers use only their listed dependencies. All links are exact and the blocked list is case sensitive.",
+  "facts": {
+    "blocked_communities": [
+      "no-export",
+      "quarantine"
+    ],
+    "zones": {
+      "eu": {
+        "policy_version": 2,
+        "export_enabled": true,
+        "community": "no-export"
+      },
+      "us": {
+        "policy_version": 1,
+        "export_enabled": true,
+        "community": "no-export"
+      },
+      "apac": {
+        "policy_version": 2,
+        "export_enabled": true,
+        "community": "global"
+      }
+    },
+    "topology": [
+      {
+        "id": "route-eu",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "route-us",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "route-apac",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "dns-eu",
+        "needs_all": [
+          "route-eu"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "dns-us",
+        "needs_all": [
+          "route-us"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "dns-apac",
+        "needs_all": [
+          "route-apac"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "enterprise-eu",
+        "needs_all": [
+          "dns-eu"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "sso-login",
+        "needs_all": [
+          "enterprise-eu"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "public-dns",
+        "needs_all": [],
+        "needs_any": [
+          "dns-eu",
+          "dns-us"
+        ]
+      },
+      {
+        "id": "mobile-auth",
+        "needs_all": [],
+        "needs_any": [
+          "dns-apac",
+          "dns-eu"
+        ]
+      }
+    ]
+  },
+  "hypotheses": [
+    {
+      "id": "H01",
+      "description": "EU export is suppressed by policy version 2 and the new blocked community."
+    },
+    {
+      "id": "H02",
+      "description": "Any no-export community suppresses every version in every zone."
+    },
+    {
+      "id": "H03",
+      "description": "The APAC route is down due to version 2."
+    },
+    {
+      "id": "H04",
+      "description": "The EU DNS service has a CPU bottleneck unrelated to routes."
+    }
+  ],
+  "actions": [
+    {
+      "id": "A01",
+      "cost": 1,
+      "path": [
+        "zones",
+        "us",
+        "community"
+      ],
+      "value": "global",
+      "meaning": "Change only US export community"
+    },
+    {
+      "id": "A02",
+      "cost": 1,
+      "path": [
+        "zones",
+        "eu",
+        "community"
+      ],
+      "value": "global",
+      "meaning": "Replace the EU blocked community with an allowed community"
+    },
+    {
+      "id": "A03",
+      "cost": 2,
+      "path": [
+        "zones",
+        "eu",
+        "export_enabled"
+      ],
+      "value": false,
+      "meaning": "Disable EU export entirely"
+    },
+    {
+      "id": "A04",
+      "cost": 3,
+      "path": [
+        "zones",
+        "eu",
+        "policy_version"
+      ],
+      "value": 1,
+      "meaning": "Revert EU route-policy version to 1"
+    }
+  ],
+  "provenance": "Inspired by the 2025-07-14 Cloudflare 1.1.1.1 routing incident; actual addresses, configuration, topology and data are fabricated."
+}

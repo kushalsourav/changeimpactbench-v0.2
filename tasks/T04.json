@@ -1,0 +1,155 @@
+{
+  "id": "T04",
+  "title": "Reservation oversubscription cascades across workflow services",
+  "context": "Two independent workflow queue pools accept batch and reserved interactive workload. Each pool has a hard capacity allocation. Workload can appear low in a single dashboard because two allocations must be summed. Downstream endpoints can be isolated or multi-homed; assume no automatic capacity rebalancing.",
+  "semantics": "queue-REGION is locally down if batch_jobs + interactive_reserved > capacity. Otherwise that queue is healthy. A batch request consumes one capacity unit, as does an interactive reservation; unused reservations still count. This is the only local fault. A dependent service follows needs_all/needs_any exactly.",
+  "facts": {
+    "pools": {
+      "east": {
+        "batch_jobs": 92,
+        "interactive_reserved": 40,
+        "capacity": 120
+      },
+      "west": {
+        "batch_jobs": 40,
+        "interactive_reserved": 10,
+        "capacity": 60
+      }
+    },
+    "topology": [
+      {
+        "id": "queue-east",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "queue-west",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "actions-runner",
+        "needs_all": [
+          "queue-east"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "coding-agent",
+        "needs_all": [
+          "actions-runner"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "git-hooks",
+        "needs_all": [],
+        "needs_any": [
+          "queue-east",
+          "queue-west"
+        ]
+      },
+      {
+        "id": "status-webhooks",
+        "needs_all": [],
+        "needs_any": [
+          "queue-east",
+          "queue-west"
+        ]
+      },
+      {
+        "id": "workflow-east",
+        "needs_all": [
+          "queue-east"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "workflow-west",
+        "needs_all": [
+          "queue-west"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "billing-sync",
+        "needs_all": [
+          "coding-agent"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "public-status",
+        "needs_all": [
+          "status-webhooks"
+        ],
+        "needs_any": []
+      }
+    ]
+  },
+  "hypotheses": [
+    {
+      "id": "H01",
+      "description": "Both queues are healthy because batch load alone fits their capacities."
+    },
+    {
+      "id": "H02",
+      "description": "The east queue exceeds capacity only after batch jobs and interactive reservations are combined."
+    },
+    {
+      "id": "H03",
+      "description": "The west queue is over-subscribed because 40 is greater than 60."
+    },
+    {
+      "id": "H04",
+      "description": "The coding agent fails independently of queue dependencies."
+    }
+  ],
+  "actions": [
+    {
+      "id": "A01",
+      "cost": 1,
+      "path": [
+        "pools",
+        "west",
+        "batch_jobs"
+      ],
+      "value": 10,
+      "meaning": "Reduce west batch allocation"
+    },
+    {
+      "id": "A02",
+      "cost": 2,
+      "path": [
+        "pools",
+        "east",
+        "interactive_reserved"
+      ],
+      "value": 20,
+      "meaning": "Reduce east reserved interactive allocation to 20"
+    },
+    {
+      "id": "A03",
+      "cost": 5,
+      "path": [
+        "pools",
+        "east",
+        "capacity"
+      ],
+      "value": 140,
+      "meaning": "Increase east pool hard capacity to 140"
+    },
+    {
+      "id": "A04",
+      "cost": 1,
+      "path": [
+        "pools",
+        "east",
+        "batch_jobs"
+      ],
+      "value": 78,
+      "meaning": "Reduce east batch allocation to 78"
+    }
+  ],
+  "provenance": "Inspired by real queue-throttling cascading failures including GitHub Actions 2025-06-05; all capacities, topology and demand data are invented."
+}

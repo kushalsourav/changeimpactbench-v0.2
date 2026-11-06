@@ -1,0 +1,773 @@
+{
+  "id": "T11",
+  "benchmark_version": "advanced-v0.5",
+  "title": "KMS key-rotation drift, per-region signing quota and stale metadata",
+  "context": "A regional key rotation coincides with excess refresh traffic and delayed metadata replication. The central identity API reports degraded but a south authentication route still works. Identify the exact local failures, propagated outage, and least costly complete recovery.",
+  "semantics": "A signer locally fails if (strict_key AND key_version != accepted_key_version) OR (calls + retry_calls > quota). Metadata locally fails if strong_read AND age_ms > max_staleness_ms. Quota equality and staleness equality are healthy. Rules never fail from monitoring text alone.",
+  "facts": {
+    "state": {
+      "signers": {
+        "east": {
+          "key_version": 10,
+          "accepted_key_version": 11,
+          "strict_key": true,
+          "calls": 40,
+          "retry_calls": 10,
+          "quota": 100
+        },
+        "west": {
+          "key_version": 11,
+          "accepted_key_version": 11,
+          "strict_key": true,
+          "calls": 90,
+          "retry_calls": 20,
+          "quota": 100
+        },
+        "south": {
+          "key_version": 11,
+          "accepted_key_version": 11,
+          "strict_key": true,
+          "calls": 30,
+          "retry_calls": 20,
+          "quota": 100
+        }
+      },
+      "metadata": {
+        "central": {
+          "age_ms": 601,
+          "max_staleness_ms": 600,
+          "strong_read": true
+        },
+        "east": {
+          "age_ms": 400,
+          "max_staleness_ms": 600,
+          "strong_read": true
+        }
+      }
+    },
+    "timeline": [
+      "17:42 key version 11 activated on east accepted-key policy",
+      "17:43 west retry burst increased signing calls",
+      "17:44 metadata replication delayed",
+      "17:45 after-state captured"
+    ],
+    "observations": [
+      "South login probe healthy despite global auth warning",
+      "West signer returns rate-limit errors at peak",
+      "Central metadata query exceeds staleness budget by one millisecond"
+    ],
+    "local_rules": [
+      {
+        "service": "signer-east",
+        "when": {
+          "any": [
+            {
+              "all": [
+                {
+                  "left": {
+                    "path": [
+                      "state",
+                      "signers",
+                      "east",
+                      "strict_key"
+                    ]
+                  },
+                  "op": "eq",
+                  "right": {
+                    "literal": true
+                  }
+                },
+                {
+                  "left": {
+                    "path": [
+                      "state",
+                      "signers",
+                      "east",
+                      "key_version"
+                    ]
+                  },
+                  "op": "ne",
+                  "right": {
+                    "path": [
+                      "state",
+                      "signers",
+                      "east",
+                      "accepted_key_version"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "left": {
+                "sum": [
+                  {
+                    "path": [
+                      "state",
+                      "signers",
+                      "east",
+                      "calls"
+                    ]
+                  },
+                  {
+                    "path": [
+                      "state",
+                      "signers",
+                      "east",
+                      "retry_calls"
+                    ]
+                  }
+                ]
+              },
+              "op": "gt",
+              "right": {
+                "path": [
+                  "state",
+                  "signers",
+                  "east",
+                  "quota"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "service": "signer-west",
+        "when": {
+          "any": [
+            {
+              "all": [
+                {
+                  "left": {
+                    "path": [
+                      "state",
+                      "signers",
+                      "west",
+                      "strict_key"
+                    ]
+                  },
+                  "op": "eq",
+                  "right": {
+                    "literal": true
+                  }
+                },
+                {
+                  "left": {
+                    "path": [
+                      "state",
+                      "signers",
+                      "west",
+                      "key_version"
+                    ]
+                  },
+                  "op": "ne",
+                  "right": {
+                    "path": [
+                      "state",
+                      "signers",
+                      "west",
+                      "accepted_key_version"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "left": {
+                "sum": [
+                  {
+                    "path": [
+                      "state",
+                      "signers",
+                      "west",
+                      "calls"
+                    ]
+                  },
+                  {
+                    "path": [
+                      "state",
+                      "signers",
+                      "west",
+                      "retry_calls"
+                    ]
+                  }
+                ]
+              },
+              "op": "gt",
+              "right": {
+                "path": [
+                  "state",
+                  "signers",
+                  "west",
+                  "quota"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "service": "signer-south",
+        "when": {
+          "any": [
+            {
+              "all": [
+                {
+                  "left": {
+                    "path": [
+                      "state",
+                      "signers",
+                      "south",
+                      "strict_key"
+                    ]
+                  },
+                  "op": "eq",
+                  "right": {
+                    "literal": true
+                  }
+                },
+                {
+                  "left": {
+                    "path": [
+                      "state",
+                      "signers",
+                      "south",
+                      "key_version"
+                    ]
+                  },
+                  "op": "ne",
+                  "right": {
+                    "path": [
+                      "state",
+                      "signers",
+                      "south",
+                      "accepted_key_version"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "left": {
+                "sum": [
+                  {
+                    "path": [
+                      "state",
+                      "signers",
+                      "south",
+                      "calls"
+                    ]
+                  },
+                  {
+                    "path": [
+                      "state",
+                      "signers",
+                      "south",
+                      "retry_calls"
+                    ]
+                  }
+                ]
+              },
+              "op": "gt",
+              "right": {
+                "path": [
+                  "state",
+                  "signers",
+                  "south",
+                  "quota"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "service": "metadata-central",
+        "when": {
+          "all": [
+            {
+              "left": {
+                "path": [
+                  "state",
+                  "metadata",
+                  "central",
+                  "strong_read"
+                ]
+              },
+              "op": "eq",
+              "right": {
+                "literal": true
+              }
+            },
+            {
+              "left": {
+                "path": [
+                  "state",
+                  "metadata",
+                  "central",
+                  "age_ms"
+                ]
+              },
+              "op": "gt",
+              "right": {
+                "path": [
+                  "state",
+                  "metadata",
+                  "central",
+                  "max_staleness_ms"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "service": "metadata-east",
+        "when": {
+          "all": [
+            {
+              "left": {
+                "path": [
+                  "state",
+                  "metadata",
+                  "east",
+                  "strong_read"
+                ]
+              },
+              "op": "eq",
+              "right": {
+                "literal": true
+              }
+            },
+            {
+              "left": {
+                "path": [
+                  "state",
+                  "metadata",
+                  "east",
+                  "age_ms"
+                ]
+              },
+              "op": "gt",
+              "right": {
+                "path": [
+                  "state",
+                  "metadata",
+                  "east",
+                  "max_staleness_ms"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "topology": [
+      {
+        "id": "signer-east",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "signer-west",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "signer-south",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "metadata-central",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "metadata-east",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "kms-east",
+        "needs_all": [
+          "signer-east"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "kms-west",
+        "needs_all": [
+          "signer-west"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "kms-south",
+        "needs_all": [
+          "signer-south"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "catalog-central",
+        "needs_all": [
+          "metadata-central"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "catalog-east",
+        "needs_all": [
+          "metadata-east"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "auth-east",
+        "needs_all": [
+          "kms-east",
+          "catalog-east"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "auth-west",
+        "needs_all": [
+          "kms-west",
+          "catalog-central"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "auth-south",
+        "needs_all": [
+          "kms-south",
+          "catalog-east"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "login-router",
+        "needs_all": [],
+        "needs_any": [],
+        "needs_at_least": {
+          "count": 2,
+          "of": [
+            "auth-east",
+            "auth-west",
+            "auth-south"
+          ]
+        }
+      },
+      {
+        "id": "fallback-login",
+        "needs_all": [],
+        "needs_any": [
+          "auth-east",
+          "auth-south"
+        ]
+      },
+      {
+        "id": "token-refresh",
+        "needs_all": [
+          "auth-east"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "token-refresh-west",
+        "needs_all": [
+          "auth-west"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "audit-central",
+        "needs_all": [
+          "catalog-central"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "audit-east",
+        "needs_all": [
+          "catalog-east"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "audit-router",
+        "needs_all": [],
+        "needs_any": [],
+        "needs_at_least": {
+          "count": 2,
+          "of": [
+            "audit-central",
+            "audit-east",
+            "auth-south"
+          ]
+        }
+      },
+      {
+        "id": "payment-authorizer",
+        "needs_all": [
+          "login-router"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "refund-api",
+        "needs_all": [
+          "auth-west"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "identity-status",
+        "needs_all": [],
+        "needs_any": [
+          "auth-east",
+          "auth-south"
+        ]
+      },
+      {
+        "id": "billing",
+        "needs_all": [
+          "payment-authorizer",
+          "audit-router"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "invoice",
+        "needs_all": [
+          "billing"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "support-console",
+        "needs_all": [],
+        "needs_any": [
+          "fallback-login",
+          "login-router"
+        ]
+      },
+      {
+        "id": "customer-alerts",
+        "needs_all": [],
+        "needs_any": [
+          "token-refresh",
+          "auth-south"
+        ]
+      },
+      {
+        "id": "fraud-proof",
+        "needs_all": [
+          "refund-api"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "risk-jobs",
+        "needs_all": [
+          "audit-central"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "security-log",
+        "needs_all": [
+          "catalog-central"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "evidence-export",
+        "needs_all": [
+          "billing"
+        ],
+        "needs_any": []
+      }
+    ]
+  },
+  "hypotheses": [
+    {
+      "id": "H01",
+      "description": "Only signer-east key-rotation incompatibility; west signer and metadata are within limits."
+    },
+    {
+      "id": "H02",
+      "description": "Only central metadata lag; signers all accept their key versions and quotas."
+    },
+    {
+      "id": "H03",
+      "description": "East signer key mismatch, west signer exceeds signing quota, and central metadata exceeds its strong-read age budget."
+    },
+    {
+      "id": "H04",
+      "description": "All regional signers are broken due to one global key mismatch."
+    },
+    {
+      "id": "H05",
+      "description": "Only west signer quota exhaustion and a quorum misconfiguration; east key and central metadata are healthy."
+    }
+  ],
+  "actions": [
+    {
+      "id": "A03",
+      "cost": 1,
+      "meaning": "Rotate only east signer to accepted key 11.",
+      "changes": [
+        {
+          "path": [
+            "state",
+            "signers",
+            "east",
+            "key_version"
+          ],
+          "value": 11
+        }
+      ]
+    },
+    {
+      "id": "A04",
+      "cost": 5,
+      "meaning": "Emergency quota redistribution repairs three direct faults while reducing south quota to 40.",
+      "changes": [
+        {
+          "path": [
+            "state",
+            "signers",
+            "east",
+            "key_version"
+          ],
+          "value": 11
+        },
+        {
+          "path": [
+            "state",
+            "signers",
+            "west",
+            "quota"
+          ],
+          "value": 120
+        },
+        {
+          "path": [
+            "state",
+            "metadata",
+            "central",
+            "age_ms"
+          ],
+          "value": 300
+        },
+        {
+          "path": [
+            "state",
+            "signers",
+            "south",
+            "quota"
+          ],
+          "value": 40
+        }
+      ]
+    },
+    {
+      "id": "A01",
+      "cost": 6,
+      "meaning": "Rotate east signer key, raise west quota and refresh central metadata age.",
+      "changes": [
+        {
+          "path": [
+            "state",
+            "signers",
+            "east",
+            "key_version"
+          ],
+          "value": 11
+        },
+        {
+          "path": [
+            "state",
+            "signers",
+            "west",
+            "quota"
+          ],
+          "value": 120
+        },
+        {
+          "path": [
+            "state",
+            "metadata",
+            "central",
+            "age_ms"
+          ],
+          "value": 300
+        }
+      ]
+    },
+    {
+      "id": "A05",
+      "cost": 9,
+      "meaning": "Use reserve capacity: rotate east key, raise west quota to 140, refresh central age to 100.",
+      "changes": [
+        {
+          "path": [
+            "state",
+            "signers",
+            "east",
+            "key_version"
+          ],
+          "value": 11
+        },
+        {
+          "path": [
+            "state",
+            "signers",
+            "west",
+            "quota"
+          ],
+          "value": 140
+        },
+        {
+          "path": [
+            "state",
+            "metadata",
+            "central",
+            "age_ms"
+          ],
+          "value": 100
+        }
+      ]
+    },
+    {
+      "id": "A02",
+      "cost": 3,
+      "meaning": "Rotate east key and raise west signer quota to 120; central metadata remains stale.",
+      "changes": [
+        {
+          "path": [
+            "state",
+            "signers",
+            "east",
+            "key_version"
+          ],
+          "value": 11
+        },
+        {
+          "path": [
+            "state",
+            "signers",
+            "west",
+            "quota"
+          ],
+          "value": 120
+        }
+      ]
+    }
+  ],
+  "provenance": "Original fictional/synthetic dossier, production-inspired failure mechanisms. All data invented; no private logs. Author verification required."
+}

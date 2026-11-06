@@ -1,0 +1,24 @@
+{
+  "failed_services": [
+    "audit-worker",
+    "canary-observability",
+    "config-api",
+    "control-canary",
+    "customer-sync",
+    "data-export",
+    "db-quorum",
+    "feature-central",
+    "ledger-reader",
+    "ledger-writer",
+    "maintenance-control",
+    "regional-api",
+    "replica-a",
+    "replica-b",
+    "security-analytics",
+    "sensor-canary",
+    "support-dashboard",
+    "user-console"
+  ],
+  "root_cause": "H02",
+  "fix_id": "A03"
+}
