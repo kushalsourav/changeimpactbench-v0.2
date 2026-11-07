@@ -49,3 +49,26 @@ test('false numerical rationale claim is flagged without altering official score
   assert.match(v.semanticWarnings[0],/false numeric claim/);
   assert.equal(v.strictlyPassed,false);
 });
+test('new v2 root-cause hypothesis mismatch is not called a semantic failure',()=>{
+  const example=structuredClone(trial);
+  example.diagnosis={expected:{failed_services:['audit-west','api-west'],root_cause:'H03',fix_id:'A03'},
+    predicted:{failed_services:['audit-west','api-west'],root_cause_id:'H02',root_cause_explanation:'A full description of the modeled dependency mechanism.',fix_id:'A03'},
+    missed_services:[], extra_services:[]};
+  example.audit.grade={strict_pass:false,root_correct:false,recovery_success:true,recovery_safe:true,protocol_errors:[]};
+  const v=explainEpisode({...basic,root_correct:false},example);
+  assert.equal(v.title,'Incorrect root-cause hypothesis ID');
+  assert.match(v.summary,/submitted H02; the reference expects H03/);
+  assert.match(v.interpretation,/separately/);
+});
+test('correct v2 diagnosis with rejected fourth simulation is described as protocol failure, not unsafe repair',()=>{
+  const example=structuredClone(trial);
+  example.diagnosis={expected:{failed_services:['audit-west','api-west'],root_cause:'H03',fix_id:'A03'},
+    predicted:{failed_services:['audit-west','api-west'],root_cause_id:'H03',root_cause_explanation:'Combined local faults caused dependency failures.',fix_id:'A03'},
+    missed_services:[],extra_services:[]};
+  example.audit.grade={strict_pass:false,root_correct:true,recovery_success:true,recovery_safe:true,
+    protocol_errors:[{turn:21,reason:'Simulation-call budget exceeded'}]};
+  const v=explainEpisode({...basic,root_correct:true},example);
+  assert.equal(v.title,'Correct diagnosis and recovery, but tool protocol was violated');
+  assert.match(v.summary,/1 rejected tool request/);
+  assert.doesNotMatch(v.title,/unsafe/i);
+});

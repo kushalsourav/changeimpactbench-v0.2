@@ -1,0 +1,223 @@
+{
+  "id": "RW02",
+  "benchmark_version": "public-incident-reconstruction-v1",
+  "title": "Cloudflare \u00b7 June 2022 routing outage",
+  "context": "PUBLIC INCIDENT SOURCE: https://blog.cloudflare.com/cloudflare-outage-on-june-21-2022. Deterministic reconstruction; NOT original internal logs, topology, metrics or repair costs.",
+  "semantics": "Causal facts from an operator-published postmortem; invented service graph and counterfactual edits are explicitly modeling assumptions.",
+  "facts": {
+    "state": {
+      "network": {
+        "route_advertisement_correct": false,
+        "overflow_capacity_ok": true
+      }
+    },
+    "timeline": [],
+    "observations": [],
+    "local_rules": [
+      {
+        "service": "mcp-spine",
+        "when": {
+          "left": {
+            "path": [
+              "state",
+              "network",
+              "route_advertisement_correct"
+            ]
+          },
+          "op": "eq",
+          "right": {
+            "literal": false
+          }
+        }
+      },
+      {
+        "service": "overflow-compute",
+        "when": {
+          "left": {
+            "path": [
+              "state",
+              "network",
+              "overflow_capacity_ok"
+            ]
+          },
+          "op": "eq",
+          "right": {
+            "literal": false
+          }
+        }
+      }
+    ],
+    "topology": [
+      {
+        "id": "mcp-spine",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "mcp-ingress",
+        "needs_all": [
+          "mcp-spine"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "mcp-http",
+        "needs_all": [
+          "mcp-ingress"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "mcp-dns",
+        "needs_all": [
+          "mcp-ingress"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "mcp-api",
+        "needs_all": [
+          "mcp-ingress"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "regional-traffic-manager",
+        "needs_all": [
+          "mcp-spine"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "regional-edge",
+        "needs_all": [
+          "regional-traffic-manager"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "overflow-compute",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "non-mcp-edge",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "external-status",
+        "needs_all": [],
+        "needs_any": []
+      }
+    ]
+  },
+  "hypotheses": [
+    {
+      "id": "H01",
+      "description": "An attack on all global locations"
+    },
+    {
+      "id": "H02",
+      "description": "Incorrect route announcement policy in the affected MCP network"
+    },
+    {
+      "id": "H03",
+      "description": "Only insufficient standby compute capacity"
+    },
+    {
+      "id": "H04",
+      "description": "All DNS root servers failed"
+    },
+    {
+      "id": "H05",
+      "description": "Client-side browser cache incompatibility"
+    }
+  ],
+  "actions": [
+    {
+      "id": "A01",
+      "cost": 2,
+      "meaning": "Increase standby capacity without restoring advertisements",
+      "changes": [
+        {
+          "path": [
+            "state",
+            "network",
+            "overflow_capacity_ok"
+          ],
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "A02",
+      "cost": 4,
+      "meaning": "Roll back incorrect routing policy and restore announcements",
+      "changes": [
+        {
+          "path": [
+            "state",
+            "network",
+            "route_advertisement_correct"
+          ],
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "A03",
+      "cost": 6,
+      "meaning": "Restore policy and increase standby capacity (extra modeled cost)",
+      "changes": [
+        {
+          "path": [
+            "state",
+            "network",
+            "route_advertisement_correct"
+          ],
+          "value": true
+        },
+        {
+          "path": [
+            "state",
+            "network",
+            "overflow_capacity_ok"
+          ],
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "A04",
+      "cost": 3,
+      "meaning": "Disable extra standby capacity without correcting routing (harmful)",
+      "changes": [
+        {
+          "path": [
+            "state",
+            "network",
+            "overflow_capacity_ok"
+          ],
+          "value": false
+        }
+      ]
+    }
+  ],
+  "provenance": {
+    "origin": "operator-published public postmortem",
+    "source_url": "https://blog.cloudflare.com/cloudflare-outage-on-june-21-2022",
+    "date": "2022-06-21 06:27 UTC",
+    "documented_facts": [
+      "A routing policy configuration change took 19 Cloudflare data centers offline.",
+      "The incident affected approximately half of HTTP requests despite 19 centers representing about 4% of locations.",
+      "The team rolled back the incorrect route advertisement policy and restored all affected locations by 07:42 UTC."
+    ],
+    "reconstructed_elements": [
+      "Illustrative three-group representation of 19 sites and 10 service nodes",
+      "Boolean router policy and capacity flags",
+      "Simulated mitigation candidates, costs, and aggregate health outcomes"
+    ],
+    "measurement_note": "All sandbox service statuses, synthetic metric values, rule predicates, costs, and counterfactual repair outcomes are modeled. They are NOT production measurements."
+  }
+}

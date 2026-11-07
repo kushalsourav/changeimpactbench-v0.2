@@ -19,16 +19,16 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from dashboard_data import audit_record, parse_jsonl
+from api.services.storage import visible_runs
 from tasks import load_cases
 
 MAX_BYTES = 50 * 1024 * 1024
-SOURCE_DIRS = ('api','docs','reference','tasks','tests','tools','scripts','web')
+SOURCE_DIRS = ('api','benchmarks','docs','reference','tasks','tests','tools','scripts','web','skills')
 SOURCE_FILES = ('README.md','.env.example','.gitignore','requirements.txt',
-                'requirements-api.txt','requirements-dev.txt','pyproject.toml',
-                'agentic.py','agentic_v2.py','agentic_v3.py','agentic_suite.py',
-                'run_agentic.py','run_agentic_v2.py','run_agentic_v3.py','run_agentic_suite.py',
-                'oracle.py','tasks.py','grader.py','dashboard_data.py','run_eval.py',
-                'analyze.py','demo.py','format.sh','format-check.sh','cleanup_legacy.sh')
+                'requirements-api.txt','requirements-agent.txt','requirements-dev.txt','pyproject.toml',
+                'agent_graph.py','run_graph_agent.py','oracle.py','tasks.py','dashboard_data.py',
+                'provider_catalog.py')
+
 VALID_EXT = {'.py','.ts','.tsx','.css','.cjs','.json','.txt','.md','.sh','.yml','.yaml'}
 FORBIDDEN_PARTS = {'node_modules','.next','.venv','__pycache__','.git','.cache','coverage','build','dist'}
 KEY_PATTERN = re.compile(rb'sk-or-v1-[A-Za-z0-9_-]{16,}', re.I)
@@ -57,9 +57,12 @@ def source_members() -> list[Path]:
 def build_archive(video_url: str, dest: Path) -> dict:
     if not re.fullmatch(r'https://[^\s]+',video_url):
         raise ValueError('A real public HTTPS video URL is required; no placeholder permitted')
-    results = sorted((ROOT/'results').glob('*.jsonl'))
+    # Only prospective v3 records are compatible with the submitted code.
+    # Historical v1/v2 files remain in results/ but MUST NOT be regraded under v3
+    # or silently pooled into this submission.
+    results = visible_runs()
     if not results:
-        raise ValueError('No real model JSONL results exist. Run and export experiments on your own machine first.')
+        raise ValueError('No current v3 model JSONL results exist. Historical v1/v2 runs are archived, not scored under v3.')
     cases={c['id']:c for c in load_cases()}
     meta=[]
     for path in results:
@@ -84,7 +87,7 @@ def build_archive(video_url: str, dest: Path) -> dict:
         payloads[rel]=path.read_bytes()
     for path in results:
         payloads[f'results/{path.name}']=path.read_bytes()
-        for suffix in ('.manifest.json','.review.json'):
+        for suffix in ('.manifest.json','.reviews.json','.synthesis.json'):
             sidecar=path.with_suffix('').with_name(path.stem+suffix)
             if sidecar.is_file(): payloads[f'results/{sidecar.name}']=sidecar.read_bytes()
     payloads['results/RELEASE_INDEX.json']=(json.dumps({

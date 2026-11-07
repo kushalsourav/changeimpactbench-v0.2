@@ -1,0 +1,3 @@
+# Optional direct Google AI Studio adapter (not needed for offline or OpenRouter runs).
+-r requirements-agent.txt
+langchain-google-genai>=3,<5

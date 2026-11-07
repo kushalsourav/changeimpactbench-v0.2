@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parent
 
 def load_cases(ids: set[str] | None = None) -> list[dict]:
     out = []
-    for path in sorted((ROOT / "tasks").glob("T*.json")):
+    for path in sorted((ROOT / "tasks").glob("*.json")):
         case = json.loads(path.read_text(encoding="utf-8"))
         if ids is None or case["id"] in ids:
             out.append(case)

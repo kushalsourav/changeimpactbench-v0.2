@@ -1,29 +1,15 @@
-"""Read-only dashboard helpers. No networking, no API-key access, no fabricated data.
+"""Read-only agentic evidence, independently regraded from observable native tool calls.
 
-All model outcomes are reconstructed from raw JSONL and checked with the same
-oracle/grader used by the runner. No provider's hidden chain of thought is shown.
+No hidden chain of thought, simulated provider replies or historical single-turn data.
 """
-
 from __future__ import annotations
-
-from collections import defaultdict
 from datetime import datetime
-from hashlib import sha256
-import io
 import json
 from pathlib import Path
 from typing import Any
-
-from grader import grade, parse_answer, InvalidAnswer
-from agentic import TASK_ID as AGENT_TASK, replay_record as replay_agent, source_case as agent_source_case
-from agentic_v2 import TASK_ID as AGENT_TASK_V2, replay_record as replay_agent_v2
-from agentic_v3 import TASK_ID as AGENT_TASK_V3, replay_record as replay_agent_v3
-from agentic_suite import TASK_IDS as SUITE_TASKS, SPECS as SUITE_SPECS, replay_record as replay_suite
-AGENT_TASKS = {AGENT_TASK, AGENT_TASK_V2, AGENT_TASK_V3} | SUITE_TASKS
+from agent_graph import TASK_IDS as AGENT_TASKS, replay_record, GRAPH_BASE
 from oracle import patch_facts, reference_answer, reference_audit, simulate
-from run_eval import effective_status, summarize
-from tasks import ROOT, make_prompt, load_cases
-
+from tasks import ROOT
 
 def available_runs(root: Path = ROOT) -> list[Path]:
     folder = root / "results"
@@ -56,107 +42,45 @@ def expected_trials_from_records(records: list[dict]) -> int:
     return max((int(x.get("trial", 1)) for x in records), default=3)
 
 
-def audit_record(record: dict, cases: dict[str, dict]) -> dict:
-    """Compute an independent, visible trace of what can actually be verified."""
-    status = effective_status(record)
-    out = {
-        "status": status,
-        "grade": None,
-        "stored_grade_matches": None,
-        "prompt_sha_matches": None,
-        "reference_matches": None,
-        "warnings": [],
-        "expected": None,
-    }
-    task_id = record.get("task_id")
-    if task_id in AGENT_TASKS:
-        replay = ({AGENT_TASK: replay_agent, AGENT_TASK_V2: replay_agent_v2, AGENT_TASK_V3: replay_agent_v3, **{k:replay_suite for k in SUITE_TASKS}}[task_id])(record)
-        expected = replay['expected']
-        ref_seed = SUITE_SPECS[task_id]['seed'] if task_id in SUITE_TASKS else 'T08'
-        ref_path = ROOT / 'reference' / f'{ref_seed}.json'
-        try:
-            reference_matches = (ref_path.is_file() and
-                                 json.loads(ref_path.read_text(encoding='utf-8')) == expected)
-        except (ValueError, OSError):
-            reference_matches = False
-        out.update({'expected': expected, 'prompt_sha_matches': replay['verified'],
-                    'reference_matches': reference_matches,
-                    'grade': replay['grade'], 'warnings': list(replay['warnings']),
-                    'unsafe_committed': replay.get('unsafe_committed')})
-        if not reference_matches:
-            out['warnings'].append(f'Agentic source {ref_seed} reference has drifted')
-        if replay['grade'] is not None:
-            stored = record.get('grade')
-            out['stored_grade_matches'] = (isinstance(stored, dict) and
-                all(stored.get(k) == replay['grade'].get(k) for k in
-                    ('pass', 'score', 'affected_f1', 'root_correct', 'fix_correct',
-                     'recovery_safe', 'recovery_success', 'unsafe_commit', 'violations')))
-            if task_id in ({AGENT_TASK_V2, AGENT_TASK_V3} | SUITE_TASKS) and out['stored_grade_matches']:
-                out['stored_grade_matches'] = all(stored.get(k) == replay['grade'].get(k) for k in
-                    ('procedure_score', 'protocol_errors', 'counterfactual_checks',
-                     'commit_was_simulated', 'strict_pass'))
-            if not out['stored_grade_matches']:
-                out['warnings'].append('Stored agentic score does not match independent replay')
-        if not replay['verified'] or not reference_matches:
-            out['status'] = 'unverified'
-        return out
-    if task_id not in cases:
-        out["warnings"].append(f"Unknown task {task_id}; cannot verify outcome")
-        return out
-    case = cases[task_id]
-    reference = reference_answer(case)
-    out["expected"] = reference
-    stored_reference = ROOT / "reference" / (task_id + ".json")
-    if stored_reference.exists():
-        try:
-            out["reference_matches"] = (
-                json.loads(stored_reference.read_text(encoding="utf-8")) == reference
-            )
-        except (ValueError, OSError):
-            out["reference_matches"] = False
-        if out["reference_matches"] is False:
-            out["warnings"].append("Stored reference differs from deterministic simulator")
-    else:
-        out["warnings"].append("Stored reference file is missing")
-    expected_prompt = make_prompt(case)
-    correct_hash = sha256(expected_prompt.encode("utf-8")).hexdigest()
-    if record.get("prompt_sha256"):
-        out["prompt_sha_matches"] = record["prompt_sha256"] == correct_hash
-        if not out["prompt_sha_matches"]:
-            out["warnings"].append(
-                "Recorded prompt does not match current task; do NOT compare across versions"
-            )
-    elif "prompt" in record:
-        out["prompt_sha_matches"] = record["prompt"] == expected_prompt
-        if not out["prompt_sha_matches"]:
-            out["warnings"].append("Recorded prompt differs from current task")
-    else:
-        out["warnings"].append(
-            "No prompt or prompt hash recorded; original prompt cannot be verified"
+def audit_record(record: dict, cases: dict[str, dict] | None = None) -> dict:
+    """Recompute evidence and score, never trusting saved grades or observations."""
+    status = record.get('status', 'unknown')
+    result = {'status':status, 'grade':None, 'stored_grade_matches':None,
+              'prompt_sha_matches':None, 'reference_matches':None,
+              'warnings':[], 'expected':None}
+    task_id = record.get('task_id')
+    if task_id not in AGENT_TASKS:
+        result['warnings'].append('Not an active LangGraph benchmark version')
+        result['status'] = 'unverified'
+        return result
+    replay = replay_record(record)
+    expected = replay['expected']
+    seed = GRAPH_BASE[task_id]
+    reference_path = ROOT / 'reference' / f'{seed}.json'
+    try:
+        ref_ok = reference_path.is_file() and json.loads(reference_path.read_text(encoding='utf-8')) == expected
+    except (ValueError, OSError):
+        ref_ok = False
+    result.update({'expected': expected,
+                   'prompt_sha_matches':replay['verified'],
+                   'reference_matches':ref_ok, 'grade':replay['grade'],
+                   'warnings':list(replay['warnings']),
+                   'unsafe_committed':replay.get('unsafe_committed')})
+    if not ref_ok:
+        result['warnings'].append(f'Synthetic source reference {seed} mismatches current oracle')
+    if replay['grade'] is not None:
+        saved = record.get('grade')
+        result['stored_grade_matches'] = isinstance(saved, dict) and all(
+            saved.get(key) == replay['grade'].get(key) for key in
+            ('pass','strict_pass','score','affected_f1','root_correct','fix_correct',
+             'recovery_safe','recovery_success','unsafe_commit','violations',
+             'procedure_score','protocol_errors','counterfactual_checks','commit_was_simulated')
         )
-    if status == "completed":
-        out["grade"] = grade(record.get("raw_output", ""), reference)
-        stored = record.get("grade")
-        if stored is not None:
-            out["stored_grade_matches"] = all(
-                stored.get(k) == out["grade"].get(k)
-                for k in (
-                    "score",
-                    "pass",
-                    "format_valid",
-                    "affected_f1",
-                    "root_correct",
-                    "fix_correct",
-                )
-            )
-            if not out["stored_grade_matches"]:
-                out["warnings"].append(
-                    "Stored grade differs from fresh grading; investigate before reporting"
-                )
-        else:
-            out["warnings"].append("Completed model response has no saved grade")
-    return out
-
+        if not result['stored_grade_matches']:
+            result['warnings'].append('Stored score differs from independent replay')
+    if not replay['verified'] or not ref_ok:
+        result['status'] = 'unverified'
+    return result
 
 def evidence_rows(records: list[dict], cases: dict[str, dict]) -> list[dict]:
     rows = []
@@ -165,7 +89,7 @@ def evidence_rows(records: list[dict], cases: dict[str, dict]) -> list[dict]:
         # Invalid prompt/references and unknown task IDs must not look like
         # verified model successes in either the evidence table or its charts.
         verified = (
-            (r.get('task_id') in cases or r.get('task_id') in AGENT_TASKS)
+            (r.get('task_id') in AGENT_TASKS)
             and a['prompt_sha_matches'] is True
             and a['reference_matches'] is True
         )
@@ -195,7 +119,7 @@ def evidence_rows(records: list[dict], cases: dict[str, dict]) -> list[dict]:
                 "grade_verified": a["stored_grade_matches"],
                 "reference_verified": a["reference_matches"],
                 "warnings": " | ".join(a["warnings"]),
-                "condition": "agentic" if r.get('task_id') in AGENT_TASKS else "single-turn",
+                "condition": "agentic",
                 "unsafe_commit": a.get('unsafe_committed') if r.get('task_id') in AGENT_TASKS else None,
                 "recovery_success": (a['grade'] or {}).get('recovery_success')
                     if r.get('task_id') in AGENT_TASKS else None,
@@ -206,94 +130,31 @@ def evidence_rows(records: list[dict], cases: dict[str, dict]) -> list[dict]:
 
 
 def summary_rows(records: list[dict], k: int) -> list[dict]:
-    """Regrade completed answers before summarizing; never turn HTTP errors into failures."""
-    cases = {c["id"]: c for c in load_cases()}
-    clean = []
-    for r in records:
-        updated = dict(r)
-        a = audit_record(r, cases)
-        # Keep suspicious prompt versions out of claimed results.
-        if ((r.get('task_id') not in cases and r.get('task_id') not in AGENT_TASKS)
-                or a["prompt_sha_matches"] is not True
-                or a["reference_matches"] is not True):
-            updated["status"] = "unverified"
-        elif a["status"] == "completed" and a["grade"] is not None:
-            updated["grade"] = a["grade"]
-        else:
-            updated["status"] = a["status"]
-        clean.append(updated)
-    grouped = summarize(clean, k)
-    rows = []
-    for model, s in grouped.items():
-        rows.append(
-            {
-                "model": model,
-                "completed": s["completed"],
-                "passed": s["pass_count"],
-                "wrong": s["completed"] - s["pass_count"],
-                "api_errors": s["api_errors"],
-                "incomplete": s["incomplete_generations"] + s["empty_generations"],
-                "unverified": sum(
-                    1
-                    for r in clean
-                    if r["model_requested"] == model and r["status"] == "unverified"
-                ),
-                "exact_pass_rate": s["pass_rate_on_completed"],
-                "mean_partial": s["mean_partial_score"],
-                "pass_power_k": s["pass_power_k"],
-                "full_trial_groups": s["full_trial_groups"],
-                "agentic_non_gradeable": sum(
-                    1 for r in clean if r.get('model_requested') == model
-                    and r.get('task_id') in AGENT_TASKS
-                    and r.get('status') in ('unsupported_tool_protocol', 'budget_exhausted')
-                ),
-                "unsafe_committed_episodes": sum(
-                    1 for r in clean if r.get('model_requested') == model
-                    and r.get('task_id') in AGENT_TASKS
-                    and audit_record(r, cases).get('unsafe_committed') is True
-                ),
-            }
-        )
+    """Group only independently verified completed model replies. Report errors separately."""
+    grouped: dict[str, list[tuple[dict, dict]]] = {}
+    for record in records:
+        grouped.setdefault(record.get('model_requested','unknown'), []).append((record,audit_record(record)))
+    rows=[]
+    for model, items in grouped.items():
+        completed=[(r,a) for r,a in items if a['status']=='completed' and a.get('grade')]
+        api_errors=sum(a['status']=='api_error' for _,a in items)
+        incomplete=sum(a['status'] in ('incomplete_generation','empty_generation') for _,a in items)
+        unverified=sum(a['status']=='unverified' for _,a in items)
+        passed=sum(a['grade']['strict_pass'] is True for _,a in completed)
+        score=sum(a['grade']['score'] for _,a in completed) / len(completed) if completed else None
+        complete_by_task: dict[str,list[dict]]={}
+        for record,audit in completed:
+            complete_by_task.setdefault(record['task_id'],[]).append({'trial':record.get('trial'), 'pass':audit['grade']['strict_pass']})
+        full=[v for v in complete_by_task.values() if len({e['trial'] for e in v})==k]
+        rows.append({'model':model,'completed':len(completed),'passed':passed,
+            'wrong':len(completed)-passed,'api_errors':api_errors,'incomplete':incomplete,
+            'unverified':unverified,'exact_pass_rate':round(passed/len(completed),4) if completed else None,
+            'mean_partial':round(score,4) if score is not None else None,
+            'pass_power_k':round(sum(all(e['pass'] for e in group) for group in full)/len(full),4) if full and k>=2 else None,
+            'full_trial_groups':len(full),
+            'agentic_non_gradeable':sum(a['status'] in ('budget_exhausted','unsupported_tool_protocol','incomplete_workflow') for _,a in items),
+            'unsafe_committed_episodes':sum(a.get('unsafe_committed') is True for _,a in items)})
     return rows
-
-
-def case_diagnostics(record: dict, case: dict) -> dict:
-    expected = reference_answer(case)
-    a = audit_record(record, {case["id"]: case})
-    result = {
-        "expected": expected,
-        "grade": a["grade"],
-        "can_parse": False,
-        "predicted": None,
-        "missed_services": [],
-        "extra_services": [],
-        "root_explanation": "",
-        "repair_explanation": "",
-    }
-    if a["status"] != "completed":
-        return result
-    try:
-        predicted = parse_answer(record.get("raw_output", ""))
-        result["predicted"] = predicted
-        result["can_parse"] = True
-        result["missed_services"] = sorted(
-            set(expected["failed_services"]) - set(predicted["failed_services"])
-        )
-        result["extra_services"] = sorted(
-            set(predicted["failed_services"]) - set(expected["failed_services"])
-        )
-        root_lookup = {h["id"]: h["description"] for h in case["hypotheses"]}
-        action_lookup = {x["id"]: x["meaning"] for x in case["actions"]}
-        result["root_explanation"] = root_lookup.get(
-            predicted["root_cause"], "Unrecognized hypothesis ID"
-        )
-        result["repair_explanation"] = action_lookup.get(
-            predicted["fix_id"], "Unrecognized action ID"
-        )
-    except InvalidAnswer:
-        pass
-    return result
-
 
 def topology_dot(case: dict, down: set[str], highlight: set[str] | None = None) -> str:
     """Graphviz DOT for the real topology. Edges point from dependency to consumer."""

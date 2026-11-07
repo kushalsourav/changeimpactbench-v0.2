@@ -10,6 +10,8 @@ from copy import deepcopy
 from typing import Any
 
 CAUSE_IDS = {
+    "RW01": "H03", "RW02": "H02", "RW03": "H02",
+    "RW04": "H02", "RW05": "H03", "RW06": "H01",
     "T01": "H03",
     "T02": "H01",
     "T03": "H04",

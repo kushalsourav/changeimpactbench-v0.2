@@ -1,0 +1,418 @@
+{
+  "RW01V3": {
+    "seed": "RW01",
+    "title": "GitHub \u00b7 October 2018 MySQL failover",
+    "version": "publicincident-rw01-v3-langgraph-v2",
+    "time": "2018-10-21 22:52 UTC",
+    "alert": "At 22:52 UTC on October 21, a major developer platform began showing stale metadata after an inter-region connectivity event. Background job processing was disrupted; Git repository data access appeared largely intact. Investigate what failed and the recovery tradeoffs in this reconstruction.",
+    "observations": [
+      "Metadata-related pages showed stale or inconsistent information",
+      "Some asynchronous jobs stopped progressing",
+      "Git repository data was still accessible through independent paths"
+    ],
+    "hypotheses": [
+      [
+        "H01",
+        "Only a webhook processing backlog"
+      ],
+      [
+        "H02",
+        "Only MySQL cluster topology divergence"
+      ],
+      [
+        "H03",
+        "MySQL failover divergence together with deliberate background-job pause"
+      ],
+      [
+        "H04",
+        "A universal Git repository storage outage"
+      ],
+      [
+        "H05",
+        "Only a DNS lookup fault"
+      ]
+    ],
+    "source_url": "https://github.blog/news-insights/company-news/oct21-post-incident-analysis/",
+    "documented_facts": [
+      "A network partition triggered MySQL Orchestrator leader changes and West Coast failover.",
+      "Divergent writes made immediately failing back unsafe.",
+      "GitHub paused webhook delivery and Pages builds to prioritize data integrity.",
+      "Recovery involved rebuilding replication topologies and restoring replicas."
+    ],
+    "model_assumptions": [
+      "12 illustrative service nodes, dependency edges, initial unavailability inventory and alert proxies",
+      "Boolean state of replication topology and protective job pause",
+      "Four hypothetical repair choices with synthetic cost units"
+    ],
+    "cause": "H03"
+  },
+  "RW02V3": {
+    "seed": "RW02",
+    "title": "Cloudflare \u00b7 June 2022 routing outage",
+    "version": "publicincident-rw02-v3-langgraph-v2",
+    "time": "2022-06-21 06:27 UTC",
+    "alert": "At 06:27 UTC on June 21, a global edge network began failing requests in a subset of locations after an infrastructure rollout. Other regions continued to serve traffic. Inspect the reconstructed network to identify the controlling fault.",
+    "observations": [
+      "A subset of high-traffic locations lost external reachability",
+      "Other data centers remained available",
+      "The outage coincided with an infrastructure change"
+    ],
+    "hypotheses": [
+      [
+        "H01",
+        "An attack on all global locations"
+      ],
+      [
+        "H02",
+        "Incorrect route announcement policy in the affected MCP network"
+      ],
+      [
+        "H03",
+        "Only insufficient standby compute capacity"
+      ],
+      [
+        "H04",
+        "All DNS root servers failed"
+      ],
+      [
+        "H05",
+        "Client-side browser cache incompatibility"
+      ]
+    ],
+    "source_url": "https://blog.cloudflare.com/cloudflare-outage-on-june-21-2022",
+    "documented_facts": [
+      "A routing policy configuration change took 19 Cloudflare data centers offline.",
+      "The incident affected approximately half of HTTP requests despite 19 centers representing about 4% of locations.",
+      "The team rolled back the incorrect route advertisement policy and restored all affected locations by 07:42 UTC."
+    ],
+    "model_assumptions": [
+      "Illustrative three-group representation of 19 sites and 10 service nodes",
+      "Boolean router policy and capacity flags",
+      "Simulated mitigation candidates, costs, and aggregate health outcomes"
+    ],
+    "cause": "H02"
+  },
+  "RW03V3": {
+    "seed": "RW03",
+    "title": "Cloudflare \u00b7 July 2019 WAF regex outage",
+    "version": "publicincident-rw03-v3-langgraph-v2",
+    "time": "2019-07-02 13:42 UTC",
+    "alert": "At 13:42 UTC on July 2, edge HTTP requests began returning errors around the time of a security-system deployment. Serving-process CPU rose sharply while DNS remained available. Investigate the reconstruction for a cause and safe repair.",
+    "observations": [
+      "HTTP traffic generated 502 responses",
+      "Serving-process CPU saturation was visible",
+      "An update to a security component was underway"
+    ],
+    "hypotheses": [
+      [
+        "H01",
+        "An external DDoS attack saturated bandwidth"
+      ],
+      [
+        "H02",
+        "WAF regex backtracking exhausted CPU following a rule deployment"
+      ],
+      [
+        "H03",
+        "A global DNS resolver failure"
+      ],
+      [
+        "H04",
+        "Only a CDN cache invalidation problem"
+      ],
+      [
+        "H05",
+        "A primary SQL database failover"
+      ]
+    ],
+    "source_url": "https://blog.cloudflare.com/details-of-the-cloudflare-outage-on-july-2-2019/",
+    "documented_facts": [
+      "A WAF managed-rule deployment contained a pathological regular expression.",
+      "Excessive regex backtracking exhausted CPU on HTTP/HTTPS serving processes.",
+      "Users received HTTP 502 errors; rollback of the offending rule restored operation."
+    ],
+    "model_assumptions": [
+      "10 simplified modeled components and dependency relationships",
+      "Boolean WAF rule and a hypothetical separate safe-guard switch",
+      "Simulation-only candidate repair costs and service availability snapshots"
+    ],
+    "cause": "H02"
+  },
+  "RW01V4": {
+    "seed": "RW01",
+    "title": "GitHub \u00b7 October 2018 MySQL failover",
+    "version": "publicincident-rw01-v4-langgraph-v3",
+    "time": "2018-10-21 22:52 UTC",
+    "alert": "At 22:52 UTC on October 21, a major developer platform began showing stale metadata after an inter-region connectivity event. Background job processing was disrupted; Git repository data access appeared largely intact. Investigate what failed and the recovery tradeoffs in this reconstruction.",
+    "observations": [
+      "Metadata-related pages showed stale or inconsistent information",
+      "Some asynchronous jobs stopped progressing",
+      "Git repository data was still accessible through independent paths"
+    ],
+    "hypotheses": [
+      [
+        "H01",
+        "Only a webhook processing backlog"
+      ],
+      [
+        "H02",
+        "Only MySQL cluster topology divergence"
+      ],
+      [
+        "H03",
+        "MySQL failover divergence together with deliberate background-job pause"
+      ],
+      [
+        "H04",
+        "A universal Git repository storage outage"
+      ],
+      [
+        "H05",
+        "Only a DNS lookup fault"
+      ]
+    ],
+    "source_url": "https://github.blog/news-insights/company-news/oct21-post-incident-analysis/",
+    "documented_facts": [
+      "A network partition triggered MySQL Orchestrator leader changes and West Coast failover.",
+      "Divergent writes made immediately failing back unsafe.",
+      "GitHub paused webhook delivery and Pages builds to prioritize data integrity.",
+      "Recovery involved rebuilding replication topologies and restoring replicas."
+    ],
+    "model_assumptions": [
+      "12 illustrative service nodes, dependency edges, initial unavailability inventory and alert proxies",
+      "Boolean state of replication topology and protective job pause",
+      "Four hypothetical repair choices with synthetic cost units"
+    ],
+    "cause": "H03"
+  },
+  "RW02V4": {
+    "seed": "RW02",
+    "title": "Cloudflare \u00b7 June 2022 routing outage",
+    "version": "publicincident-rw02-v4-langgraph-v3",
+    "time": "2022-06-21 06:27 UTC",
+    "alert": "At 06:27 UTC on June 21, a global edge network began failing requests in a subset of locations after an infrastructure rollout. Other regions continued to serve traffic. Inspect the reconstructed network to identify the controlling fault.",
+    "observations": [
+      "A subset of high-traffic locations lost external reachability",
+      "Other data centers remained available",
+      "The outage coincided with an infrastructure change"
+    ],
+    "hypotheses": [
+      [
+        "H01",
+        "An attack on all global locations"
+      ],
+      [
+        "H02",
+        "Incorrect route announcement policy in the affected MCP network"
+      ],
+      [
+        "H03",
+        "Only insufficient standby compute capacity"
+      ],
+      [
+        "H04",
+        "All DNS root servers failed"
+      ],
+      [
+        "H05",
+        "Client-side browser cache incompatibility"
+      ]
+    ],
+    "source_url": "https://blog.cloudflare.com/cloudflare-outage-on-june-21-2022",
+    "documented_facts": [
+      "A routing policy configuration change took 19 Cloudflare data centers offline.",
+      "The incident affected approximately half of HTTP requests despite 19 centers representing about 4% of locations.",
+      "The team rolled back the incorrect route advertisement policy and restored all affected locations by 07:42 UTC."
+    ],
+    "model_assumptions": [
+      "Illustrative three-group representation of 19 sites and 10 service nodes",
+      "Boolean router policy and capacity flags",
+      "Simulated mitigation candidates, costs, and aggregate health outcomes"
+    ],
+    "cause": "H02"
+  },
+  "RW03V4": {
+    "seed": "RW03",
+    "title": "Cloudflare \u00b7 July 2019 WAF regex outage",
+    "version": "publicincident-rw03-v4-langgraph-v3",
+    "time": "2019-07-02 13:42 UTC",
+    "alert": "At 13:42 UTC on July 2, edge HTTP requests began returning errors around the time of a security-system deployment. Serving-process CPU rose sharply while DNS remained available. Investigate the reconstruction for a cause and safe repair.",
+    "observations": [
+      "HTTP traffic generated 502 responses",
+      "Serving-process CPU saturation was visible",
+      "An update to a security component was underway"
+    ],
+    "hypotheses": [
+      [
+        "H01",
+        "An external DDoS attack saturated bandwidth"
+      ],
+      [
+        "H02",
+        "WAF regex backtracking exhausted CPU following a rule deployment"
+      ],
+      [
+        "H03",
+        "A global DNS resolver failure"
+      ],
+      [
+        "H04",
+        "Only a CDN cache invalidation problem"
+      ],
+      [
+        "H05",
+        "A primary SQL database failover"
+      ]
+    ],
+    "source_url": "https://blog.cloudflare.com/details-of-the-cloudflare-outage-on-july-2-2019/",
+    "documented_facts": [
+      "A WAF managed-rule deployment contained a pathological regular expression.",
+      "Excessive regex backtracking exhausted CPU on HTTP/HTTPS serving processes.",
+      "Users received HTTP 502 errors; rollback of the offending rule restored operation."
+    ],
+    "model_assumptions": [
+      "10 simplified modeled components and dependency relationships",
+      "Boolean WAF rule and a hypothetical separate safe-guard switch",
+      "Simulation-only candidate repair costs and service availability snapshots"
+    ],
+    "cause": "H02"
+  },
+  "RW04V4": {
+    "seed": "RW04",
+    "title": "Cloudflare \u00b7 July 2020 backbone routing incident",
+    "version": "publicincident-rw04-v4-langgraph-v3",
+    "time": "2020-07-17 21:12 UTC",
+    "alert": "A backbone configuration change directed traffic into an overloaded routing location. Some regions failed while independent edge locations continued serving. Investigate the modeled route-control failure and redundant paths.",
+    "observations": [
+      "The incident followed a network configuration update",
+      "Traffic concentrated around a backbone location",
+      "Non-backbone edge paths remained usable"
+    ],
+    "hypotheses": [
+      [
+        "H01",
+        "An entire global DNS authority outage"
+      ],
+      [
+        "H02",
+        "Backbone route attraction overwhelmed one routing hub"
+      ],
+      [
+        "H03",
+        "A WAF regular-expression CPU failure"
+      ],
+      [
+        "H04",
+        "A database schema migration failure"
+      ],
+      [
+        "H05",
+        "Only a customer-browser caching problem"
+      ]
+    ],
+    "source_url": "https://blog.cloudflare.com/cloudflare-outage-on-july-17-2020/",
+    "documented_facts": [
+      "A router configuration error attracted excessive traffic to Atlanta on July 17, 2020.",
+      "The backbone outage affected only certain locations, and independent edge locations continued serving.",
+      "Disabling the affected router restored traffic flow."
+    ],
+    "model_assumptions": [
+      "10 simplified service nodes including one redundantly fed ingress",
+      "Synthetic backbone route-attraction and isolation flags",
+      "Four hypothetical atomic interventions and cost units"
+    ],
+    "cause": "H02"
+  },
+  "RW05V4": {
+    "seed": "RW05",
+    "title": "Cloudflare \u00b7 November 2023 control-plane outage",
+    "version": "publicincident-rw05-v4-langgraph-v3",
+    "time": "2023-11-02 11:43 UTC",
+    "alert": "A power incident affected a primary site hosting the control plane and analytics systems. Redundant facilities were not immediately serving all control services. Investigate the modeled multi-dependency failure and recovery.",
+    "observations": [
+      "Control-plane and analytics services degraded",
+      "Independent edge request processing continued",
+      "A recovery facility was activated during the incident"
+    ],
+    "hypotheses": [
+      [
+        "H01",
+        "A malicious application deployment corrupting API handlers"
+      ],
+      [
+        "H02",
+        "A global DNS authority incident"
+      ],
+      [
+        "H03",
+        "Primary-site power loss and incomplete failover readiness affecting distinct control-plane components"
+      ],
+      [
+        "H04",
+        "Only a cache TTL configuration error"
+      ],
+      [
+        "H05",
+        "A WAF regex processing outage"
+      ]
+    ],
+    "source_url": "https://blog.cloudflare.com/post-mortem-on-cloudflare-control-plane-and-analytics-outage/",
+    "documented_facts": [
+      "A power failure at an upstream colocation facility disrupted Cloudflare control-plane and analytics systems in November 2023.",
+      "A disaster recovery facility restored most control-plane functionality before all services returned.",
+      "The edge network continued routing customer traffic during much of the incident."
+    ],
+    "model_assumptions": [
+      "Synthetic Boolean primary-site power and DR availability switches",
+      "10 illustrative nodes with independent control and analytics failure paths",
+      "Hypothetical atomic repair candidates and costs; not claimed historical actions"
+    ],
+    "cause": "H03"
+  },
+  "RW06V4": {
+    "seed": "RW06",
+    "title": "Cloudflare \u00b7 June 2025 Workers KV dependency outage",
+    "version": "publicincident-rw06-v4-langgraph-v3",
+    "time": "2025-06-12 17:52 UTC",
+    "alert": "An upstream backing-store failure made key-value lookups unreliable, degrading multiple dependent products. A tempting broad fail-open option risks a previously healthy security control. Identify the minimum complete SAFE intervention in this modeled sandbox.",
+    "observations": [
+      "Multiple products depended on a common key-value service",
+      "Uncached key lookups failed while some cached requests succeeded",
+      "Core DNS, WAF and proxy paths were not directly affected"
+    ],
+    "hypotheses": [
+      [
+        "H01",
+        "A shared backing-storage dependency failure impacting Workers KV consumers"
+      ],
+      [
+        "H02",
+        "Only a browser-side JavaScript regression"
+      ],
+      [
+        "H03",
+        "Global BGP hijack of authoritative DNS"
+      ],
+      [
+        "H04",
+        "An across-the-board WAF regex meltdown"
+      ],
+      [
+        "H05",
+        "A hardware failure of all edge caching nodes"
+      ]
+    ],
+    "source_url": "https://blog.cloudflare.com/cloudflare-service-outage-june-12-2025/",
+    "documented_facts": [
+      "Workers KV relied in part on storage provided by a third party, which experienced an outage on June 12, 2025.",
+      "Workers KV failure affected multiple dependent Cloudflare products.",
+      "DNS, core proxy, cache and WAF were not directly affected by the incident."
+    ],
+    "model_assumptions": [
+      "10 synthetic service nodes and simplified dependency edges",
+      "A deliberately unsafe cheap fail-open alternative affecting an initially healthy service",
+      "Hypothetical storage failover, recovery costs and counterfactual effects"
+    ],
+    "cause": "H01"
+  }
+}

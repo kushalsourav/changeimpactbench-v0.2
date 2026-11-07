@@ -1,0 +1,13 @@
+{
+  "failed_services": [
+    "access",
+    "gateway",
+    "images",
+    "kv-storage",
+    "turnstile",
+    "workers-ai",
+    "workers-kv"
+  ],
+  "root_cause": "H01",
+  "fix_id": "A02"
+}

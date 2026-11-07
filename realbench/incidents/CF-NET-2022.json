@@ -1,0 +1,154 @@
+{
+  "id": "CF-NET-2022",
+  "title": "Cloudflare BGP policy rollout outage",
+  "organisation": "Cloudflare",
+  "date": "2022-06-21",
+  "source_published": "2022-06-21",
+  "source_title": "Cloudflare outage on June 21, 2022",
+  "source_url": "https://blog.cloudflare.com/cloudflare-outage-on-june-21-2022",
+  "alert": "Cloudflare reported connectivity failures at some major edge locations during a routing configuration rollout. Determine the affected footprint, cause and documented recovery approach.",
+  "affected": [
+    "I1",
+    "I2",
+    "I3"
+  ],
+  "correct_cause": "H01",
+  "correct_response": "R01",
+  "evidence": [
+    {
+      "id": "E01",
+      "time": "06:17 UTC",
+      "kind": "rollout",
+      "text": "Routing configuration reached busiest locations before the MCP-enabled sites were affected.",
+      "source_section": "Introduction",
+      "source_url": "https://blog.cloudflare.com/cloudflare-outage-on-june-21-2022"
+    },
+    {
+      "id": "E02",
+      "time": "06:27 UTC",
+      "kind": "impact",
+      "text": "Deployment at MCP-enabled sites took 19 locations offline; these facilities handled about half of global requests.",
+      "source_section": "Introduction",
+      "source_url": "https://blog.cloudflare.com/cloudflare-outage-on-june-21-2022"
+    },
+    {
+      "id": "E03",
+      "time": "06:51 UTC",
+      "kind": "root",
+      "text": "Engineers made an initial router change to test the failure mechanism.",
+      "source_section": "Introduction",
+      "source_url": "https://blog.cloudflare.com/cloudflare-outage-on-june-21-2022"
+    },
+    {
+      "id": "E04",
+      "time": "06:58 UTC",
+      "kind": "response",
+      "text": "Engineers identified the routing policy problem and began rolling back the bad change; first site was restored.",
+      "source_section": "Introduction",
+      "source_url": "https://blog.cloudflare.com/cloudflare-outage-on-june-21-2022"
+    },
+    {
+      "id": "E05",
+      "time": "07:42 UTC",
+      "kind": "response",
+      "text": "The last affected data center was brought online after reverts were completed.",
+      "source_section": "Introduction",
+      "source_url": "https://blog.cloudflare.com/cloudflare-outage-on-june-21-2022"
+    },
+    {
+      "id": "E06",
+      "time": "postmortem",
+      "kind": "root",
+      "text": "A misordered BGP policy rejected site-local announcements, disrupting internal reachability and load balancing.",
+      "source_section": "Technical description of the error and how it happened",
+      "source_url": "https://blog.cloudflare.com/cloudflare-outage-on-june-21-2022"
+    },
+    {
+      "id": "E07",
+      "time": "postmortem",
+      "kind": "contributing",
+      "text": "The staged deployment process failed to include an MCP-enabled site until the final step.",
+      "source_section": "Remediation and follow-up steps",
+      "source_url": "https://blog.cloudflare.com/cloudflare-outage-on-june-21-2022"
+    }
+  ],
+  "numbers": {
+    "affected_datacenters": 19,
+    "global_request_share_percent": 50,
+    "recovery_minutes": 75
+  },
+  "impact_options": [
+    {
+      "id": "I1",
+      "name": "19 data centers"
+    },
+    {
+      "id": "I2",
+      "name": "Approximately 50% of traffic handled by those sites"
+    },
+    {
+      "id": "I3",
+      "name": "Some website/service reachability through Cloudflare"
+    },
+    {
+      "id": "I4",
+      "name": "Every Cloudflare data center globally"
+    }
+  ],
+  "root_hypotheses": [
+    {
+      "id": "H01",
+      "description": "A BGP route policy change withdrew/rejected critical site-local prefixes in MCP data centers"
+    },
+    {
+      "id": "H02",
+      "description": "A malicious DNS hijack of global authoritative nameservers"
+    },
+    {
+      "id": "H03",
+      "description": "A global storage cluster corruption"
+    },
+    {
+      "id": "H04",
+      "description": "An upstream utility blackout across all data centers"
+    }
+  ],
+  "response_options": [
+    {
+      "id": "R01",
+      "description": "Revert the faulty routing policy at affected routers and verify site restoration"
+    },
+    {
+      "id": "R02",
+      "description": "Discard customer origin caches"
+    },
+    {
+      "id": "R03",
+      "description": "Restart every customer application"
+    },
+    {
+      "id": "R04",
+      "description": "Wait for hardware replacement before changing routing"
+    }
+  ],
+  "causal_graph": [
+    {
+      "from": "Routing policy rollout",
+      "to": "Site-local prefixes rejected"
+    },
+    {
+      "from": "Site-local prefixes rejected",
+      "to": "MCP sites lose reachability"
+    },
+    {
+      "from": "MCP sites lose reachability",
+      "to": "19 data centers affected"
+    },
+    {
+      "from": "Policy revert",
+      "to": "Locations restored"
+    }
+  ],
+  "dataset_origin": "Published first-party incident postmortem; curated and paraphrased source facts (NOT original telemetry)",
+  "benchmark_version": "cib-real-postmortem-v1/cf-net-2022"
+}

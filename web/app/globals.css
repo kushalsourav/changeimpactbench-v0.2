@@ -1398,3 +1398,72 @@ input[type='search'] {
 .research-service-links { display: flex; flex-wrap: wrap; gap: 6px; }
 .research-service-links button { display: inline-flex; align-items: center; gap: 7px; font: 600 12px 'Roboto Mono',ui-monospace,monospace; padding: 3px 6px; border: 1px solid var(--rule-strong); background: var(--paper-raised); color: var(--ink); border-radius: 2px; }
 .research-service-links button:hover { border-color: var(--primary); }
+
+/* v0.9.7: reviewer-first lab and chronological evidence, no decorative animation. */
+.incident-public-chooser { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 18px; border: 1px solid var(--rule); background: var(--paper-raised); margin-bottom: 12px; }
+.incident-public-chooser > strong { font-size: 12px; }
+.incident-public-chooser select { min-width: 220px; max-width: 420px; }
+.incident-public-chooser small { font-size: 11px; color: var(--ink-muted); }
+.trace-timeline { border-left: 3px solid var(--rule-strong); margin-left: 10px; padding-left: 14px; }
+.trace-timeline:has([open]) { border-left-color: var(--primary); }
+@media (max-width: 760px) { .incident-public-chooser { align-items: stretch; flex-direction: column; } .incident-public-chooser select { width: 100%; max-width: none; } }
+
+/* v0.9.8 — first-time researcher presentation. Flat, no motion, no decorative effects. */
+.research-methodology { border: 1px solid var(--rule); background: var(--paper-raised); margin: 18px 0 20px; padding: 12px 16px; }
+.research-methodology > summary { font-weight: 650; font-size: 12px; cursor: pointer; }
+.research-methodology > .research-method { margin-top: 12px; }
+.agent-launch-simple { max-width: 1120px; margin: 0 auto; }
+.agent-launch-simple .agent-launch-intro { padding-bottom: 6px; }
+.simple-launch-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.simple-launch-fields .field-group, .simple-launch-fields select { min-width: 0; width: 100%; }
+.model-choose-row { display: flex; align-items: stretch; gap: 7px; }
+.model-choose-row select { flex: 1 1 auto; min-width: 0; }
+.model-choose-row .button { flex: 0 0 auto; }
+.simple-dataset-summary { margin: 16px 0; padding: 16px; border: 1px solid var(--rule); background: var(--paper-raised); display: flex; flex-direction: column; gap: 7px; }
+.simple-dataset-summary > strong { font-size: 17px; }
+.simple-dataset-summary > p { font-size: 13px; line-height: 1.6; }
+.simple-dataset-summary > small, .simple-dataset-summary > .muted { color: var(--ink-muted); font-size: 12px; }
+.text-link-action { display: inline-flex; width: fit-content; align-items: center; gap: 5px; color: var(--primary); border: 0; padding: 0; background: transparent; font-weight: 600; font-size: 12px; }
+.text-link-action:hover { text-decoration: underline; }
+.simple-launch-approval { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; padding: 16px 0 0; border-top: 1px solid var(--rule); }
+.simple-launch-approval .check-row { flex: 1 1 310px; min-width: 0; margin: 0; }
+.simple-launch-approval > .muted { flex: 0 0 100%; font-size: 11px; }
+.simple-run-heading { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; }
+.simple-run-heading > div:first-child { display: grid; gap: 3px; }
+.simple-run-heading > div:first-child strong { font-size: 15px; }
+.live-metrics { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; margin-top: 12px; }
+.live-metrics > div { border: 1px solid var(--rule); background: var(--paper-raised); padding: 12px 14px; display: grid; gap: 3px; }
+.live-metrics small { color: var(--ink-muted); font-size: 11px; }
+.live-metrics strong { font-variant-numeric: tabular-nums; font-size: 18px; }
+.live-activity { border: 1px solid var(--rule); background: var(--paper); margin: 12px 0; max-height: 340px; overflow: auto; }
+.live-activity > .muted { padding: 18px; }
+.live-activity-item { display: grid; grid-template-columns: minmax(180px,0.65fr) minmax(0,1fr); gap: 12px; align-items: baseline; padding: 11px 14px; border-bottom: 1px solid var(--rule); font-size: 12px; }
+.live-activity-item:last-child { border-bottom: 0; }
+.live-activity-item > strong { font-weight: 650; overflow-wrap: anywhere; }
+.live-activity-item > span { color: var(--ink-muted); overflow-wrap: anywhere; }
+.live-activity-problem { border-left: 3px solid var(--error); }
+.live-activity-result { border-left: 3px solid var(--success); }
+.run-log-text { padding: 14px; max-height: 300px; max-width: 100%; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; background: var(--paper-raised); border: 1px solid var(--rule); font: 11px ui-monospace,monospace; }
+.trace-timeline > summary { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: baseline; cursor: pointer; font-size: 12px; }
+.trace-timeline > summary::marker { color: var(--ink-muted); }
+.trace-event-title { flex: 1 1 230px; display: grid; gap: 3px; }
+.trace-event-title > strong { font-size: 13px; color: var(--ink); }
+.trace-event-title > small { color: var(--ink-muted); font-size: 11px; font-family: ui-monospace,monospace; }
+.trace-event-summary { flex: 1 1 280px; color: var(--ink-muted); }
+.trace-event-detail { display: grid; gap: 10px; padding: 10px 0; }
+.trace-event-detail h3 { font-size: 12px; }
+.trace-timeline[open] { border-left-color: var(--primary); }
+.trace-submission { border-left-color: var(--success); background: var(--success-tint); }
+.trace-submission-verdict { padding: 9px 12px; background: var(--paper); border: 1px solid var(--rule); font-size: 12px; }
+@media (max-width: 760px) {
+  .simple-launch-fields { grid-template-columns: minmax(0,1fr); }
+  .simple-launch-approval > .button { width: 100%; justify-content: center; }
+  .live-metrics { grid-template-columns: minmax(0,1fr); }
+  .live-activity-item { grid-template-columns: minmax(0,1fr); gap: 4px; }
+}
+
+/* v0.9.9 source provenance and multi-model comparison, flat research interface */
+.model-multiselect { max-height: 190px; overflow-y: auto; border: 1px solid var(--rule); padding: 10px 14px; min-width: min(100%, 420px); }
+.model-multiselect .check-row { display:flex; gap:8px; align-items:center; padding: 5px 0; }
+.incident-source-note { grid-column: 1/-1; font-size: 12px; border-bottom: 1px solid var(--rule); padding: 6px 12px; }
+.simple-dataset-summary ul { padding-left: 20px; margin-block: 8px; }

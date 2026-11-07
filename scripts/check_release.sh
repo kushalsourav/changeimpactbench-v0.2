@@ -12,4 +12,4 @@ if [[ "${1:-}" == "--final" ]]; then
   fi
   ( cd web && npm run lint && npm run build )
 fi
-echo 'Offline release checks complete. Human semantic review and real provider trials remain separate.'
+echo 'Native-only offline checks complete. Real provider trials, human review and production build are separate.'

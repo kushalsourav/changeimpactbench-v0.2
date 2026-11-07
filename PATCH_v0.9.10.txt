@@ -1,0 +1,56 @@
+ChangeImpactBench v0.9.10 PATCH — install ONLY over v0.9.9 FULL.
+
+This is a prospective evaluation amendment. Old v1 model JSONL files are preserved untouched but excluded from v2 comparisons.
+
+INSTALL (stop backend/frontend first):
+  cd ~/hackathons/changeimpactbench-v0.2
+  unzip -o /mnt/d/micro1/ChangeImpactBench_DiagnosisContract_v0.9.10_PATCH.zip
+  source .venv/bin/activate
+  python tools/smoke_langgraph.py
+  bash scripts/check_release.sh --final
+
+DO NOT RUN scripts/clean_native_only.py --apply --drop-runs.
+
+No raw episodes, API secrets, task/seed JSON or oracle references included.
+New task IDs: RW01V2, RW02V2, RW03V2.
+
+CHANGED FILES:
+README.md  sha256=672931af67d77ac16ad27d1d97c65a10329ec2474e9146689a1a3290f54fab69
+api/main.py  sha256=7411b65541c0430ba0a1f26f2643e2c9497aba2bfff920555064e93bda83b224
+api/routes/archive.py  sha256=4785c8caae32cfd748243f75b3bb5e2f6c9ec44b5f9956649ca86ec4e890fa31
+api/routes/comparison.py  sha256=ef865c96e063b8e395b47f3db3aa1f34a0f880e5cb7462696fbbf66554f870f5
+api/routes/health.py  sha256=ea62f986027b24425bb3a97cc18c01b1241347245356f9170f1c3586c2c7af50
+api/routes/runs.py  sha256=6f60ebd08c42f71d7ecf662d6470e228a558c5ddc53b15a42b286b8900054682
+api/routes/synthesis.py  sha256=5a69f70412b33dfcdeb3e1da839a3e32632bf00475d257d92eae64a74e8463ed
+api/tests/test_native_agent_api.py  sha256=ef1146ea5eb796e8807e3354b6baad6e8ac5e33fabe8b5064d3c0291b44d0257
+api/tests/test_native_run_visibility.py  sha256=11648118e2e2096410b2a6cf73cd5221af4381fa1f8a9bd19720d5035554f0a4
+api/tests/test_v2_archive.py  sha256=015c86d8fdb46c321ca520c14d5006788cfe370c062c712920b5bafc0f91e6d6
+benchmarks/environment.py  sha256=888a5191cc8150e5ec84a7331570bd8fe0b8b21b58c1857546b8c52cf4e54edb
+benchmarks/grader.py  sha256=4efaba242d89ac9f966a4f13482aef377e3fdb10f234059ae2839c467ed3e3b5
+benchmarks/native_agent.py  sha256=1b616e1264ed853c33ac9109a589d3ea21f10c05f61cb137df867ee648c70689
+benchmarks/public_sources.json  sha256=3b7f278c061cb6ccaf9c28446e5f40b01c344a0fff4413b338fe9a0c86168d7d
+benchmarks/runner.py  sha256=84fe86c7a28d012b614d5fd2cf66a31d61be4beb8dd24f57a62081a49ea97c4a
+benchmarks/spec.py  sha256=80f4bad462b63821a1f4ac08b186880577a415e911a5f79ccabcac7738750f7a
+docs/DIAGNOSIS_CONTRACT_v0.9.10.md  sha256=1cad5273cc1d383798ac834803b65c46aaea3791b0bb984700da8359d27cbc51
+docs/RELEASE_v0.9.10.md  sha256=d0342f3a1a2bd9d69b03645a9b8b9ae11ff69529a15176bcd48498e2b1a2085e
+scripts/clean_native_only.py  sha256=83b67761246ba3b0c7487f533ba0de8b8f6d6c6ffc36bfc6f337fe98cc4c74c6
+tests/test_agent_graph.py  sha256=2cba89f1cd22a125426d79caae39063fe2140d7569d3fbd8be001a5ebde02944
+tests/test_diagnosis_contract_v2.py  sha256=8718b6b821e018ffa333215acfd9bf71a464121af4ede9dbe04137b5efb4784b
+tests/test_public_sources.py  sha256=36008c0b23b5f2bc5f26f3067c9e4b548199b06327b95a16756fbf5ff5152971
+tools/audit_benchmark.py  sha256=460cb0bd41e6fc318f004022775e90e4a24c06307fc67330feb96c0ed65a04c8
+tools/make_submission.py  sha256=8052ab3a84feb4ad21f4ff6d89861004a41c8ea8f36fbd7f3f838e8b38b98c52
+tools/smoke_langgraph.py  sha256=53713747b6b640d59be2301743ba84e6e9c3bfc60f348dc37f965b0a50e337ec
+web/README.md  sha256=d9a9eabdcb913443b40fe15ead28fb5da84723dbf231609163bba7374b662ebf
+web/hooks/useWorkbench.tsx  sha256=6714d1faa57c8ad8cd7816e559d3dd1488a95ba3ec897a300723d92ce357bcd3
+web/lib/api.ts  sha256=9cb0a4406b17163537658dd9884c1fc19043665108a82ce3a33652f1b7e521e5
+web/lib/episode-analysis.ts  sha256=2edb03408bca9150e490ec983d7926a3c4fb70eeff7a6bcf12d556c6de43a01b
+web/lib/presentation.tsx  sha256=260ac645c6bd1b08500b5e4e1c8bc9c48e675174e5ee0fa66fd4300e4618fe00
+web/package-lock.json  sha256=883a4ba6f9ef69add19ebdcb0ea8e008224df0432c303556cb7595ddaf030e5a
+web/package.json  sha256=90888003390a04112bef68fe08b811c9bdf70b25e7fea854191a3ffb8e04ebc7
+web/pages/ControlRoom.tsx  sha256=00c39de1641fae7c6ace07079afc0d26a7af606b84ab9b37d347a59b24da40d1
+web/pages/ExecutionAnalysis.tsx  sha256=e6bb2c0ddfb2d320a918342663edacfecd9f579050bf42d65dc927f555440736
+web/pages/Overview.tsx  sha256=7a999c014d73a4d5d1481ea8647c8d6531d3a7fd02023eebc3310d44e739f7ea
+web/tests/diagnosis-contract-v2.test.cjs  sha256=8d8df8a0e6d2a07751d5d703b9e353aa68979f01dc97e46d782fecf2468d49b9
+web/tests/episode-analysis.test.cjs  sha256=da67486696c15fb39f4565dc92bb100ec6e0bbbf949fad643c341c40ce591173
+web/tests/native-only-control.test.cjs  sha256=e386f7f4540337d933b6656f288028d39e14697499c835a50116a051c51ab678
+web/tests/readable-ui.test.cjs  sha256=98dbdc72f7d5032faccbbdce26681aece707b453d0222c3e25d96c5355b7f9e8

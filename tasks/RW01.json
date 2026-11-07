@@ -1,0 +1,273 @@
+{
+  "id": "RW01",
+  "benchmark_version": "public-incident-reconstruction-v1",
+  "title": "GitHub \u00b7 October 2018 MySQL failover",
+  "context": "PUBLIC INCIDENT SOURCE: https://github.blog/news-insights/company-news/oct21-post-incident-analysis/. Deterministic reconstruction; NOT original internal logs, topology, metrics or repair costs.",
+  "semantics": "Causal facts from an operator-published postmortem; invented service graph and counterfactual edits are explicitly modeling assumptions.",
+  "facts": {
+    "state": {
+      "mysql": {
+        "replication_consistent": false
+      },
+      "jobs": {
+        "paused": true
+      },
+      "routing": {
+        "west_primary": true
+      }
+    },
+    "timeline": [],
+    "observations": [],
+    "local_rules": [
+      {
+        "service": "mysql-east",
+        "when": {
+          "left": {
+            "path": [
+              "state",
+              "mysql",
+              "replication_consistent"
+            ]
+          },
+          "op": "eq",
+          "right": {
+            "literal": false
+          }
+        }
+      },
+      {
+        "service": "webhook-worker",
+        "when": {
+          "left": {
+            "path": [
+              "state",
+              "jobs",
+              "paused"
+            ]
+          },
+          "op": "eq",
+          "right": {
+            "literal": true
+          }
+        }
+      },
+      {
+        "service": "pages-builder",
+        "when": {
+          "left": {
+            "path": [
+              "state",
+              "jobs",
+              "paused"
+            ]
+          },
+          "op": "eq",
+          "right": {
+            "literal": true
+          }
+        }
+      }
+    ],
+    "topology": [
+      {
+        "id": "mysql-east",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "mysql-west",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "replication-topology",
+        "needs_all": [
+          "mysql-east"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "metadata-writes",
+        "needs_all": [
+          "replication-topology"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "webhook-worker",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "pages-builder",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "webhook-delivery",
+        "needs_all": [
+          "webhook-worker",
+          "metadata-writes"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "pages-publish",
+        "needs_all": [
+          "pages-builder",
+          "metadata-writes"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "issue-metadata",
+        "needs_all": [
+          "metadata-writes"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "pull-request-metadata",
+        "needs_all": [
+          "metadata-writes"
+        ],
+        "needs_any": []
+      },
+      {
+        "id": "git-repositories",
+        "needs_all": [],
+        "needs_any": []
+      },
+      {
+        "id": "status-page",
+        "needs_all": [],
+        "needs_any": []
+      }
+    ]
+  },
+  "hypotheses": [
+    {
+      "id": "H01",
+      "description": "Only a webhook processing backlog"
+    },
+    {
+      "id": "H02",
+      "description": "Only MySQL cluster topology divergence"
+    },
+    {
+      "id": "H03",
+      "description": "MySQL failover divergence together with deliberate background-job pause"
+    },
+    {
+      "id": "H04",
+      "description": "A universal Git repository storage outage"
+    },
+    {
+      "id": "H05",
+      "description": "Only a DNS lookup fault"
+    }
+  ],
+  "actions": [
+    {
+      "id": "A01",
+      "cost": 1,
+      "meaning": "Resume workers without reconciling divergent MySQL writes",
+      "changes": [
+        {
+          "path": [
+            "state",
+            "jobs",
+            "paused"
+          ],
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "A02",
+      "cost": 3,
+      "meaning": "Repair replication topology only; keep background jobs paused",
+      "changes": [
+        {
+          "path": [
+            "state",
+            "mysql",
+            "replication_consistent"
+          ],
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "A03",
+      "cost": 6,
+      "meaning": "Reconcile the replication topology and resume deferred jobs after integrity checks",
+      "changes": [
+        {
+          "path": [
+            "state",
+            "mysql",
+            "replication_consistent"
+          ],
+          "value": true
+        },
+        {
+          "path": [
+            "state",
+            "jobs",
+            "paused"
+          ],
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "A04",
+      "cost": 8,
+      "meaning": "Coordinated reconciliation with redundant failover (same modeled recovery, higher cost)",
+      "changes": [
+        {
+          "path": [
+            "state",
+            "mysql",
+            "replication_consistent"
+          ],
+          "value": true
+        },
+        {
+          "path": [
+            "state",
+            "jobs",
+            "paused"
+          ],
+          "value": false
+        },
+        {
+          "path": [
+            "state",
+            "routing",
+            "west_primary"
+          ],
+          "value": false
+        }
+      ]
+    }
+  ],
+  "provenance": {
+    "origin": "operator-published public postmortem",
+    "source_url": "https://github.blog/news-insights/company-news/oct21-post-incident-analysis/",
+    "date": "2018-10-21 22:52 UTC",
+    "documented_facts": [
+      "A network partition triggered MySQL Orchestrator leader changes and West Coast failover.",
+      "Divergent writes made immediately failing back unsafe.",
+      "GitHub paused webhook delivery and Pages builds to prioritize data integrity.",
+      "Recovery involved rebuilding replication topologies and restoring replicas."
+    ],
+    "reconstructed_elements": [
+      "12 illustrative service nodes, dependency edges, initial unavailability inventory and alert proxies",
+      "Boolean state of replication topology and protective job pause",
+      "Four hypothetical repair choices with synthetic cost units"
+    ],
+    "measurement_note": "All sandbox service statuses, synthetic metric values, rule predicates, costs, and counterfactual repair outcomes are modeled. They are NOT production measurements."
+  }
+}

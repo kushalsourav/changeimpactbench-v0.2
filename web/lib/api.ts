@@ -8,21 +8,31 @@ export type RunFile = {
   benchmark_versions?: string[];
   planned_trials?: number | null;
   requests_planned?: number | null;
-  condition?: 'single-turn' | 'agentic';
+  condition?: 'agentic';
 };
 export type Health = {
   status: string;
   version: string;
   key_configured: boolean;
+  openrouter_key_configured?: boolean;
+  google_key_configured?: boolean;
+  anthropic_key_configured?: boolean;
   timestamp_utc: string;
 };
 export type Task = {
   id: string;
   title: string;
   context: string;
+  alert?: string;
+  dataset_name?: string;
+  source_seed?: string;
+  dataset_origin?: string;
+  source_url?: string;
+  documented_facts?: string[];
+  model_assumptions?: string[];
   services: number;
   failed: number;
-  condition?: 'single-turn' | 'agentic';
+  condition?: 'agentic';
   benchmark_version?: string;
 };
 export type EvalSummary = {
@@ -62,7 +72,7 @@ export type EvidenceRow = {
   grade_verified: boolean | null;
   reference_verified: boolean | null;
   warnings: string;
-  condition?: 'single-turn' | 'agentic';
+  condition?: 'agentic';
   unsafe_commit?: boolean | null;
   recovery_success?: boolean | null;
   tool_calls?: number | null;
@@ -102,6 +112,7 @@ export type Case = {
     topology: NodeInfo[];
     [key: string]: unknown;
   };
+  provenance?: {source_url?:string; documented_facts?:string[]; reconstructed_elements?:string[]; origin?:string;measurement_note?:string};
   hypotheses: {
     id: string;
     description: string;
@@ -150,12 +161,16 @@ export type TrialDetail = {
   diagnosis: {
     predicted: {
       failed_services: string[];
-      root_cause: string;
+      root_cause?: string;
+      root_cause_id?: string;
+      root_cause_explanation?: string;
       fix_id: string;
     } | null;
     expected: {
       failed_services: string[];
-      root_cause: string;
+      root_cause?: string;
+      root_cause_id?: string;
+      root_cause_explanation?: string;
       fix_id: string;
     };
     missed_services: string[];
@@ -177,7 +192,7 @@ export type RunStatus = {
   requests_finished?: number;
   records_saved?: number;
   current_request?: string | null;
-  condition?: 'single-turn' | 'agentic';
+  condition?: 'agentic';
 };
 export type AgentEvent = {
   tool: string;

@@ -1,0 +1,7 @@
+# Native agentic-only runtime; historical runners have been removed.
+# Versions are intentionally constrained to the LangChain v1 + LangGraph v1 API.
+-r requirements-api.txt
+langchain>=1.4,<2
+langgraph>=1.1,<2
+langchain-core>=1.1,<2
+langchain-openrouter>=0.2.8,<0.3

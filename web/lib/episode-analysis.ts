@@ -115,9 +115,13 @@ export function explainEpisode(row: EvidenceRow, detail: TrialDetail): EpisodeEx
     summary = `The agent restored ${restored ?? initialAffected ?? 'all'} initially unavailable services without new outages, but the initial incident report missed ${missing.length} and falsely included ${extra.length} services.`;
     interpretation = 'Operational remediation and exact reconstruction of the initial blast radius are separate evaluated capabilities.';
   } else if (g.root_correct === false) {
-    title = 'Incorrect causal diagnosis';
-    summary = 'The submitted root-cause class differs from the independently verified incident reference.';
-    interpretation = 'Compare the agent-visible observations and recorded final answer; no hidden reasoning is available.';
+    title = 'Incorrect root-cause hypothesis ID';
+    summary = `The agent submitted ${string(predicted?.root_cause_id) || 'no valid ID'}; the reference expects ${string(expected?.root_cause) || 'an unrecorded ID'}. This is a classification mismatch, not a semantic evaluation of its prose.`;
+    interpretation = 'The root-cause ID is scored exactly; the explanatory narrative is reviewed separately against observed evidence.';
+  } else if (g.root_correct === true && strictlyPassed === false && Array.isArray(g.protocol_errors) && g.protocol_errors.length) {
+    title = 'Correct diagnosis and recovery, but tool protocol was violated';
+    summary = `The agent selected the correct root-cause ID and recovered ${restored ?? initialAffected ?? 'all'} services safely, but had ${g.protocol_errors.length} rejected tool request(s).`;
+    interpretation = 'Workflow discipline and causal classification are measured separately. Inspect the rejected tool call and the point breakdown.';
   } else if (strictlyPassed === true) {
     title = 'Complete recovery and exact diagnosis';
     summary = `The agent matched the initial failed-service set and root cause, and safely restored ${restored ?? initialAffected ?? 'all'} services.`;
