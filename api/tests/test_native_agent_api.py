@@ -49,12 +49,16 @@ class NativeAgentAPIContracts(unittest.TestCase):
         self.assertEqual(out.status_code,200)
         cases=out.json()
         self.assertEqual({c['id'] for c in cases},set(TASK_IDS))
-        self.assertEqual(len(cases),9)
+        self.assertEqual(len(cases),27)
         for task in cases:
             self.assertEqual(task['condition'],'agentic')
-            self.assertIn('public',task['dataset_origin'])
-            self.assertTrue(task['source_url'].startswith('https://'))
-            self.assertIn(task['source_seed'], ('RW01', 'RW02', 'RW03', 'RW04', 'RW05', 'RW06'))
+            if task['id'].endswith(('V6N','V6CF','V5')):
+                self.assertIn('synthetic',task['dataset_origin'])
+                self.assertEqual(task['source_url'],'')
+            else:
+                self.assertIn('public',task['dataset_origin'])
+                self.assertTrue(task['source_url'].startswith('https://'))
+            self.assertTrue(task['source_seed'].startswith(tuple(f'RW{i:02}' for i in range(1,7))))
             self.assertEqual(task['benchmark_version'],VERSIONS[task['id']])
             details=client.get('/api/tasks/'+task['id']).json()
             self.assertEqual(details['prompt'],agent_prompt(task['id']))

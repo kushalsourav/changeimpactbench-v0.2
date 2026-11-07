@@ -1,0 +1,15 @@
+{
+  "failed_services": [
+    "mcp-api",
+    "mcp-dns",
+    "mcp-http",
+    "mcp-ingress",
+    "mcp-spine",
+    "quorum-gateway-02",
+    "regional-edge",
+    "regional-traffic-manager",
+    "validated-shard-02"
+  ],
+  "root_cause": "H02",
+  "fix_id": "A95"
+}

@@ -8,7 +8,7 @@ from pathlib import Path
 import sys
 ROOT=Path(__file__).resolve().parent.parent
 sys.path.insert(0,str(ROOT))
-from benchmarks.spec import REGISTRY, reference_trajectory, source_case
+from benchmarks.spec import get_spec, service_codes, reference_trajectory, source_case
 from agent_graph import GraphEnvironment, TASK_IDS, VERSIONS
 from dashboard_data import available_runs, audit_record, parse_jsonl
 from oracle import initial_failures, reference_answer, reference_audit, simulate
@@ -43,14 +43,16 @@ def run_audit(root:Path=ROOT)->dict:
             result=json.loads(env.execute(tool,args,f'offline-reference-{i}'))
             assert not result.get('rejected'), (task_id,tool,result)
         reference=reference_answer(source_case(task_id))
+        codes = service_codes(task_id)
+        expected_failed = {codes.get(n,n) for n in reference['failed_services']}
         passed=bool(env.final and env.committed_effect and
-                    set(env.final['failed_services'])==set(reference['failed_services']) and
+                    set(env.final['failed_services'])==expected_failed and
                     env.final['root_cause_id']==reference['root_cause'] and
                     env.underlying.committed==reference['fix_id'] and
                     not env.committed_effect['unavailable_after'] and
                     not env.committed_effect['newly_unavailable'])
         report['agentic_tasks'].append({'task':task_id,'version':VERSIONS[task_id],
-            'seed':REGISTRY[task_id].seed,'reference_tool_calls':len(trajectory),
+            'seed':get_spec(task_id).seed,'reference_tool_calls':len(trajectory),
             'reference_submission_correct':passed,'is_real_model_trial':False,
             'human_semantic_review':'pending'})
     for path in available_runs(root):

@@ -34,6 +34,16 @@ def patch_facts(facts: dict, action: dict) -> dict:
     Reference answers are never sent to the model.
     """
     out = deepcopy(facts)
+    # V6 conditional operations are unavailable if their documented readiness
+    # requirement is false. Return an unchanged copy so a simulation reveals
+    # a no-op, without treating a model's plan as a real state mutation.
+    requirement = action.get('precondition')
+    if requirement is not None:
+        value = facts
+        for key in requirement['path']:
+            value = value[key]
+        if value != requirement['equals']:
+            return out
     edits = action.get("changes", [action])
     if not edits:
         raise ValueError("A repair must contain at least one change")

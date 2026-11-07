@@ -8,9 +8,9 @@ from benchmarks.native_agent import (
     ENGINE, GRAPH_BASE, MAX_MODEL_CALLS, MAX_TOOLS, VERSIONS,
     GraphEnvironment, source_case, agent_prompt, recorded_implementation_hashes,
 )
-from benchmarks.spec import digest
+from benchmarks.spec import digest, service_codes, synthetic_task
 from benchmarks.skills import repair_system_prompt
-from oracle import reference_answer
+from oracle import reference_answer, initial_failures
 
 def _f1(expected: set[str], actual: set[str]) -> float:
     if not expected and not actual:
@@ -37,6 +37,9 @@ def replay_record(record: dict) -> dict:
         raise ValueError('Unknown new LangGraph benchmark task')
     case = source_case(task_id)
     expected = reference_answer(case)
+    if synthetic_task(task_id):
+        mapping = service_codes(task_id)
+        expected['failed_services'] = sorted(mapping[n] for n in expected['failed_services'])
     prompt = agent_prompt(task_id)
     if (record.get('benchmark_version') != VERSIONS[task_id]
             or record.get('agent_framework') != ENGINE
@@ -111,14 +114,30 @@ def replay_record(record: dict) -> dict:
     citation_ids = set(final['evidence_ids'])
     cited = [s for s in env.steps if s['observation']['event_id'] in citation_ids]
     provenance = len(cited) == len(citation_ids) and len(cited) >= 2
-    support_count = sum(s['tool'] in ('inspect_metrics', 'inspect_logs', 'inspect_config',
-                                     'scan_service_health', 'simulate_repair') for s in cited)
+    support_count = sum(s['tool'] in (('inspect_metrics', 'inspect_logs', 'inspect_config',
+                                     'inspect_dependencies', 'scan_service_health', 'simulate_repair') if synthetic_task(task_id) else
+                                    ('inspect_metrics', 'inspect_logs', 'inspect_config',
+                                     'scan_service_health', 'simulate_repair')) for s in cited)
     evidence_score = (10 if provenance and support_count >= 2 else 5 if provenance and support_count else 0)
+    # V5 rejects empty citation theater: some cited evidence must directly
+    # bear on a genuinely failed local check; another independent observation
+    # must establish scope, propagation, or counterfactual effect.
+    if synthetic_task(task_id):
+        direct_faults, _ = initial_failures(case['id'], case['facts'])
+        names = env.underlying.reverse_codes
+        local_support = any(event['tool'] in ('inspect_config', 'inspect_logs', 'inspect_metrics')
+                            and names.get(event['arguments']['service'], event['arguments']['service']) in direct_faults
+                            for event in cited)
+        corroboration = any(event['tool'] in ('scan_service_health', 'inspect_dependencies', 'simulate_repair')
+                            for event in cited)
+        if not (local_support and corroboration):
+            evidence_score = min(evidence_score, 5)
+
     errors = [a for a in attempts if a.get('rejected_reason')]
     procedure_score = max(0, 10 - 5 * len(errors))
     if env.underlying.violations:
         procedure_score = 0
-    outcome_based = task_id.endswith('V4')
+    outcome_based = task_id.endswith(('V4', 'V5', 'V6N', 'V6CF'))
     strict = (set(final['failed_services']) == set(expected['failed_services']) and root_ok
               and fix_ok and env.underlying.committed == expected['fix_id'] and safe
               and complete and (outcome_based or not errors) and evidence_score == 10)
@@ -142,7 +161,7 @@ def replay_record(record: dict) -> dict:
     if evidence_score != 10: reasons.append('insufficient_evidence_provenance')
     grade = {
         'pass': strict, 'strict_pass': strict, 'score': score,
-        'pass_contract': 'outcome-v4' if outcome_based else 'workflow-v3',
+        'pass_contract': 'outcome-v6' if task_id.endswith(('V6N','V6CF')) else 'outcome-v5' if synthetic_task(task_id) else 'outcome-v4' if outcome_based else 'workflow-v3',
         'affected_f1': round(f1, 5), 'root_correct': root_ok, 'fix_correct': fix_ok,
         'format_valid': True, 'recovery_safe': safe, 'recovery_success': complete,
         'unsafe_commit': unsafe, 'committed_action': env.underlying.committed,

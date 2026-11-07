@@ -1,3 +1,45 @@
+# ChangeImpactBench V5 — integrated into the original V4 application
+
+**Current source folder remains `changeimpactbench-v0.2`. No replacement UI is present.** The existing Next.js frontend and FastAPI/LangGraph evaluation routes now expose `RW01V5`–`RW06V5` alongside frozen historic V4 task IDs. V5 asks whether tool-using responders can safely investigate ambiguous synthetic production-style incidents and choose the lowest-cost safe single repair without postmortem-title leakage. It uses independently replayed trajectories and outcome-based grading; a mistaken hypothesis or unsafe repair matters to production reliability.
+
+**Status: locally tested code, NOT a completed model-evidence submission.** No real-provider trials or public demo video have been run/created in this environment. Do not report a model failure rate until supported by genuine independently replayed records. The previous source, original reference answers, and grading semantics are reproducible from `baseline/ChangeImpactBench_V4_CURRENT_SOURCE.zip`; SHA-256 manifest is in `baseline/V4_SOURCE_MANIFEST.json`.
+
+## Clean WSL extraction and quick tests
+
+```bash
+mkdir -p ~/hackathons
+cd ~/hackathons
+# Extract the supplied V5 ZIP here; it contains the SAME existing project folder.
+unzip -o /mnt/d/micro1/ChangeImpactBench_V5_INTEGRATED_SOURCE.zip
+cd changeimpactbench-v0.2
+python3 -m unittest discover -s tests -q
+node --test web/tests/*.test.cjs
+```
+
+## Run the existing UI (with network access for initial installation)
+
+```bash
+cd ~/hackathons/changeimpactbench-v0.2
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements-api.txt -r requirements-agent.txt
+# Copy .env.example to .env and set actual provider keys locally; never upload .env.
+# In terminal A, after loading environment variables:
+python -m uvicorn api.main:app --host 127.0.0.1 --port 8000
+# Terminal B:
+cd web && npm ci && npm run lint && npm run build && npm run dev
+```
+
+Open http://127.0.0.1:3000. Use the **existing** Run a Test/Control Room screen and select a V5 scenario. Real provider runs require approval and a configured API key; approximate upper bound is 48 provider requests per task/trial, so compute your own runtime/cost estimate from your model's per-token rates before launch. Model-dependent actual token use and cost cannot be guaranteed.
+
+**V5 protocol:** 48 model requests, 47 accepted sandbox tool calls, 5 read-only simulations, one sandbox-only commit; strict pass requires exact initial impact, correct causal hypothesis, complete restoration, preservation of healthy services, minimum-cost safe intervention and supporting observed evidence. Independent grader calculates impact 20%, cause 20%, recovery/safety 40%, evidence 10%, discipline 10%. V5 hypothesis H06 is a near-miss, not an oracle shortcut. The evidence reviewer must still evaluate causal explanation semantics; code only checks deterministic support categories. Results, model IDs, temperatures, samples and failure analysis are **pending real trials**.
+
+**Provenance and AI assistance:** V5 adapts the six preexisting reconstructed public-incident seeds, using wholly synthetic dependencies, service states, failure rules and repair costs. AI-assisted code modifications require human review by the submitting participant. See [`V5_CHANGELOG.md`](V5_CHANGELOG.md), [`docs/V5_IMPLEMENTATION_AND_CHECKLIST.md`](docs/V5_IMPLEMENTATION_AND_CHECKLIST.md) and existing prior-work docs. Video walkthrough link: **NOT PROVIDED — add a genuinely public link before submission.** Short submission description: V5 evaluates failure diagnosis and safe remediation under distributed evidence, adversarial cheaper near-misses and independent sandbox replay, using six versioned synthetic incident tasks. No verified model performance claims yet.
+
+---
+
+## Original V4 README (preserved below for historical context)
+
 # ChangeImpactBench — Source-grounded agentic incident evaluation (v0.9.12)
 
 **Research question:** Can a real AI agent investigate a documented software incident in a deterministic reconstruction, identify the exact initial impact, select the correct causal hypothesis, and commit a complete safe repair using bounded tools?
@@ -93,3 +135,16 @@ python tools/regrade_v5.py results/ui_6263badc14a4.jsonl results/ui_34e9891718f9
 ```
 
 See `docs/RELEASE_v0.9.13_AUDIT.md` and `docs/SUBMISSION_EVIDENCE_PLAN.md`.
+
+## V6 neutral and counterfactual conditions (integrated into this application)
+
+The existing LangGraph/FastAPI/Next.js app includes `RW01V6N`–`RW06V6N`
+(neutral prompt, distributed evidence, partial external health scan) and
+`RW01V6CF`–`RW06V6CF` (counterfactual quorum graphs and conditional repairs).
+Historical V4/V5 IDs and source remain available. The *only* web application
+is this original project; use the existing Control Room dropdown. Review
+`docs/V6_INTEGRATION_AND_VALIDITY.md` and `V5_CHANGELOG.md` before experiments.
+The real-model ablation and human-review gates remain pending; do not treat
+offline scripted-agent test records as provider results. One user-supplied
+RW05V5 live transcript is preserved under `results/imported/` and is not a
+V6 trial. The public video link must still be provided before submission.

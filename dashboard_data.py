@@ -58,7 +58,21 @@ def audit_record(record: dict, cases: dict[str, dict] | None = None) -> dict:
     seed = GRAPH_BASE[task_id]
     reference_path = ROOT / 'reference' / f'{seed}.json'
     try:
-        ref_ok = reference_path.is_file() and json.loads(reference_path.read_text(encoding='utf-8')) == expected
+        historical_reference = json.loads(reference_path.read_text(encoding='utf-8')) if reference_path.is_file() else None
+        if task_id.endswith(('V5', 'V6N', 'V6CF')):
+            # Verify the historic reference independently in original names,
+            # then verify the encoded V5/V6 replay against the versioned oracle.
+            # No bypass: BOTH comparisons must succeed, and the task's frozen
+            # source/prompt/trajectory hashes are checked by replay_record.
+            from oracle import reference_answer
+            from benchmarks.spec import source_case, service_codes
+            original = reference_answer(source_case(task_id))
+            encoded = dict(original)
+            codes = service_codes(task_id)
+            encoded['failed_services'] = sorted(codes[n] for n in original['failed_services'])
+            ref_ok = historical_reference == reference_answer(source_case(seed + 'V4')) and encoded == expected
+        else:
+            ref_ok = historical_reference == expected
     except (ValueError, OSError):
         ref_ok = False
     result.update({'expected': expected,

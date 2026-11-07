@@ -84,7 +84,7 @@ def gemini_graph_factory(env, model_id, token, max_tokens, effort, temperature, 
 def main():
     parser = argparse.ArgumentParser(description='Direct Gemini API agentic experiments; one case per invocation')
     parser.add_argument('--model', required=True, help='Exact Gemini Developer API model ID, e.g. gemini-3.5-flash-lite if available')
-    parser.add_argument('--task', choices=sorted(x for x in TASK_IDS if x.endswith('V4')), required=True)
+    parser.add_argument('--task', choices=sorted(TASK_IDS), required=True)
     parser.add_argument('--trials', type=int, default=1)
     parser.add_argument('--max-tokens', type=int, default=8000)
     parser.add_argument('--temperature', type=float, default=0)

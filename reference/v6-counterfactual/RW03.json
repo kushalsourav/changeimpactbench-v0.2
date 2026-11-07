@@ -1,0 +1,16 @@
+{
+  "failed_services": [
+    "cdn-cache",
+    "customer-http",
+    "customer-https",
+    "edge-proxy",
+    "http-worker",
+    "https-worker",
+    "quorum-gateway-03",
+    "validated-shard-03",
+    "waf-api",
+    "waf-rule-engine"
+  ],
+  "root_cause": "H02",
+  "fix_id": "A95"
+}

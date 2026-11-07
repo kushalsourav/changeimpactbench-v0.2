@@ -1,0 +1,15 @@
+{
+  "failed_services": [
+    "atlanta-backbone",
+    "cache-eu",
+    "cache-west",
+    "eu-edge",
+    "europe-backbone",
+    "quorum-gateway-04",
+    "us-west-backbone",
+    "us-west-edge",
+    "validated-shard-04"
+  ],
+  "root_cause": "H02",
+  "fix_id": "A95"
+}

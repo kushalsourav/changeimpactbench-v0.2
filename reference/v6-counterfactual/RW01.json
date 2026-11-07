@@ -1,0 +1,17 @@
+{
+  "failed_services": [
+    "issue-metadata",
+    "metadata-writes",
+    "mysql-east",
+    "pages-builder",
+    "pages-publish",
+    "pull-request-metadata",
+    "quorum-gateway-01",
+    "replication-topology",
+    "validated-shard-01",
+    "webhook-delivery",
+    "webhook-worker"
+  ],
+  "root_cause": "H03",
+  "fix_id": "A95"
+}

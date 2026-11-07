@@ -1,0 +1,16 @@
+{
+  "failed_services": [
+    "analytics-api",
+    "analytics-store",
+    "billing-control",
+    "control-api",
+    "control-db",
+    "dashboard",
+    "log-delivery",
+    "quorum-gateway-05",
+    "reports",
+    "validated-shard-05"
+  ],
+  "root_cause": "H03",
+  "fix_id": "A95"
+}

@@ -49,14 +49,66 @@ REGISTRY: dict[str, TaskSpec] = {
     for task_id,raw in _REGISTRY_RAW.items()
 }
 
+# V5 cases have neutral public wording; original source records remain untouched.
+V5_FIXTURES = Path(__file__).with_name('v5_fixtures')
+V5_REGISTRY: dict[str, TaskSpec] = {}
+for _path in sorted(V5_FIXTURES.glob('RW*.json')):
+    _fixture = json.loads(_path.read_text(encoding='utf-8'))
+    _public = _fixture['task']
+    _task_id = _path.stem + 'V5'
+    V5_REGISTRY[_task_id] = TaskSpec(
+        id=_task_id, version='agentic-v5-integrated-1', seed=_path.stem,
+        time=_public['time'], alert=_public['alert'], observations=(),
+        hypotheses=tuple((h['id'], h['description']) for h in _public['hypotheses']),
+        max_model_calls=48, max_tools=47, max_simulations=5,
+        source_url='', documented_facts=(),
+        model_assumptions=('Synthetic dependency and repair fixture; not live telemetry',),
+    )
+
+# V6 adds two independently gradeable conditions in the EXISTING application.
+V6_FIXTURES = Path(__file__).with_name('v6_fixtures')
+V6_REGISTRY: dict[str, TaskSpec] = {}
+for _condition, _suffix in (('neutral', 'V6N'), ('counterfactual', 'V6CF')):
+    for _path in sorted((V6_FIXTURES / _condition).glob('RW*.json')):
+        _public = json.loads(_path.read_text(encoding='utf-8'))['task']
+        _task_id = _path.stem + _suffix
+        V6_REGISTRY[_task_id] = TaskSpec(
+            id=_task_id, version='agentic-v6-' + _condition + '-1', seed=_path.stem,
+            time=_public['time'], alert=_public['alert'], observations=(),
+            hypotheses=tuple((h['id'], h['description']) for h in _public['hypotheses']),
+            max_model_calls=48, max_tools=47, max_simulations=7,
+            source_url='', documented_facts=(),
+            model_assumptions=('Entirely synthetic; deterministic counterfactual environment',),
+        )
+
+def synthetic_task(task_id: str) -> bool:
+    return task_id.endswith(('V5', 'V6N', 'V6CF'))
+
+def fixture_path(task_id: str) -> Path:
+    if task_id.endswith('V5'):
+        return V5_FIXTURES / (get_spec(task_id).seed + '.json')
+    if task_id.endswith('V6N'):
+        return V6_FIXTURES / 'neutral' / (get_spec(task_id).seed + '.json')
+    if task_id.endswith('V6CF'):
+        return V6_FIXTURES / 'counterfactual' / (get_spec(task_id).seed + '.json')
+    raise ValueError('Not a versioned synthetic task')
+
+def service_codes(task_id: str) -> dict[str, str]:
+    if not synthetic_task(task_id):
+        return {}
+    fixture = json.loads(fixture_path(task_id).read_text(encoding='utf-8'))
+    return {item['role']: item['service_code'] for item in fixture['task']['public_inventory']}
+
 def get_spec(task_id: str) -> TaskSpec:
     try:
-        return REGISTRY[task_id]
+        return REGISTRY[task_id] if task_id in REGISTRY else {**V5_REGISTRY, **V6_REGISTRY}[task_id]
     except KeyError as exc:
         raise ValueError(f'Unknown source-grounded incident: {task_id}') from exc
 
 def source_case(task_id: str) -> dict:
     seed = get_spec(task_id).seed
+    if synthetic_task(task_id):
+        return json.loads(fixture_path(task_id).read_text(encoding='utf-8'))['case']
     return next(case for case in load_cases({seed}) if case['id'] == seed)
 
 def reference_trajectory(task_id: str) -> list[tuple[str, dict]]:
@@ -65,9 +117,14 @@ def reference_trajectory(task_id: str) -> list[tuple[str, dict]]:
     reference = reference_answer(case)
     direct, _ = initial_failures(case['id'], case['facts'])
     result = [('read_alert', {}), ('scan_service_health', {})]
-    for service in sorted(direct):
-        result.append(('inspect_config', {'service': service}))
-    result.append(('inspect_dependencies', {'service': sorted(direct)[0]}))
+    # V5 mapping is discoverable in read_alert; no additional native tool required.
+    codes = service_codes(task_id)
+    for service in (sorted(set(n['id'] for n in case['facts']['topology'])) if task_id.endswith(('V6N','V6CF')) else sorted(direct)):
+        if task_id.endswith(('V6N','V6CF')):
+            result.append(('inspect_metrics', {'service': codes.get(service, service)}))
+        if service in direct:
+            result.append(('inspect_config', {'service': codes.get(service, service)}))
+    result.append(('inspect_dependencies', {'service': codes.get(sorted(direct)[0], sorted(direct)[0])}))
     result.append(('list_repairs', {}))
     outcomes = reference_audit(case)['actions']
     partials = [a for a in case['actions'] if not outcomes[a['id']]['full_recovery']]
@@ -76,7 +133,7 @@ def reference_trajectory(task_id: str) -> list[tuple[str, dict]]:
     evidence_before = [f'EV{i:03d}' for i, (name, _) in enumerate(result, 1)
                        if name in ('inspect_config', 'inspect_dependencies', 'scan_service_health')]
     result.append(('prepare_repair', {
-        'failed_services': reference['failed_services'],
+        'failed_services': sorted(codes.get(n,n) for n in reference['failed_services']),
         'hypothesized_root_cause_id': cause_id,
         'repair_instructions': f'Investigated the independent failure paths with direct local checks. Proposed cause: {description}. Compare candidates for full safe recovery; choose the least-cost repair and verify the result before final submission.',
         'evidence_ids': evidence_before,
@@ -90,7 +147,7 @@ def reference_trajectory(task_id: str) -> list[tuple[str, dict]]:
     cause_id = reference['root_cause']
     description = next(desc for label, desc in get_spec(task_id).hypotheses if label == cause_id)
     result.append(('submit_diagnosis', {
-        'failed_services': reference['failed_services'],
+        'failed_services': sorted(codes.get(n,n) for n in reference['failed_services']),
         'root_cause_id': cause_id,
         'root_cause_explanation': f'{description}. Verified through direct local checks and downstream dependency evidence.',
         'fix_id': reference['fix_id'], 'evidence_ids': evidence,

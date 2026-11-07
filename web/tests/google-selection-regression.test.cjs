@@ -9,11 +9,11 @@ test('Control Room restricts selections to OpenRouter; legacy Google backend rem
   assert.match(control, /selectedModels\.length < 5/);
   assert.match(control, /setSelectedModels\(\[\.\.\.selectedModels, modelId\]\)/);
   assert.match(control, /selectedModels\.length >= 5/);
-  assert.match(control, /Select up to five OpenRouter models/);
+  assert.match(control, /Select up to five models across OpenRouter and direct Anthropic/);
   assert.doesNotMatch(control, /setSelectedModels\(\[modelId\]\)/);
   assert.match(control, /models\.filter\(m => !m\.id\.startsWith\('google-ai-studio\/'\)\)/);
   assert.match(hook, /!selectedModels\.some\(x => x\.startsWith\('google-ai-studio\/'\)\)/);
-  assert.match(hook, /!selectedModels\.some\(x => !x\.startsWith\('google-ai-studio\/'\)\)/);
+  assert.match(hook, /!selectedModels\.some\(x => !x\.startsWith\('google-ai-studio\/'\) && !x\.startsWith\('anthropic\/'\)\)/);
 });
 test('start button explains missing key or approval, and refresh reloads backend health', () => {
   assert.match(control, /launchBlocker && <p role="alert"/);

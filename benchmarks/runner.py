@@ -93,7 +93,7 @@ def make_native_tools(env: GraphEnvironment) -> list:
     @tool
     def prepare_repair(
         failed_services: list[str],
-        hypothesized_root_cause_id: Literal['H01','H02','H03','H04','H05'],
+        hypothesized_root_cause_id: Literal['H01','H02','H03','H04','H05','H06'],
         repair_instructions: str, evidence_ids: list[str],
         tool_call_id: Annotated[str, InjectedToolCallId],
     ) -> str:
@@ -118,12 +118,12 @@ def make_native_tools(env: GraphEnvironment) -> list:
     @tool(return_direct=True)
     def submit_diagnosis(
         failed_services: list[str],
-        root_cause_id: Literal['H01','H02','H03','H04','H05'],
+        root_cause_id: Literal['H01','H02','H03','H04','H05','H06'],
         root_cause_explanation: str, fix_id: str,
         evidence_ids: list[str], rationale: str,
         tool_call_id: Annotated[str, InjectedToolCallId],
     ) -> str:
-        """FINAL: root_cause_id MUST be a hypothesis ID (H01-H05); root_cause_explanation describes observed causes. Also submit initial failed services, fix ID, real event IDs, and rationale."""
+        """FINAL: root_cause_id MUST be a hypothesis ID (H01-H06); root_cause_explanation describes observed causes. Also submit initial failed services, fix ID, real event IDs, and rationale."""
         return env.execute('submit_diagnosis', {
             'failed_services': failed_services, 'root_cause_id': root_cause_id,
             'root_cause_explanation': root_cause_explanation, 'fix_id': fix_id, 'evidence_ids': evidence_ids, 'rationale': rationale,

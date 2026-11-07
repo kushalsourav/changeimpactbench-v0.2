@@ -51,6 +51,30 @@ class AnthropicProviderTests(unittest.TestCase):
         self.assertIn('run_mixed_providers.py', ' '.join(popen.call_args.args[0]))
         self.assertEqual(response.json()['requests_planned'],96)
 
+    def test_versioned_tasks_reach_direct_provider_runners(self):
+        """Validate CLI task choices without API keys or external calls."""
+        import subprocess
+        import sys
+        from pathlib import Path
+        root = Path(__file__).resolve().parents[2]
+        for adapter in ('run_anthropic.py', 'run_gemini.py'):
+            help_result = subprocess.run(
+                [sys.executable, str(root / 'tools' / adapter), '--help'],
+                cwd=root, capture_output=True, text=True, check=False,
+            )
+            self.assertEqual(help_result.returncode, 0, help_result.stderr)
+            for valid in ('RW01V4', 'RW05V5', 'RW03V6N', 'RW04V6CF'):
+                self.assertIn(valid, help_result.stdout, (adapter, valid))
+            self.assertNotIn('RW99V6CF', help_result.stdout)
+
+    def test_anthropic_v6_counterfactual_dispatch(self):
+        task = 'RW04V6CF'
+        self.assertEqual(LaunchRequest(models=[A], tasks=[task]).tasks, [task])
+        cmd = next(commands([A], task, 1, 4, 0, 8000, 'low',
+                            ['results/anthropic_v6_test.jsonl']))
+        self.assertIn('run_anthropic.py', ' '.join(cmd))
+        self.assertEqual(cmd[cmd.index('--task') + 1], task)
+
     def test_runner_routes_exact_models(self):
         result = list(commands([A,O,G], 'RW05V4', 1, 4, 0, 8000, 'low',
                                ['results/a.jsonl','results/b.jsonl','results/c.jsonl']))

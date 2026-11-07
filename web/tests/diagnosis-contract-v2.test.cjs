@@ -18,6 +18,6 @@ test('User sees only prospective v2 tasks and no historical pooled scores',()=>{
   const labels=source('lib/presentation.tsx');
   const defaults=source('hooks/useWorkbench.tsx');
   assert.match(labels,/RW01V3', 'RW02V3', 'RW03V3'/);
-  assert.match(defaults,/useState\(\['RW01V4'\]\)/);
-  assert.match(defaults,/useState\('RW01V4'\)/);
+  assert.match(defaults,/useState\(\['RW01V6N'\]\)/);
+  assert.match(defaults,/useState\('RW01V6N'\)/);
 });

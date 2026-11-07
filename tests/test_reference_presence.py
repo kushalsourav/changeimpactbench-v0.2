@@ -14,7 +14,7 @@ class ReferencePresenceTests(unittest.TestCase):
     def test_each_active_scenario_has_exact_oracle_reference(self):
         for task, seed in GRAPH_BASE.items():
             with self.subTest(task=task):
-                ref = ROOT / "reference" / (seed + ".json")
+                ref = ROOT / 'reference' / ('v6-neutral' if task.endswith('V6N') else 'v6-counterfactual') / (seed + '.json') if task.endswith(('V6N','V6CF')) else ROOT / 'reference' / (seed + '.json')
                 self.assertTrue(ref.is_file(), f"Missing reference snapshot: {ref}")
                 self.assertEqual(json.loads(ref.read_text()), reference_answer(source_case(task)))
 

@@ -56,7 +56,7 @@ class GraphBenchmarkTests(unittest.TestCase):
         self.assertEqual({t for t in TASK_IDS if t.endswith('V4')}, {'RW01V4','RW02V4','RW03V4','RW04V4','RW05V4','RW06V4'})
         self.assertNotIn('reference', agent_prompt('RW03V3').lower())
         # The seed/source document is reviewer-only, NOT in agent prompt.
-        for task in TASK_IDS:
+        for task in REGISTRY:
             self.assertEqual(VERSIONS[task], REGISTRY[task].version)
             self.assertGreaterEqual(len(source_case(task)['facts']['topology']), 10)
             self.assertTrue(REGISTRY[task].source_url.startswith('https://'))
