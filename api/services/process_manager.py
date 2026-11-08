@@ -43,4 +43,6 @@ def process_state() -> dict:
                 'requests_started':started, 'requests_finished':min(finished, started),
                 'records_saved':records_saved,
                 'condition':'agentic',
+                'task_id':active.get('task_id'), 'models':active.get('models'),
+                'trials':active.get('trials'),
                 'current_request':current_label if status == 'running' else None}

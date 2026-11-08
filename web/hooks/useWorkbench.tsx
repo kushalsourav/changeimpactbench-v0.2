@@ -16,7 +16,7 @@ import { chartLabel, modelDisplay, short, isAgenticTask } from '../lib/presentat
 import type { Page, AgenticComparison, ChartRow } from '../lib/presentation';
 import { useExecutionStream } from './useExecutionStream';
 export function useWorkbench() {
-  const [page, setPage] = useState<Page>('overview'),
+  const [page, setPage] = useState<Page>('control'),
     [collapsed, setCollapsed] = useState(false),
     [dark, setDark] = useState(false);
   const [health, setHealth] = useState<Health | null>(null),

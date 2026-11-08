@@ -40,7 +40,7 @@ export function parseLiveActivity(log: string): LiveActivity[] {
   let turn: number | null = null;
   for (const [index, raw] of (log || '').split(/\r?\n/).entries()) {
     const line = raw.trim();
-    const request = line.match(/^turn=(\d+)\/\d+\s*·\s*(?:provider|Gemini) request/);
+    const request = line.match(/^turn=(\d+)\/\d+\s*·\s*(?:provider|Anthropic|Gemini) request/);
     if (request) { turn = Number(request[1]); continue; }
     const observation = line.match(/^(EV\d+)\s+([a-z_]+)\s*→\s*(.*)$/);
     if (observation) {
@@ -52,11 +52,64 @@ export function parseLiveActivity(log: string): LiveActivity[] {
         detail: summarizeTool(tool, data), kind: 'tool' });
       continue;
     }
-    if (/protocol error:|(?:provider|Gemini) failed|error:|budget exhausted/i.test(line)) {
+    if (/protocol error:|(?:provider|Anthropic|Gemini) failed|error:|budget exhausted/i.test(line)) {
       result.push({ key: `problem-${index}`, turn, tool: 'warning', title: `Turn ${turn ?? '?'} · Issue recorded`, detail: line.slice(0, 350), kind: 'problem' });
     } else if (/score=|Run saved:/.test(line)) {
       result.push({ key: `result-${index}`, turn, tool: 'result', title: 'Episode result saved', detail: line.slice(0, 250), kind: 'result' });
     }
   }
   return result;
+}
+
+/** Derive workflow progress only from real log lines; never infer a diagnosis or repair. */
+export const WORKFLOW_STAGES = [
+  { key: 'received', label: 'Start investigation', tools: [] },
+  { key: 'investigate', label: 'Inspect the incident', tools: ['read_alert', 'scan_service_health', 'inspect_metrics', 'inspect_logs', 'inspect_config', 'inspect_dependencies', 'list_repairs'] },
+  { key: 'plan', label: 'Prepare a repair', tools: ['prepare_repair'] },
+  { key: 'simulate', label: 'Test a repair', tools: ['simulate_repair'] },
+  { key: 'apply', label: 'Apply a repair', tools: ['apply_repair'] },
+  { key: 'diagnose', label: 'Submit diagnosis', tools: ['submit_diagnosis'] },
+  { key: 'grade', label: 'Verify and grade', tools: [] },
+] as const;
+
+export type WorkflowStep = {
+  key: string;
+  label: string;
+  state: 'done' | 'current' | 'pending';
+};
+export type WorkflowState = { steps: WorkflowStep[]; episode: string; activity: LiveActivity[] };
+export function parseLiveWorkflow(fullLog: string, running: boolean): WorkflowState {
+  const lines = (fullLog || '').split(/\r?\n/);
+  // The last score is a reliable episode boundary for each provider adapter.
+  // A new episode cannot inherit a previous one's completed stages.
+  const lastScore = lines.findLastIndex(line => /^\s+score=/.test(line));
+  const precedingScore = lastScore >= 0
+    ? lines.slice(0, lastScore).findLastIndex(line => /^\s+score=/.test(line)) : -1;
+  const afterScore = lines.slice(lastScore + 1).join('\n');
+  // A new trial starts when another provider request is actually logged.
+  // Until then, keep showing the preceding episode instead of resetting it.
+  const nextTrialHasStarted = /turn=\d+\/\d+\s*·\s*(?:provider|Anthropic|Gemini) request/.test(afterScore);
+  const segment = lastScore < 0 ? fullLog
+    : nextTrialHasStarted ? afterScore : lines.slice(precedingScore + 1).join('\n');
+  const activity = parseLiveActivity(segment);
+  const tools = new Set(activity.filter(a => a.kind === 'tool').map(a => a.tool));
+  const requestSeen = /turn=\d+\/\d+\s*·\s*(?:provider|Anthropic|Gemini) request/.test(segment);
+  const graded = /^\s+score=/m.test(segment);
+  const completedKeys = new Set<string>();
+  if (requestSeen || tools.size || graded) completedKeys.add('received');
+  for (const stage of WORKFLOW_STAGES) {
+    if (stage.tools.some(tool => tools.has(tool))) completedKeys.add(stage.key);
+  }
+  if (graded) completedKeys.add('grade');
+  const reached = Math.max(-1, ...WORKFLOW_STAGES.map((stage, i) => completedKeys.has(stage.key) ? i : -1));
+  // If only a provider request exists, we are waiting for the first inspection.
+  const current = running ? Math.min(reached + 1, WORKFLOW_STAGES.length - 1) : -1;
+  return {
+    steps: WORKFLOW_STAGES.map((stage, i) => ({
+      key: stage.key, label: stage.label,
+      state: completedKeys.has(stage.key) ? 'done' : i === current ? 'current' : 'pending',
+    })),
+    episode: /\[(\d+\/\d+)\].*trial=\d+/.exec(segment)?.[1] || '',
+    activity,
+  };
 }

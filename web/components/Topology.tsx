@@ -19,11 +19,12 @@ import {
   ArrowDown,
   RotateCcw,
   AlertTriangle,
+  CircleHelp,
   Maximize,
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
-type Health = 'healthy' | 'failed' | 'downstream' | 'restored' | 'newly-damaged';
+type Health = 'unknown' | 'healthy' | 'failed' | 'downstream' | 'restored' | 'newly-damaged';
 type PaperNodeData = Record<string, unknown> & {
   label: string;
   typeName: string;
@@ -31,6 +32,7 @@ type PaperNodeData = Record<string, unknown> & {
   selected: boolean;
 };
 const icons = {
+  unknown: CircleHelp,
   healthy: Check,
   failed: X,
   downstream: ArrowDown,
@@ -65,6 +67,7 @@ function GraphCore({
   selected,
   onSelect,
   before,
+  unknown,
 }: {
   nodes: NodeInfo[];
   failed: string[];
@@ -73,6 +76,7 @@ function GraphCore({
   selected?: string;
   onSelect?: (id: string) => void;
   before?: string[];
+  unknown?: boolean;
 }) {
   const { fitView, zoomIn, zoomOut } = useReactFlow();
   const graph = useMemo(() => {
@@ -102,7 +106,7 @@ function GraphCore({
         const now = down.has(n.id),
           prior = original.has(n.id);
         const direct = now && directDown.has(n.id);
-        const status: Health = now
+        const status: Health = unknown ? 'unknown' : now
           ? !prior
             ? 'newly-damaged'
             : direct
@@ -176,7 +180,7 @@ function GraphCore({
         ? nodes.filter((n) => down.has(n.id) !== predictedDown.has(n.id)).length
         : 0,
     };
-  }, [nodes, failed, directFailed, predicted, selected, before]);
+  }, [nodes, failed, directFailed, predicted, selected, before, unknown]);
   const fit = useCallback(() => {
     void fitView({ padding: 0.2, duration: 0 });
   }, [fitView]);
@@ -223,10 +227,8 @@ function GraphCore({
         <Background color="#E4E2DC" gap={24} size={1} />
       </ReactFlow>
       <div className="legend">
-        <span>✓ Healthy / restored</span>
-        <span>× Failed</span>
-        <span>↓ Downstream</span>
-        <span>! Newly damaged</span>
+        {unknown ? <span>○ Status not shown during investigation</span> : <span>✓ Healthy / restored</span>}
+        {!unknown && <><span>× Failed</span><span>↓ Downstream</span><span>! Newly damaged</span></>}
         <span>─ Required edge</span>
         <span>┄ Redundant edge</span>
         <span>·· Quorum (N of M) edge</span>
@@ -243,6 +245,7 @@ export function Topology(props: {
   selected?: string;
   onSelect?: (id: string) => void;
   before?: string[];
+  unknown?: boolean;
 }) {
   return (
     <ReactFlowProvider>

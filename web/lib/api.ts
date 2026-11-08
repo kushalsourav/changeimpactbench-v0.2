@@ -193,6 +193,9 @@ export type RunStatus = {
   requests_finished?: number;
   records_saved?: number;
   current_request?: string | null;
+  task_id?: string;
+  models?: string[];
+  trials?: number;
   condition?: 'agentic';
 };
 export type AgentEvent = {

@@ -132,9 +132,11 @@ def start_experiment(req: LaunchRequest):
         active.update({'process':p,'id':jid,'output_file':output_file,
                        'log_path':log_path,'requests_planned':required,
                        'started_utc':started_utc,'started_monotonic':started_monotonic,
-                       'stop_requested':False,'condition':req.condition})
+                       'stop_requested':False,'condition':req.condition,
+                       'task_id':req.tasks[0],'models':req.models,'trials':req.trials})
     return {'id':jid,'status':'running','output_file':output_file,
-            'condition':req.condition,'requests_planned':required,'started_utc':started_utc,'elapsed_seconds':0.0}
+            'condition':req.condition,'task_id':req.tasks[0],
+            'models':req.models,'trials':req.trials,'requests_planned':required,'started_utc':started_utc,'elapsed_seconds':0.0}
 
 
 @router.post('/api/experiment/stop')

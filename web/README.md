@@ -1,32 +1,17 @@
-# ChangeImpactBench v0.9.8 · Modular LangGraph-native research UI
+# ChangeImpactBench · V6 counterfactual UI
 
-Exactly four tabs: **Research Overview**, **Incident Lab**, **Run a test**, **Episode evidence** (Summary, Tool trace, Integrity checks). The backend launches only one native `langchain.agents.create_agent`/LangGraph investigation per approved episode. The five task IDs are AG08V6, AG09V3, AG10V3, AG11V3 and AG12V3. All scenarios and telemetry are locally authored synthetic fixtures, not production incidents.
+The application has two navigation destinations: **Run a Test** and **Results**. The standalone Incident Lab was removed; the dependency map now appears during a live investigation, with all service health states deliberately marked unknown until independent verification. The live workflow marks steps only from recorded provider and tool events. It never displays simulated chain-of-thought or makes up an execution status.
 
-No model scores are embedded in the UI. With a freshly cleaned `results/` folder, the Overview explicitly displays an empty state. New outcomes come only from provider episodes independently replayed by FastAPI. Hidden chain-of-thought is inaccessible; the observable native tool trajectory is retained.
+## Run a Test
 
-Run `(cd web && npm ci && npm run lint && npm run build)` on WSL before release. Development: `(cd web && npm run dev)`; FastAPI at http://127.0.0.1:8000. Never put backend API keys in `web/`.
+Choose one of six `RW01V6CF`–`RW06V6CF` incidents, select 1–5 supported provider models, and choose 1–5 trials per model. Explicitly approve a bounded number of real provider calls. Then click **Start Investigation**. The live panel shows the model's recorded inspection, repair planning, simulation, commitment, diagnosis submission, verification, and latest tool observations. An empty workflow step means it has not yet been recorded; it is not proof of failure. The topology diagram is reference context for the reviewer, not a map the model necessarily saw.
 
-Styling is static, flat, and graph-first: no animations, gradients or unnecessary decorative cards. The actual agent commitment remains distinct from hypothetical repair previews.
+**Advanced settings:** max output tokens per model response (512–16000), reasoning effort, temperature, and delay. The output token setting is not a model input token budget; input-token usage can be inspected in recorded evidence, and provider-specific reasoning controls may be ignored by some adapters. When comparing models, report the exact generation settings and token usage.
 
-## Source layout
+## Results
 
-- `app/page.tsx` is the thin Next.js entry point.
-- `pages/` contains four independent screens.
-- `components/ResearchShell.tsx` owns navigation; `components/ui/` holds shared rendering primitives.
-- `hooks/useWorkbench.tsx` owns server/selection state shared across screens; `hooks/useExecutionStream.ts` listens for live SSE progress.
-- `store/WorkbenchContext.tsx` carries typed state without duplicate fetches.
-- `lib/` contains API types and evidence-only explanations.
+Show saved trials, independently verified strict verdict, grade, why a trial passed or failed, and comparisons of matching task versions. **View full evidence** opens the detailed audit and recorded tool trace, review, and raw exports. No artificial model scores are embedded in the UI.
 
-Historical run files from older engines are excluded by `/api/runs`; use `scripts/clean_native_only.py --apply --drop-runs` to delete them permanently after stopping the servers.
+## Running locally
 
-## First-time researcher flow
-
-The first screen explains the research question and, once a real provider episode exists, shows its verified recovery/diagnosis outcome before methodology. The run and incident selectors use readable names but retain exact task/version/provider identifiers. Comparison statistics require at least two completed episodes. The launcher presents only incident/model/approval/start, with advanced settings collapsed. The evidence view summarizes every recorded tool call and exposes raw observations, deterministic replay, and optional human review. Model hidden chain of thought is not available.
-
-## Diagnosis-contract amendment (v0.9.10)
-
-Current cases: `RW01V2`, `RW02V2`, `RW03V2`. A terminal diagnosis now contains a required enumerated `root_cause_id` and a separate `root_cause_explanation`. Episode Evidence displays the scorer's criterion points and strict-failure reasons, distinguishing classification from rejected tool attempts. Old v1 episodes are read-only historical evidence at `/api/archive/runs`, not active comparisons. See `../docs/DIAGNOSIS_CONTRACT_v0.9.10.md`.
-
-## Agent-written handoff and skills (v0.9.11)
-
-Active experiments: `RW01V3`, `RW02V3`, `RW03V3`. The Episode Evidence Summary now displays the recorded model-authored `prepare_repair` brief and a SHA-256 check of the dynamic repair system prompt. The Tool trace shows the handoff as an observed event, and the redacted exception traceback can be inspected for orchestration errors. Historical v1/v2 records are read-only.
+Run `(cd web && npm ci && npm run lint && npm run build)` before release. Development: `(cd web && npm run dev)`, FastAPI at `http://127.0.0.1:8000`. Keep provider keys server-side in the project `.env`; never expose them in Next.js. The backend uses LangChain `create_agent` / LangGraph and deterministic Python replay for all six distinct counterfactual references. See the repository root README for evaluation and reproducibility methodology.

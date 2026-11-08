@@ -18,13 +18,12 @@ import {
 import { NAV, desc, runLabel } from '../lib/presentation';
 import { useWorkbenchState } from '../store/WorkbenchContext';
 import { Overview } from '../pages/Overview';
-import { IncidentLab } from '../pages/IncidentLab';
 import { ControlRoom } from '../pages/ControlRoom';
 import { ExecutionAnalysis } from '../pages/ExecutionAnalysis';
 export function ResearchShell() {
   const { page, setPage, collapsed, setCollapsed, dark, setDark, health, runs, run, setRun, info, task, setRecordIndex, trial, setTrial, setAnalysisTab, loading, error, setError, search, setSearch, setFilter, flowNotice, setFlowNotice, selectPage, refreshRuns, refreshRun, selected, explanation } = useWorkbenchState();
   return (
-    <div className={`shell ${page === 'lab' ? 'shell--incident-lab' : ''}`}>
+    <div className="shell">
       <aside className={`rail ${collapsed ? 'collapsed' : ''}`}>
         <div className="brand">
           <div className="brand-symbol">
@@ -32,7 +31,7 @@ export function ResearchShell() {
           </div>
           <div className="brand-copy">
             <strong>ChangeImpactBench</strong>
-            <small>Research & evaluation lab</small>
+            <small>AI incident evaluation</small>
           </div>
         </div>
         <nav aria-label="Main navigation" className="nav">
@@ -78,9 +77,9 @@ export function ResearchShell() {
           >
             <Menu size={18} />
           </button>
-          <strong className="appbar-context">ChangeImpactBench / {NAV.find((item) => item.id === page)?.label}</strong>
+          <strong className="appbar-context">ChangeImpactBench / {page === 'analysis' ? 'Results / Evidence' : NAV.find((item) => item.id === page)?.label}</strong>
           <div className="grow" />
-          <div className="appbar-search">
+          {page !== 'control' && <div className="appbar-search">
             <Search size={15} />
             <input
               aria-label="Search evidence"
@@ -91,8 +90,8 @@ export function ResearchShell() {
                 if (e.key === 'Enter') { setFilter(search); setAnalysisTab('Summary'); setPage('analysis'); }
               }}
             />
-          </div>
-          <select
+          </div>}
+          {page !== 'control' && <select
             aria-label="Select experiment"
             value={run}
             onChange={(e) => {
@@ -107,8 +106,8 @@ export function ResearchShell() {
                 {runLabel(r)}
               </option>
             ))}
-          </select>
-          <button
+          </select>}
+          {page !== 'control' && <button
             title="Reload evidence"
             className="icon-btn"
             onClick={() => {
@@ -117,7 +116,7 @@ export function ResearchShell() {
             }}
           >
             <RefreshCw size={16} />
-          </button>
+          </button>}
           <button title="Toggle theme" className="icon-btn" onClick={() => setDark((v) => !v)}>
             {dark ? <Sun size={17} /> : <Moon size={17} />}
           </button>
@@ -133,43 +132,19 @@ export function ResearchShell() {
             </button>
           ))}
         </nav>
-        <div className={`page ${page === 'lab' ? 'page--incident-lab' : ''}`}>
-          {page !== 'lab' && page !== 'overview' && (
-          <div className="page-heading" style={page === 'control' ? { display: 'none' } : undefined}>
-            <div>
-              <h1>{NAV.find((n) => n.id === page)?.label}</h1>
-              <p>{desc[page]}</p>
-              <div className="workflow-next">
-                {page === 'overview' ? (
-                  <button className="button" onClick={() => setPage('control')}>
-                    Configure a new experiment <ArrowRight size={14} />
-                  </button>
-                ) : page === 'control' ? (
-                  <button
-                    className="button"
-                    onClick={() => setPage('lab')}
-                  >
-                    Review saved incident <ArrowRight size={14} />
-                  </button>
-                ) : page === 'analysis' ? (
-                  <button className="button" onClick={() => setPage('overview')}>
-                    Back to research findings <ArrowRight size={14} />
-                  </button>
-                ) : null}
+        <div className="page">
+          {page === 'analysis' && (
+            <div className="page-heading simple-evidence-heading">
+              <div>
+                <button className="text-link-action" onClick={() => setPage('overview')}>
+                  <ChevronLeft size={14} /> Back to Results
+                </button>
+                <h1>Episode evidence</h1>
+                <p>See what the model did and why it passed or failed.</p>
               </div>
             </div>
-            <div className="document-meta">
-              REPORT / CIB-RESEARCH
-              <br />
-              SOURCE / {run || 'None selected'}
-              <br />
-              ENGINE / deterministic Python
-              <br />
-              BENCHMARK / {info?.benchmark_versions?.join(' / ') || 'Not recorded'}
-            </div>
-          </div>
           )}
-          {page !== 'lab' && flowNotice && (
+          {flowNotice && (
             <div className="notice" role="status">
               <CheckCircle size={16} />
               <span style={{ flex: 1 }}>{flowNotice}</span>
@@ -192,7 +167,7 @@ export function ResearchShell() {
               </button>
             </div>
           )}
-          {page !== 'lab' && error && (
+          {error && (
             <div role="alert" className="notice error">
               <AlertTriangle size={18} />
               <span style={{ flex: 1 }}>{error}</span>
@@ -214,7 +189,6 @@ export function ResearchShell() {
             </div>
           )}
           {page === 'overview' && <Overview />}
-          {page === 'lab' && <IncidentLab />}
           {page === 'analysis' && <ExecutionAnalysis />}
           {page === 'control' && <ControlRoom />}
         </div>

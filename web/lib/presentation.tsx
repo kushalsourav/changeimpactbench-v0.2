@@ -2,12 +2,10 @@
 import {
   Activity,
   FlaskConical,
-  GitBranch,
-  LayoutDashboard,
-  Network
+  LayoutDashboard
 } from 'lucide-react';
 import type { RunFile, Task, AgentEvent } from './api';
-export type Page = 'overview' | 'lab' | 'control' | 'analysis';
+export type Page = 'control' | 'overview' | 'analysis';
 export type AgenticComparison = {
   task_id: string;
   benchmark_version: string;
@@ -48,16 +46,13 @@ export type ChartRow = {
 export const CHART_FONT = { fontFamily: 'Roboto, system-ui, sans-serif', fontSize: 12, fill: '#5F6368' };
 export const chartLabel = (value: string) => (value.length > 17 ? `${value.slice(0, 16)}…` : value);
 export const NAV: { id: Page; label: string; icon: typeof Activity }[] = [
-  { id: 'overview', label: 'Research overview', icon: LayoutDashboard },
-  { id: 'lab', label: 'Incident lab', icon: Network },
-  { id: 'control', label: 'Run a test', icon: FlaskConical },
-  { id: 'analysis', label: 'Episode evidence', icon: GitBranch },
+  { id: 'control', label: 'Run a Test', icon: FlaskConical },
+  { id: 'overview', label: 'Results', icon: LayoutDashboard },
 ];
 export const desc: Record<Page, string> = {
-  overview: 'Verified findings and model comparisons, all on screen.',
-  lab: 'Understand the reported incident and its modeled dependency graph.',
-  control: 'Launch a bounded agent evaluation with explicit approval.',
-  analysis: 'What the agent did, what the sandbox observed, and how independent replay checked it.',
+  overview: 'Saved investigations and model comparisons.',
+  control: 'Choose an incident and a model.',
+  analysis: 'Why this investigation passed or failed.',
 };
 export const p100 = (v: number | null | undefined) => (v == null ? 'N/A' : `${(v * 100).toFixed(1)}%`);
 export const niceTitle = (value: string) =>

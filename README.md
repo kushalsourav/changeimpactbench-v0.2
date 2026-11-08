@@ -11,7 +11,7 @@
 - The original incident title, operator postmortem link and reported source facts are already stored as reviewer-only `case.title` and `case.provenance` inside each V6CF fixture. The UI displays them, but they are **never sent in model prompts**. These are provenance/inspiration, not claims of original telemetry.
 - `benchmarks/spec.py`: V6CF-only task registry and human reference trajectory. `benchmarks/environment.py`: isolated agent tools. `oracle.py`: deterministic impact/recovery logic. `benchmarks/grader.py` and `dashboard_data.py`: independent replay plus canonical reference validation.
 
-The same six task IDs appear throughout the Control Room, Incident Lab, saved traces and exports. Earlier V4/V5/V6-neutral task registries and evaluation paths have been removed. Historical raw outputs are not included in this clean source release; use fresh, verifiable V6CF runs for final evidence.
+The same six task IDs appear throughout the Run a Test, Results, saved traces and exports. Earlier V4/V5/V6-neutral task registries and evaluation paths have been removed. Historical raw outputs are not included in this clean source release; use fresh, verifiable V6CF runs for final evidence.
 
 ## Local setup (WSL / Linux)
 
@@ -44,7 +44,7 @@ python tools/audit_benchmark.py --output reports/offline_audit.json
 
 The offline audit checks **six** original stored answer files against the independent oracle, confirms the minimum-cost recovery, verifies dangerous A90 counterfactual alternatives and completes synthetic tool trajectories. These scripted reference agents are **not frontier-model runs**. The grader rejects fabricated citations, wrong cause, unsafe commits, altered logs, changed prompt/code hashes and reference mismatch.
 
-Every real episode records task/version, prompt, full native tool trajectory, bounded call counts, exact model/provider configuration, source hashes, outcome and independent grading. The Control Room stores provider outputs as JSONL in `results/`; reviewer evidence and raw exports are available in the existing UI. Saved results produced with other source versions remain source-hash incompatible until independently verified with their corresponding frozen archive, and should not be pooled with the current version. Strict pass requires exact initial affected service set, root-cause ID, committed reference-optimal repair, complete safe recovery and sufficient *observed* evidence. A partial 0–100 score is explanatory only. Human review is needed for causal explanation semantics.
+Every real episode records task/version, prompt, full native tool trajectory, bounded call counts, exact model/provider configuration, source hashes, outcome and independent grading. Run a Test stores provider outputs as JSONL in `results/`; reviewer evidence and raw exports are available in the existing UI. Saved results produced with other source versions remain source-hash incompatible until independently verified with their corresponding frozen archive, and should not be pooled with the current version. Strict pass requires exact initial affected service set, root-cause ID, committed reference-optimal repair, complete safe recovery and sufficient *observed* evidence. A partial 0–100 score is explanatory only. Human review is needed for causal explanation semantics.
 
 **No current-run frontier scores are invented in this release.** Previous raw records are excluded from this clean source ZIP because they cannot be assumed reproducible under the updated source hashes. Run fresh experiments to substantiate claims. Report the exact model IDs, sampling/reasoning settings, trial counts, run dates, observed pass rates, costs and failure-analysis transcript excerpts before submission.
 
@@ -72,3 +72,10 @@ Extract this ZIP into the *same parent directory*, retaining the existing `chang
 - Repair choices have deterministic **task-specific opaque `RNN` IDs**, real costs, and target configuration fields but no optimality claims or descriptions of expected success. The original `Axx` IDs remain unchanged in the fixtures/reviewer references.
 - Counterfactual `simulate_repair` observations contain **aggregate recovery/safety counts only**, without service names, service IDs, or predicted cause labels. Counts remain visible so a model can make an evidence-based safety decision.
 - The independent grader translates private reference repair IDs to public IDs and replays actual tool calls against original fixture state. Changing this interface changes source/prompt hashes: earlier transcripts are not valid current-run evidence.
+
+## Simple evaluation UI
+
+The frontend opens on **Run a Test** and has only two navigation destinations: **Run a Test** and **Results**. The standalone Incident Lab page has been removed. An active test shows a step-by-step workflow derived from actual subprocess tool events, a neutral (health-unknown) React Flow service dependency diagram, provider request counts, and recorded activity. The diagram is reviewer context, **not** a claim about what the model observed. Completed evidence, final incident state, strict PASS/FAIL, scores, raw traces and exports remain under Results → View full evidence.
+
+The advanced **Max output tokens per response** setting remains editable, along with reasoning effort, temperature and request delay. It is a provider output/generation cap, **not** an input-context token budget. Model-reported prompt/input tokens are recorded in episode usage. Provider-specific reasoning settings are not guaranteed to apply. Do not equate output-token limits with model thinking capacity.
+
