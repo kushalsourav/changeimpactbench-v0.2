@@ -1,0 +1,194 @@
+{
+  "available": true,
+  "generated_utc": "2026-11-08T19:38:26.854067+00:00",
+  "model": "google-ai-studio/gemini-3.5-flash-lite",
+  "experiment_id": "52da31a0344f",
+  "experiment_id_source": "run_manifest",
+  "run_file": "ui_52da31a0344f.jsonl",
+  "verified_facts": {
+    "episode_count": 2,
+    "gradeable_count": 2,
+    "strict_passes": 1,
+    "strict_failures": 1,
+    "complete_safe_recoveries": 2,
+    "ungradeable_count": 0,
+    "ungradeable_by_reason": {},
+    "episodes": [
+      {
+        "episode": 0,
+        "trial": 1,
+        "task": "RW02V6CF",
+        "model": "nvidia/nemotron-3.5-lightning:free",
+        "status": "completed",
+        "error_category": null,
+        "multi_tool_provider_turns": [],
+        "audit_warnings": [],
+        "verified": true,
+        "integrity": {
+          "prompt": true,
+          "reference": true,
+          "stored_grade": true
+        },
+        "strict_pass": true,
+        "partial_score": 1.0,
+        "impact_f1": 1.0,
+        "root_correct": true,
+        "recovery_success": true,
+        "recovery_safe": true,
+        "unsafe_commit": false,
+        "root_cause_id_submitted": "H02",
+        "root_cause_id_expected": "H02",
+        "criterion_scores": {
+          "impact": {
+            "earned": 20.0,
+            "available": 20,
+            "measurement": "initial-service F1"
+          },
+          "root_cause_id": {
+            "earned": 20,
+            "available": 20,
+            "measurement": "exact hypothesis ID"
+          },
+          "safe_complete_recovery": {
+            "earned": 40,
+            "available": 40,
+            "measurement": "sandbox replay"
+          },
+          "evidence_provenance": {
+            "earned": 10,
+            "available": 10,
+            "measurement": "valid citations from at least two operational evidence categories, including an initially unavailable service; not explanation semantics"
+          },
+          "protocol_discipline": {
+            "earned": 10,
+            "available": 10,
+            "measurement": "rejected tool requests and violations"
+          }
+        },
+        "strict_failure_reasons": [],
+        "semantic_explanation_review": "human evidence review pending; free-form text not scored",
+        "tool_calls": 34,
+        "provider_requests": 34,
+        "committed_action": "R02",
+        "committed_cost": 4,
+        "reference_optimal_action": "R02",
+        "reference_optimal_cost": 4,
+        "repair_cost_delta": 0,
+        "protocol_errors": 0,
+        "gradeable": true
+      },
+      {
+        "episode": 1,
+        "trial": 2,
+        "task": "RW02V6CF",
+        "model": "nvidia/nemotron-3.5-lightning:free",
+        "status": "completed",
+        "error_category": null,
+        "multi_tool_provider_turns": [],
+        "audit_warnings": [],
+        "verified": true,
+        "integrity": {
+          "prompt": true,
+          "reference": true,
+          "stored_grade": true
+        },
+        "strict_pass": false,
+        "partial_score": 0.9913,
+        "impact_f1": 0.95652,
+        "root_correct": true,
+        "recovery_success": true,
+        "recovery_safe": true,
+        "unsafe_commit": false,
+        "root_cause_id_submitted": "H02",
+        "root_cause_id_expected": "H02",
+        "criterion_scores": {
+          "impact": {
+            "earned": 19.13043,
+            "available": 20,
+            "measurement": "initial-service F1"
+          },
+          "root_cause_id": {
+            "earned": 20,
+            "available": 20,
+            "measurement": "exact hypothesis ID"
+          },
+          "safe_complete_recovery": {
+            "earned": 40,
+            "available": 40,
+            "measurement": "sandbox replay"
+          },
+          "evidence_provenance": {
+            "earned": 10,
+            "available": 10,
+            "measurement": "valid citations from at least two operational evidence categories, including an initially unavailable service; not explanation semantics"
+          },
+          "protocol_discipline": {
+            "earned": 10,
+            "available": 10,
+            "measurement": "rejected tool requests and violations"
+          }
+        },
+        "strict_failure_reasons": [
+          "initial_service_inventory_inexact"
+        ],
+        "semantic_explanation_review": "human evidence review pending; free-form text not scored",
+        "tool_calls": 27,
+        "provider_requests": 27,
+        "committed_action": "R02",
+        "committed_cost": 4,
+        "reference_optimal_action": "R02",
+        "reference_optimal_cost": 4,
+        "repair_cost_delta": 0,
+        "protocol_errors": 0,
+        "gradeable": true
+      }
+    ],
+    "data_origin": "Independent Python oracle and stored native tool replay; not Google-generated content"
+  },
+  "record_sha256": "3f6ebc8de86ebebb943f7df66e5464b2d76c6431d9e52bfddce7706f511cb22d",
+  "record_tasks": [
+    "RW02V6CF"
+  ],
+  "record_models": [
+    "nvidia/nemotron-3.5-lightning:free"
+  ],
+  "label": "LLM interpretation; not deterministic verdict or human-verified semantics",
+  "narrative_validation": {
+    "status": "passed_guardrails",
+    "warnings": [],
+    "note": "Basic automated checks only; explanation semantics still require human review"
+  },
+  "synthesis": {
+    "headline": "SRE Analysis on nvidia/nemotron-3.5-lightning:free Episode Outcomes",
+    "interpretation": "An analysis of the two gradeable episodes reveals a dichotomy in strict outcomes despite high partial recovery scores. Episode 0 achieved a strict PASS with a full partial score of 1.0, perfect root cause identification (H02), and optimal repair action R02 with a committed cost of 4 matching the reference optimal cost. Episode 1 achieved a high partial score of 0.9913 and successfully recovered the service with the correct root cause ID H02, but registered a strict FAIL due to an initial service inventory inexactness reason under strict failure criteria. Both episodes executed safe repairs without protocol errors or extra repair costs, demonstrating that high partial scores and safe recovery do not automatically guarantee a strict pass when inventory precision criteria are not completely fulfilled.",
+    "observations": [
+      "Episode 0 achieved a strict PASS with a partial score of 1.0 and zero strict failure reasons.",
+      "Episode 1 achieved a high partial score of 0.9913 and successful recovery, but strictly failed due to initial_service_inventory_inexact.",
+      "Both episodes correctly identified the root cause ID as H02.",
+      "Both episodes executed the optimal committed action R02 with zero repair cost delta."
+    ],
+    "limitations": "The analysis is constrained by a very small sample size of only two gradeable episodes from a single model run. All synthetic reconstructions of topology, metrics, costs, and counterfactual repairs limit broader generalization without broader production measurements.",
+    "chart_choice": "score_by_model",
+    "chart_explanation": "The score_by_model chart displays the partial scores and strict pass/fail outcomes across the evaluated episodes.",
+    "supporting_episodes": [
+      0,
+      1
+    ]
+  },
+  "chart": {
+    "type": "score_by_model",
+    "rows": [
+      {
+        "label": "nvidia/nemotron-3.5-lightning:free",
+        "value": 99.56,
+        "denominator": 2
+      }
+    ],
+    "data_origin": "Computed from independent deterministic regrades, not generated by the LLM"
+  },
+  "episode_count": 2,
+  "gradeable_count": 2,
+  "sources": [
+    ""
+  ]
+}

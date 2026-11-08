@@ -1,0 +1,202 @@
+=== Model 1/1: nvidia/nemotron-3.5-lightning:free ===
+[1/2] LangGraph create_agent · nvidia/nemotron-3.5-lightning:free · RW06V6CF · trial=1
+    turn=1/48 · provider request ...
+    input tokens: 2934 / 1000000 (cumulative provider-reported)
+    turn=1/48 · provider completed
+    EV001 read_alert → {"alert":"Identity, configuration, media, and AI products show uneven failures while core DNS, proxy, cache, and WAF remain available. Identify every initially failed service; select the lowest-cost complete safe repair."}
+    turn=2/48 · provider request ...
+    input tokens: 6478 / 1000000 (cumulative provider-reported)
+    turn=2/48 · provider completed
+    EV002 scan_service_health → {"statuses":{"svc-005":"unavailable","svc-007":"unavailable","svc-014":"healthy","svc-015":"unavailable","svc-016":"unavailable","svc-018":"healthy","svc-024":"healthy","svc-025":"healthy","svc-028":"healthy"},"observed_count":9,"kind":"synthetic availability probes","observed_at":"2025-06-12T18:10:00Z"}
+    turn=3/48 · provider request ...
+    input tokens: 10289 / 1000000 (cumulative provider-reported)
+    turn=3/48 · provider completed
+    EV003 inspect_metrics → {"service":"svc-005","health_probe":"unavailable","signals":{"identity_login_failure_pct":100.0,"service_token_failure_pct":0.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=4/48 · provider request ...
+    input tokens: 14535 / 1000000 (cumulative provider-reported)
+    turn=4/48 · provider completed
+    EV004 inspect_logs → {"service":"svc-005","lines":["2025-06-12T18:10:00Z svc-005 request path unavailable; correlate local signals and upstream dependencies"]}
+    turn=5/48 · provider request ...
+    input tokens: 18995 / 1000000 (cumulative provider-reported)
+    turn=5/48 · provider completed
+    EV005 inspect_config → {"service":"svc-005","configuration_snapshot":{},"freshness":"fresh","measurement_age_seconds":0}
+    turn=6/48 · provider request ...
+    input tokens: 23620 / 1000000 (cumulative provider-reported)
+    turn=6/48 · provider completed
+    EV006 inspect_dependencies → {"service":"svc-005","upstream":{"needs_all":["svc-002"],"needs_any":[]},"direct_consumers":["svc-007","svc-009","svc-017"]}
+    turn=7/48 · provider request ...
+    input tokens: 28490 / 1000000 (cumulative provider-reported)
+    turn=7/48 · provider completed
+    EV007 inspect_metrics → {"service":"svc-007","health_probe":"unavailable","signals":{"connection_failure_pct":100.0,"dns_query_success_pct":99.7},"freshness":"fresh","measurement_age_seconds":0}
+    turn=8/48 · provider request ...
+    input tokens: 33665 / 1000000 (cumulative provider-reported)
+    turn=8/48 · provider completed
+    EV008 inspect_logs → {"service":"svc-007","lines":["2025-06-12T18:10:00Z svc-007 request path unavailable; correlate local signals and upstream dependencies"]}
+    turn=9/48 · provider request ...
+    input tokens: 39060 / 1000000 (cumulative provider-reported)
+    turn=9/48 · provider completed
+    EV009 inspect_config → {"service":"svc-007","configuration_snapshot":{},"freshness":"fresh","measurement_age_seconds":0}
+    turn=10/48 · provider request ...
+    input tokens: 44614 / 1000000 (cumulative provider-reported)
+    turn=10/48 · provider completed
+    EV010 inspect_dependencies → {"service":"svc-007","upstream":{"needs_all":["svc-005"],"needs_any":[]},"direct_consumers":["svc-022"]}
+    turn=11/48 · provider request ...
+    input tokens: 50336 / 1000000 (cumulative provider-reported)
+    turn=11/48 · provider completed
+    EV011 inspect_metrics → {"service":"svc-015","health_probe":"unavailable","signals":{"playlist_error_rate_pct":90.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=12/48 · provider request ...
+    input tokens: 56341 / 1000000 (cumulative provider-reported)
+    turn=12/48 · provider completed
+    EV012 inspect_logs → {"service":"svc-015","lines":["2025-06-12T18:10:00Z svc-015 request path unavailable; correlate local signals and upstream dependencies"]}
+    turn=13/48 · provider request ...
+    input tokens: 62538 / 1000000 (cumulative provider-reported)
+    turn=13/48 · provider completed
+    EV013 inspect_config → {"service":"svc-015","configuration_snapshot":{},"freshness":"fresh","measurement_age_seconds":0}
+    turn=14/48 · provider request ...
+    input tokens: 68894 / 1000000 (cumulative provider-reported)
+    turn=14/48 · provider completed
+    EV014 inspect_dependencies → {"service":"svc-015","upstream":{"needs_all":["svc-002"],"needs_any":[]},"direct_consumers":[]}
+    turn=15/48 · provider request ...
+    input tokens: 75383 / 1000000 (cumulative provider-reported)
+    turn=15/48 · provider completed
+    EV015 inspect_metrics → {"service":"svc-016","health_probe":"unavailable","signals":{"inference_failure_pct":100.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=16/48 · provider request ...
+    input tokens: 82082 / 1000000 (cumulative provider-reported)
+    turn=16/48 · provider completed
+    EV016 inspect_logs → {"service":"svc-016","lines":["2025-06-12T18:10:00Z svc-016 request path unavailable; correlate local signals and upstream dependencies"]}
+    turn=17/48 · provider request ...
+    input tokens: 88971 / 1000000 (cumulative provider-reported)
+    turn=17/48 · provider completed
+    EV017 inspect_config → {"service":"svc-016","configuration_snapshot":{},"freshness":"fresh","measurement_age_seconds":0}
+    turn=18/48 · provider request ...
+    input tokens: 96019 / 1000000 (cumulative provider-reported)
+    turn=18/48 · provider completed
+    EV018 inspect_dependencies → {"service":"svc-016","upstream":{"needs_all":["svc-002"],"needs_any":[]},"direct_consumers":["svc-021"]}
+    turn=19/48 · provider request ...
+    input tokens: 103235 / 1000000 (cumulative provider-reported)
+    turn=19/48 · provider completed
+    EV019 list_repairs → {"candidate_repairs":[{"id":"R01","cost":9,"estimated_minutes":180,"risk":"low","operational_description":"Cut over to alternate storage and backfill all namespaces before restoring dependent products."},{"id":"R02","cost":1,"estimated_minutes":10,"risk":"critical","operational_description":"Cut over unvalidated storage and force security policy evaluation to fail open."},{"id":"R03","cost":6,"estimated_minutes":110,"risk":"medium","operational_description":"Cut critical Workers KV namespaces over to the prepared alternate backing store with controlled cache repopulation."},{"id":"R04","cost":4,"estimated_minutes":15,"risk":"high","operational_description":"Enable product kill switches without restoring Workers KV origin reads or writes."},{"id":"R05","cost":2,"estimated_minutes":20,"risk":"medium","operational_description":"Gracefully degrade identity-dependent Gateway rules and shed retry load while storage remains unavailable."},{"id":"R06","cost":8,"estimated_minutes":148,"risk":"low","operational_description":"Wait for the primary storage provider to recover, then progressively restore namespace traffic."}]}
+    turn=20/48 · provider request ...
+    input tokens: 111358 / 1000000 (cumulative provider-reported)
+    turn=20/48 · provider completed
+    protocol error: Call prepare_repair with an evidence-backed plan before simulation
+    turn=21/48 · provider request ...
+    input tokens: 119863 / 1000000 (cumulative provider-reported)
+    turn=21/48 · provider completed
+    EV020 prepare_repair → {"phase":"repair","handoff_accepted":true,"available_simulations":5}
+    turn=22/48 · provider request ...
+    input tokens: 129497 / 1000000 (cumulative provider-reported)
+    turn=22/48 · provider completed
+    EV021 simulate_repair → {"action_id":"R05","cost":2,"restored_count":0,"unavailable_after_count":16,"newly_unavailable_count":0,"simulations_remaining":4,"simulated_only":true}
+    turn=23/48 · provider request ...
+    input tokens: 139349 / 1000000 (cumulative provider-reported)
+    turn=23/48 · provider completed
+    EV022 simulate_repair → {"action_id":"R01","cost":9,"restored_count":16,"unavailable_after_count":0,"newly_unavailable_count":0,"simulations_remaining":3,"simulated_only":true}
+    turn=24/48 · provider request ...
+    input tokens: 149470 / 1000000 (cumulative provider-reported)
+    turn=24/48 · provider completed
+    EV023 apply_repair → {"action_id":"R01","restored_count":16,"unavailable_after_count":0,"newly_unavailable_count":0,"committed_in_sandbox":true}
+    turn=25/48 · provider request ...
+    input tokens: 159976 / 1000000 (cumulative provider-reported)
+    turn=25/48 · provider completed
+    EV024 submit_diagnosis → {"received":true,"final_status":"submitted_for_independent_grading"}
+    score=0.63 pass=False status=completed
+[2/2] LangGraph create_agent · nvidia/nemotron-3.5-lightning:free · RW06V6CF · trial=2
+    turn=1/48 · provider request ...
+    input tokens: 2934 / 1000000 (cumulative provider-reported)
+    turn=1/48 · provider completed
+    EV001 read_alert → {"alert":"Identity, configuration, media, and AI products show uneven failures while core DNS, proxy, cache, and WAF remain available. Identify every initially failed service; select the lowest-cost complete safe repair."}
+    turn=2/48 · provider request ...
+    input tokens: 6529 / 1000000 (cumulative provider-reported)
+    turn=2/48 · provider completed
+    EV002 scan_service_health → {"statuses":{"svc-005":"unavailable","svc-007":"unavailable","svc-014":"healthy","svc-015":"unavailable","svc-016":"unavailable","svc-018":"healthy","svc-024":"healthy","svc-025":"healthy","svc-028":"healthy"},"observed_count":9,"kind":"synthetic availability probes","observed_at":"2025-06-12T18:10:00Z"}
+    turn=3/48 · provider request ...
+    input tokens: 10384 / 1000000 (cumulative provider-reported)
+    turn=3/48 · provider completed
+    EV003 inspect_metrics → {"service":"svc-005","health_probe":"unavailable","signals":{"identity_login_failure_pct":100.0,"service_token_failure_pct":0.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=4/48 · provider request ...
+    input tokens: 14690 / 1000000 (cumulative provider-reported)
+    turn=4/48 · provider completed
+    EV004 inspect_metrics → {"service":"svc-007","health_probe":"unavailable","signals":{"connection_failure_pct":100.0,"dns_query_success_pct":99.7},"freshness":"fresh","measurement_age_seconds":0}
+    turn=5/48 · provider request ...
+    input tokens: 19198 / 1000000 (cumulative provider-reported)
+    turn=5/48 · provider completed
+    EV005 inspect_metrics → {"service":"svc-015","health_probe":"unavailable","signals":{"playlist_error_rate_pct":90.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=6/48 · provider request ...
+    input tokens: 23893 / 1000000 (cumulative provider-reported)
+    turn=6/48 · provider completed
+    EV006 inspect_metrics → {"service":"svc-016","health_probe":"unavailable","signals":{"inference_failure_pct":100.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=7/48 · provider request ...
+    input tokens: 28777 / 1000000 (cumulative provider-reported)
+    turn=7/48 · provider completed
+    EV007 inspect_config → {"service":"svc-005","configuration_snapshot":{},"freshness":"fresh","measurement_age_seconds":0}
+    turn=8/48 · provider request ...
+    input tokens: 33848 / 1000000 (cumulative provider-reported)
+    turn=8/48 · provider completed
+    EV008 inspect_dependencies → {"service":"svc-005","upstream":{"needs_all":["svc-002"],"needs_any":[]},"direct_consumers":["svc-007","svc-009","svc-017"]}
+    turn=9/48 · provider request ...
+    input tokens: 39169 / 1000000 (cumulative provider-reported)
+    turn=9/48 · provider completed
+    EV009 inspect_dependencies → {"service":"svc-007","upstream":{"needs_all":["svc-005"],"needs_any":[]},"direct_consumers":["svc-022"]}
+    turn=10/48 · provider request ...
+    input tokens: 44773 / 1000000 (cumulative provider-reported)
+    turn=10/48 · provider completed
+    EV010 inspect_dependencies → {"service":"svc-015","upstream":{"needs_all":["svc-002"],"needs_any":[]},"direct_consumers":[]}
+    turn=11/48 · provider request ...
+    input tokens: 50558 / 1000000 (cumulative provider-reported)
+    turn=11/48 · provider completed
+    EV011 inspect_dependencies → {"service":"svc-016","upstream":{"needs_all":["svc-002"],"needs_any":[]},"direct_consumers":["svc-021"]}
+    turn=12/48 · provider request ...
+    input tokens: 56534 / 1000000 (cumulative provider-reported)
+    turn=12/48 · provider completed
+    EV012 inspect_metrics → {"service":"svc-002","health_probe":"unavailable","signals":{"request_error_rate_pct":100.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=13/48 · provider request ...
+    input tokens: 62763 / 1000000 (cumulative provider-reported)
+    turn=13/48 · provider completed
+    EV013 inspect_metrics → {"service":"svc-009","health_probe":"unavailable","signals":{"request_error_rate_pct":100.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=14/48 · provider request ...
+    input tokens: 69281 / 1000000 (cumulative provider-reported)
+    turn=14/48 · provider completed
+    EV014 inspect_metrics → {"service":"svc-017","health_probe":"unavailable","signals":{"request_error_rate_pct":100.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=15/48 · provider request ...
+    input tokens: 75997 / 1000000 (cumulative provider-reported)
+    turn=15/48 · provider completed
+    EV015 inspect_metrics → {"service":"svc-001","health_probe":"unavailable","signals":{"cache_hit_rate_pct":9.78,"origin_request_failure_pct":90.22,"write_failure_pct":100.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=16/48 · provider request ...
+    input tokens: 83332 / 1000000 (cumulative provider-reported)
+    turn=16/48 · provider completed
+    EV016 inspect_dependencies → {"service":"svc-001","upstream":{"needs_all":[],"needs_any":[]},"direct_consumers":["svc-002","svc-003","svc-019"]}
+    turn=17/48 · provider request ...
+    input tokens: 90942 / 1000000 (cumulative provider-reported)
+    turn=17/48 · provider completed
+    EV017 inspect_metrics → {"service":"svc-003","health_probe":"unavailable","signals":{"request_error_rate_pct":100.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=18/48 · provider request ...
+    input tokens: 98921 / 1000000 (cumulative provider-reported)
+    turn=18/48 · provider completed
+    EV018 inspect_metrics → {"service":"svc-019","health_probe":"unavailable","signals":{"error_rate_pct":22.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=19/48 · provider request ...
+    input tokens: 107140 / 1000000 (cumulative provider-reported)
+    turn=19/48 · provider completed
+    EV019 list_repairs → {"candidate_repairs":[{"id":"R01","cost":9,"estimated_minutes":180,"risk":"low","operational_description":"Cut over to alternate storage and backfill all namespaces before restoring dependent products."},{"id":"R02","cost":1,"estimated_minutes":10,"risk":"critical","operational_description":"Cut over unvalidated storage and force security policy evaluation to fail open."},{"id":"R03","cost":6,"estimated_minutes":110,"risk":"medium","operational_description":"Cut critical Workers KV namespaces over to the prepared alternate backing store with controlled cache repopulation."},{"id":"R04","cost":4,"estimated_minutes":15,"risk":"high","operational_description":"Enable product kill switches without restoring Workers KV origin reads or writes."},{"id":"R05","cost":2,"estimated_minutes":20,"risk":"medium","operational_description":"Gracefully degrade identity-dependent Gateway rules and shed retry load while storage remains unavailable."},{"id":"R06","cost":8,"estimated_minutes":148,"risk":"low","operational_description":"Wait for the primary storage provider to recover, then progressively restore namespace traffic."}]}
+    turn=20/48 · provider request ...
+    input tokens: 117185 / 1000000 (cumulative provider-reported)
+    turn=20/48 · provider completed
+    EV020 prepare_repair → {"phase":"repair","handoff_accepted":true,"available_simulations":5}
+    turn=21/48 · provider request ...
+    input tokens: 128505 / 1000000 (cumulative provider-reported)
+    turn=21/48 · provider completed
+    EV021 simulate_repair → {"action_id":"R01","cost":9,"restored_count":16,"unavailable_after_count":0,"newly_unavailable_count":0,"simulations_remaining":4,"simulated_only":true}
+    turn=22/48 · provider request ...
+    input tokens: 140017 / 1000000 (cumulative provider-reported)
+    turn=22/48 · provider completed
+    EV022 apply_repair → {"action_id":"R01","restored_count":16,"unavailable_after_count":0,"newly_unavailable_count":0,"committed_in_sandbox":true}
+    turn=23/48 · provider request ...
+    input tokens: 151709 / 1000000 (cumulative provider-reported)
+    turn=23/48 · provider completed
+    EV023 submit_diagnosis → {"received":true,"final_status":"submitted_for_independent_grading"}
+    score=0.90385 pass=False status=completed
+Run saved: /home/ashborn/hackathons/changeimpactbench-v0.2/results/.mixed_staging/ui_5a244e5e9538/model_01.jsonl
+Model 1: merged 2 episode(s)
+Mixed-provider run saved: /home/ashborn/hackathons/changeimpactbench-v0.2/results/ui_5a244e5e9538.jsonl; completed=2; provider_errors=0; runner_failures=0
+Starting opt-in Google Research Lab synthesis...
+Research Lab Gemini synthesis saved: ui_5a244e5e9538.jsonl, records=2

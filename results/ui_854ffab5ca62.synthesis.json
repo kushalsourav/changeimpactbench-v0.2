@@ -1,0 +1,331 @@
+{
+  "available": true,
+  "generated_utc": "2026-11-08T18:24:14.371142+00:00",
+  "model": "google-ai-studio/gemini-3.5-flash-lite",
+  "experiment_id": "854ffab5ca62",
+  "experiment_id_source": "run_manifest",
+  "run_file": "ui_854ffab5ca62.jsonl",
+  "verified_facts": {
+    "episode_count": 4,
+    "gradeable_count": 4,
+    "strict_passes": 2,
+    "strict_failures": 2,
+    "complete_safe_recoveries": 4,
+    "ungradeable_count": 0,
+    "ungradeable_by_reason": {},
+    "episodes": [
+      {
+        "episode": 0,
+        "trial": 1,
+        "task": "RW03V6CF",
+        "model": "claude-sonnet-5-5",
+        "status": "completed",
+        "error_category": null,
+        "multi_tool_provider_turns": [],
+        "audit_warnings": [],
+        "verified": true,
+        "integrity": {
+          "prompt": true,
+          "reference": true,
+          "stored_grade": true
+        },
+        "strict_pass": true,
+        "partial_score": 1.0,
+        "impact_f1": 1.0,
+        "root_correct": true,
+        "recovery_success": true,
+        "recovery_safe": true,
+        "unsafe_commit": false,
+        "root_cause_id_submitted": "H02",
+        "root_cause_id_expected": "H02",
+        "criterion_scores": {
+          "impact": {
+            "earned": 20.0,
+            "available": 20,
+            "measurement": "initial-service F1"
+          },
+          "root_cause_id": {
+            "earned": 20,
+            "available": 20,
+            "measurement": "exact hypothesis ID"
+          },
+          "safe_complete_recovery": {
+            "earned": 40,
+            "available": 40,
+            "measurement": "sandbox replay"
+          },
+          "evidence_provenance": {
+            "earned": 10,
+            "available": 10,
+            "measurement": "valid citations from at least two operational evidence categories, including an initially unavailable service; not explanation semantics"
+          },
+          "protocol_discipline": {
+            "earned": 10,
+            "available": 10,
+            "measurement": "rejected tool requests and violations"
+          }
+        },
+        "strict_failure_reasons": [],
+        "semantic_explanation_review": "human evidence review pending; free-form text not scored",
+        "tool_calls": 34,
+        "provider_requests": 34,
+        "committed_action": "R05",
+        "committed_cost": 4,
+        "reference_optimal_action": "R05",
+        "reference_optimal_cost": 4,
+        "repair_cost_delta": 0,
+        "protocol_errors": 0,
+        "gradeable": true
+      },
+      {
+        "episode": 1,
+        "trial": 2,
+        "task": "RW03V6CF",
+        "model": "claude-sonnet-5-5",
+        "status": "completed",
+        "error_category": null,
+        "multi_tool_provider_turns": [],
+        "audit_warnings": [],
+        "verified": true,
+        "integrity": {
+          "prompt": true,
+          "reference": true,
+          "stored_grade": true
+        },
+        "strict_pass": true,
+        "partial_score": 1.0,
+        "impact_f1": 1.0,
+        "root_correct": true,
+        "recovery_success": true,
+        "recovery_safe": true,
+        "unsafe_commit": false,
+        "root_cause_id_submitted": "H02",
+        "root_cause_id_expected": "H02",
+        "criterion_scores": {
+          "impact": {
+            "earned": 20.0,
+            "available": 20,
+            "measurement": "initial-service F1"
+          },
+          "root_cause_id": {
+            "earned": 20,
+            "available": 20,
+            "measurement": "exact hypothesis ID"
+          },
+          "safe_complete_recovery": {
+            "earned": 40,
+            "available": 40,
+            "measurement": "sandbox replay"
+          },
+          "evidence_provenance": {
+            "earned": 10,
+            "available": 10,
+            "measurement": "valid citations from at least two operational evidence categories, including an initially unavailable service; not explanation semantics"
+          },
+          "protocol_discipline": {
+            "earned": 10,
+            "available": 10,
+            "measurement": "rejected tool requests and violations"
+          }
+        },
+        "strict_failure_reasons": [],
+        "semantic_explanation_review": "human evidence review pending; free-form text not scored",
+        "tool_calls": 28,
+        "provider_requests": 28,
+        "committed_action": "R05",
+        "committed_cost": 4,
+        "reference_optimal_action": "R05",
+        "reference_optimal_cost": 4,
+        "repair_cost_delta": 0,
+        "protocol_errors": 0,
+        "gradeable": true
+      },
+      {
+        "episode": 2,
+        "trial": 1,
+        "task": "RW03V6CF",
+        "model": "gemini-3.5-flash-lite",
+        "status": "completed",
+        "error_category": null,
+        "multi_tool_provider_turns": [],
+        "audit_warnings": [],
+        "verified": true,
+        "integrity": {
+          "prompt": true,
+          "reference": true,
+          "stored_grade": true
+        },
+        "strict_pass": false,
+        "partial_score": 1.0,
+        "impact_f1": 1.0,
+        "root_correct": true,
+        "recovery_success": true,
+        "recovery_safe": true,
+        "unsafe_commit": false,
+        "root_cause_id_submitted": "H02",
+        "root_cause_id_expected": "H02",
+        "criterion_scores": {
+          "impact": {
+            "earned": 20.0,
+            "available": 20,
+            "measurement": "initial-service F1"
+          },
+          "root_cause_id": {
+            "earned": 20,
+            "available": 20,
+            "measurement": "exact hypothesis ID"
+          },
+          "safe_complete_recovery": {
+            "earned": 40,
+            "available": 40,
+            "measurement": "sandbox replay"
+          },
+          "evidence_provenance": {
+            "earned": 10,
+            "available": 10,
+            "measurement": "valid citations from at least two operational evidence categories, including an initially unavailable service; not explanation semantics"
+          },
+          "protocol_discipline": {
+            "earned": 10,
+            "available": 10,
+            "measurement": "rejected tool requests and violations"
+          }
+        },
+        "strict_failure_reasons": [
+          "repair_not_reference_optimal"
+        ],
+        "semantic_explanation_review": "human evidence review pending; free-form text not scored",
+        "tool_calls": 28,
+        "provider_requests": 28,
+        "committed_action": "R06",
+        "committed_cost": 5,
+        "reference_optimal_action": "R05",
+        "reference_optimal_cost": 4,
+        "repair_cost_delta": 1,
+        "protocol_errors": 0,
+        "gradeable": true
+      },
+      {
+        "episode": 3,
+        "trial": 2,
+        "task": "RW03V6CF",
+        "model": "gemini-3.5-flash-lite",
+        "status": "completed",
+        "error_category": null,
+        "multi_tool_provider_turns": [],
+        "audit_warnings": [],
+        "verified": true,
+        "integrity": {
+          "prompt": true,
+          "reference": true,
+          "stored_grade": true
+        },
+        "strict_pass": false,
+        "partial_score": 0.95238,
+        "impact_f1": 0.7619,
+        "root_correct": true,
+        "recovery_success": true,
+        "recovery_safe": true,
+        "unsafe_commit": false,
+        "root_cause_id_submitted": "H02",
+        "root_cause_id_expected": "H02",
+        "criterion_scores": {
+          "impact": {
+            "earned": 15.2381,
+            "available": 20,
+            "measurement": "initial-service F1"
+          },
+          "root_cause_id": {
+            "earned": 20,
+            "available": 20,
+            "measurement": "exact hypothesis ID"
+          },
+          "safe_complete_recovery": {
+            "earned": 40,
+            "available": 40,
+            "measurement": "sandbox replay"
+          },
+          "evidence_provenance": {
+            "earned": 10,
+            "available": 10,
+            "measurement": "valid citations from at least two operational evidence categories, including an initially unavailable service; not explanation semantics"
+          },
+          "protocol_discipline": {
+            "earned": 10,
+            "available": 10,
+            "measurement": "rejected tool requests and violations"
+          }
+        },
+        "strict_failure_reasons": [
+          "initial_service_inventory_inexact",
+          "repair_not_reference_optimal"
+        ],
+        "semantic_explanation_review": "human evidence review pending; free-form text not scored",
+        "tool_calls": 25,
+        "provider_requests": 25,
+        "committed_action": "R06",
+        "committed_cost": 5,
+        "reference_optimal_action": "R05",
+        "reference_optimal_cost": 4,
+        "repair_cost_delta": 1,
+        "protocol_errors": 0,
+        "gradeable": true
+      }
+    ],
+    "data_origin": "Independent Python oracle and stored native tool replay; not Google-generated content"
+  },
+  "record_sha256": "adeb111f71c5fe00218eb47e7a3a680918bcaaf61729dbff200308ca1ac81773",
+  "record_tasks": [
+    "RW03V6CF"
+  ],
+  "record_models": [
+    "claude-sonnet-5-5",
+    "gemini-3.5-flash-lite"
+  ],
+  "label": "LLM interpretation; not deterministic verdict or human-verified semantics",
+  "narrative_validation": {
+    "status": "passed_guardrails",
+    "warnings": [],
+    "note": "Basic automated checks only; explanation semantics still require human review"
+  },
+  "synthesis": {
+    "headline": "Analysis of SRE Episode Outcomes Showing Sub-optimal Repair Costs and Strict Failure Divergence",
+    "interpretation": "The evaluated episodes demonstrate complete recovery and accurate root-cause identification across multiple models, but highlight critical divergences in strict pass outcomes. Specifically, episodes 2 and 3 achieved high partial scores and successful safe recovery, yet strictly failed due to non-optimal repair choices (committed action R06 with cost 5 versus reference optimal action R05 with cost 4). Episode 3 additionally incurred an initial service inventory inexactness penalty. Conversely, episodes 0 and 1 achieved strict passes with optimal repair costs and correct root-cause IDs, proving that high partial scores alone do not guarantee strict operational success if remediation is economically non-optimal.",
+    "observations": [
+      "Episodes 0 and 1 achieved strict passes with optimal repair action R05 and a cost of 4.",
+      "Episodes 2 and 3 achieved complete recovery and correct root cause H02, but strict-failed due to committing non-optimal repair R06 at a cost of 5.",
+      "Episode 3 suffered from an additional strict failure reason due to an inexact initial service inventory.",
+      "All evaluated episodes successfully maintained safe recovery and zero protocol errors."
+    ],
+    "limitations": "The sample size is restricted to four evaluated episodes from a synthetic reconstruction environment. Telemetry, topology, and counterfactual repair costs are modeled and do not represent live production measurements. Semantic explanations remain subject to pending human review.",
+    "chart_choice": "score_by_model",
+    "chart_explanation": "This chart illustrates the variation in strict passes versus strict failures across different model runs, mapping how non-optimal repair costs impact final outcomes despite high partial scores.",
+    "supporting_episodes": [
+      0,
+      1,
+      2,
+      3
+    ]
+  },
+  "chart": {
+    "type": "score_by_model",
+    "rows": [
+      {
+        "label": "claude-sonnet-5-5",
+        "value": 100.0,
+        "denominator": 2
+      },
+      {
+        "label": "gemini-3.5-flash-lite",
+        "value": 97.62,
+        "denominator": 2
+      }
+    ],
+    "data_origin": "Computed from independent deterministic regrades, not generated by the LLM"
+  },
+  "episode_count": 4,
+  "gradeable_count": 4,
+  "sources": [
+    ""
+  ]
+}

@@ -1,0 +1,470 @@
+{
+  "available": true,
+  "generated_utc": "2026-11-08T18:59:35.982315+00:00",
+  "model": "google-ai-studio/gemini-3.5-flash-lite",
+  "experiment_id": "73f09d6ff72b",
+  "experiment_id_source": "run_manifest",
+  "run_file": "ui_73f09d6ff72b.jsonl",
+  "verified_facts": {
+    "episode_count": 6,
+    "gradeable_count": 6,
+    "strict_passes": 2,
+    "strict_failures": 4,
+    "complete_safe_recoveries": 6,
+    "ungradeable_count": 0,
+    "ungradeable_by_reason": {},
+    "episodes": [
+      {
+        "episode": 0,
+        "trial": 1,
+        "task": "RW01V6CF",
+        "model": "claude-sonnet-5-5",
+        "status": "completed",
+        "error_category": null,
+        "multi_tool_provider_turns": [],
+        "audit_warnings": [],
+        "verified": true,
+        "integrity": {
+          "prompt": true,
+          "reference": true,
+          "stored_grade": true
+        },
+        "strict_pass": true,
+        "partial_score": 1.0,
+        "impact_f1": 1.0,
+        "root_correct": true,
+        "recovery_success": true,
+        "recovery_safe": true,
+        "unsafe_commit": false,
+        "root_cause_id_submitted": "H03",
+        "root_cause_id_expected": "H03",
+        "criterion_scores": {
+          "impact": {
+            "earned": 20.0,
+            "available": 20,
+            "measurement": "initial-service F1"
+          },
+          "root_cause_id": {
+            "earned": 20,
+            "available": 20,
+            "measurement": "exact hypothesis ID"
+          },
+          "safe_complete_recovery": {
+            "earned": 40,
+            "available": 40,
+            "measurement": "sandbox replay"
+          },
+          "evidence_provenance": {
+            "earned": 10,
+            "available": 10,
+            "measurement": "valid citations from at least two operational evidence categories, including an initially unavailable service; not explanation semantics"
+          },
+          "protocol_discipline": {
+            "earned": 10,
+            "available": 10,
+            "measurement": "rejected tool requests and violations"
+          }
+        },
+        "strict_failure_reasons": [],
+        "semantic_explanation_review": "human evidence review pending; free-form text not scored",
+        "tool_calls": 33,
+        "provider_requests": 33,
+        "committed_action": "R04",
+        "committed_cost": 8,
+        "reference_optimal_action": "R04",
+        "reference_optimal_cost": 8,
+        "repair_cost_delta": 0,
+        "protocol_errors": 0,
+        "gradeable": true
+      },
+      {
+        "episode": 1,
+        "trial": 2,
+        "task": "RW01V6CF",
+        "model": "claude-sonnet-5-5",
+        "status": "completed",
+        "error_category": null,
+        "multi_tool_provider_turns": [],
+        "audit_warnings": [],
+        "verified": true,
+        "integrity": {
+          "prompt": true,
+          "reference": true,
+          "stored_grade": true
+        },
+        "strict_pass": true,
+        "partial_score": 1.0,
+        "impact_f1": 1.0,
+        "root_correct": true,
+        "recovery_success": true,
+        "recovery_safe": true,
+        "unsafe_commit": false,
+        "root_cause_id_submitted": "H03",
+        "root_cause_id_expected": "H03",
+        "criterion_scores": {
+          "impact": {
+            "earned": 20.0,
+            "available": 20,
+            "measurement": "initial-service F1"
+          },
+          "root_cause_id": {
+            "earned": 20,
+            "available": 20,
+            "measurement": "exact hypothesis ID"
+          },
+          "safe_complete_recovery": {
+            "earned": 40,
+            "available": 40,
+            "measurement": "sandbox replay"
+          },
+          "evidence_provenance": {
+            "earned": 10,
+            "available": 10,
+            "measurement": "valid citations from at least two operational evidence categories, including an initially unavailable service; not explanation semantics"
+          },
+          "protocol_discipline": {
+            "earned": 10,
+            "available": 10,
+            "measurement": "rejected tool requests and violations"
+          }
+        },
+        "strict_failure_reasons": [],
+        "semantic_explanation_review": "human evidence review pending; free-form text not scored",
+        "tool_calls": 38,
+        "provider_requests": 38,
+        "committed_action": "R04",
+        "committed_cost": 8,
+        "reference_optimal_action": "R04",
+        "reference_optimal_cost": 8,
+        "repair_cost_delta": 0,
+        "protocol_errors": 0,
+        "gradeable": true
+      },
+      {
+        "episode": 2,
+        "trial": 1,
+        "task": "RW01V6CF",
+        "model": "gemini-3.5-flash-lite",
+        "status": "completed",
+        "error_category": null,
+        "multi_tool_provider_turns": [],
+        "audit_warnings": [],
+        "verified": true,
+        "integrity": {
+          "prompt": true,
+          "reference": true,
+          "stored_grade": true
+        },
+        "strict_pass": false,
+        "partial_score": 0.88,
+        "impact_f1": 0.4,
+        "root_correct": true,
+        "recovery_success": true,
+        "recovery_safe": true,
+        "unsafe_commit": false,
+        "root_cause_id_submitted": "H03",
+        "root_cause_id_expected": "H03",
+        "criterion_scores": {
+          "impact": {
+            "earned": 8.0,
+            "available": 20,
+            "measurement": "initial-service F1"
+          },
+          "root_cause_id": {
+            "earned": 20,
+            "available": 20,
+            "measurement": "exact hypothesis ID"
+          },
+          "safe_complete_recovery": {
+            "earned": 40,
+            "available": 40,
+            "measurement": "sandbox replay"
+          },
+          "evidence_provenance": {
+            "earned": 10,
+            "available": 10,
+            "measurement": "valid citations from at least two operational evidence categories, including an initially unavailable service; not explanation semantics"
+          },
+          "protocol_discipline": {
+            "earned": 10,
+            "available": 10,
+            "measurement": "rejected tool requests and violations"
+          }
+        },
+        "strict_failure_reasons": [
+          "initial_service_inventory_inexact"
+        ],
+        "semantic_explanation_review": "human evidence review pending; free-form text not scored",
+        "tool_calls": 26,
+        "provider_requests": 26,
+        "committed_action": "R04",
+        "committed_cost": 8,
+        "reference_optimal_action": "R04",
+        "reference_optimal_cost": 8,
+        "repair_cost_delta": 0,
+        "protocol_errors": 0,
+        "gradeable": true
+      },
+      {
+        "episode": 3,
+        "trial": 2,
+        "task": "RW01V6CF",
+        "model": "gemini-3.5-flash-lite",
+        "status": "completed",
+        "error_category": null,
+        "multi_tool_provider_turns": [],
+        "audit_warnings": [],
+        "verified": true,
+        "integrity": {
+          "prompt": true,
+          "reference": true,
+          "stored_grade": true
+        },
+        "strict_pass": false,
+        "partial_score": 0.89524,
+        "impact_f1": 0.47619,
+        "root_correct": true,
+        "recovery_success": true,
+        "recovery_safe": true,
+        "unsafe_commit": false,
+        "root_cause_id_submitted": "H03",
+        "root_cause_id_expected": "H03",
+        "criterion_scores": {
+          "impact": {
+            "earned": 9.52381,
+            "available": 20,
+            "measurement": "initial-service F1"
+          },
+          "root_cause_id": {
+            "earned": 20,
+            "available": 20,
+            "measurement": "exact hypothesis ID"
+          },
+          "safe_complete_recovery": {
+            "earned": 40,
+            "available": 40,
+            "measurement": "sandbox replay"
+          },
+          "evidence_provenance": {
+            "earned": 10,
+            "available": 10,
+            "measurement": "valid citations from at least two operational evidence categories, including an initially unavailable service; not explanation semantics"
+          },
+          "protocol_discipline": {
+            "earned": 10,
+            "available": 10,
+            "measurement": "rejected tool requests and violations"
+          }
+        },
+        "strict_failure_reasons": [
+          "initial_service_inventory_inexact"
+        ],
+        "semantic_explanation_review": "human evidence review pending; free-form text not scored",
+        "tool_calls": 35,
+        "provider_requests": 35,
+        "committed_action": "R04",
+        "committed_cost": 8,
+        "reference_optimal_action": "R04",
+        "reference_optimal_cost": 8,
+        "repair_cost_delta": 0,
+        "protocol_errors": 0,
+        "gradeable": true
+      },
+      {
+        "episode": 4,
+        "trial": 1,
+        "task": "RW01V6CF",
+        "model": "nvidia/nemotron-3.5-lightning:free",
+        "status": "completed",
+        "error_category": null,
+        "multi_tool_provider_turns": [],
+        "audit_warnings": [],
+        "verified": true,
+        "integrity": {
+          "prompt": true,
+          "reference": true,
+          "stored_grade": true
+        },
+        "strict_pass": false,
+        "partial_score": 0.68,
+        "impact_f1": 0.4,
+        "root_correct": false,
+        "recovery_success": true,
+        "recovery_safe": true,
+        "unsafe_commit": false,
+        "root_cause_id_submitted": "H01",
+        "root_cause_id_expected": "H03",
+        "criterion_scores": {
+          "impact": {
+            "earned": 8.0,
+            "available": 20,
+            "measurement": "initial-service F1"
+          },
+          "root_cause_id": {
+            "earned": 0,
+            "available": 20,
+            "measurement": "exact hypothesis ID"
+          },
+          "safe_complete_recovery": {
+            "earned": 40,
+            "available": 40,
+            "measurement": "sandbox replay"
+          },
+          "evidence_provenance": {
+            "earned": 10,
+            "available": 10,
+            "measurement": "valid citations from at least two operational evidence categories, including an initially unavailable service; not explanation semantics"
+          },
+          "protocol_discipline": {
+            "earned": 10,
+            "available": 10,
+            "measurement": "rejected tool requests and violations"
+          }
+        },
+        "strict_failure_reasons": [
+          "initial_service_inventory_inexact",
+          "root_cause_id_incorrect"
+        ],
+        "semantic_explanation_review": "human evidence review pending; free-form text not scored",
+        "tool_calls": 24,
+        "provider_requests": 24,
+        "committed_action": "R04",
+        "committed_cost": 8,
+        "reference_optimal_action": "R04",
+        "reference_optimal_cost": 8,
+        "repair_cost_delta": 0,
+        "protocol_errors": 0,
+        "gradeable": true
+      },
+      {
+        "episode": 5,
+        "trial": 2,
+        "task": "RW01V6CF",
+        "model": "nvidia/nemotron-3.5-lightning:free",
+        "status": "completed",
+        "error_category": null,
+        "multi_tool_provider_turns": [],
+        "audit_warnings": [],
+        "verified": true,
+        "integrity": {
+          "prompt": true,
+          "reference": true,
+          "stored_grade": true
+        },
+        "strict_pass": false,
+        "partial_score": 0.68,
+        "impact_f1": 0.4,
+        "root_correct": false,
+        "recovery_success": true,
+        "recovery_safe": true,
+        "unsafe_commit": false,
+        "root_cause_id_submitted": "H01",
+        "root_cause_id_expected": "H03",
+        "criterion_scores": {
+          "impact": {
+            "earned": 8.0,
+            "available": 20,
+            "measurement": "initial-service F1"
+          },
+          "root_cause_id": {
+            "earned": 0,
+            "available": 20,
+            "measurement": "exact hypothesis ID"
+          },
+          "safe_complete_recovery": {
+            "earned": 40,
+            "available": 40,
+            "measurement": "sandbox replay"
+          },
+          "evidence_provenance": {
+            "earned": 10,
+            "available": 10,
+            "measurement": "valid citations from at least two operational evidence categories, including an initially unavailable service; not explanation semantics"
+          },
+          "protocol_discipline": {
+            "earned": 10,
+            "available": 10,
+            "measurement": "rejected tool requests and violations"
+          }
+        },
+        "strict_failure_reasons": [
+          "initial_service_inventory_inexact",
+          "root_cause_id_incorrect"
+        ],
+        "semantic_explanation_review": "human evidence review pending; free-form text not scored",
+        "tool_calls": 24,
+        "provider_requests": 24,
+        "committed_action": "R04",
+        "committed_cost": 8,
+        "reference_optimal_action": "R04",
+        "reference_optimal_cost": 8,
+        "repair_cost_delta": 0,
+        "protocol_errors": 0,
+        "gradeable": true
+      }
+    ],
+    "data_origin": "Independent Python oracle and stored native tool replay; not Google-generated content"
+  },
+  "record_sha256": "449034d43c36aa708df06819b3517ebcd337cd90097699bfa3875f7fff910503",
+  "record_tasks": [
+    "RW01V6CF"
+  ],
+  "record_models": [
+    "claude-sonnet-5-5",
+    "gemini-3.5-flash-lite",
+    "nvidia/nemotron-3.5-lightning:free"
+  ],
+  "label": "LLM interpretation; not deterministic verdict or human-verified semantics",
+  "narrative_validation": {
+    "status": "passed_guardrails",
+    "warnings": [],
+    "note": "Basic automated checks only; explanation semantics still require human review"
+  },
+  "synthesis": {
+    "headline": "Comparative Analysis of LLM Incident Recovery: Success Rates, Root Cause Accuracy, and Repair Costs Across Models",
+    "interpretation": "An evaluation of six episodes across three models reveals that while all models achieved safe recovery using optimal repair R04 at a committed cost of 8, strict pass rates varied significantly due to differences in initial service inventory F1 scores and root cause identification. Claude-sonnet-5-5 achieved a 100 percent strict pass rate with perfect impact F1 scores and correct hypothesis ID H03. Conversely, Gemini-3.5-flash-lite and NVIDIA Nemotron-3.5-lightning suffered strict failures driven by inexact initial service inventories, with Nemotron additionally failing root cause identification by submitting H01 instead of H03.",
+    "observations": [
+      "Claude-sonnet-5-5 successfully passed all strict evaluation criteria across episodes 0 and 1, demonstrating perfect initial-service F1 and accurate root-cause identification.",
+      "Gemini-3.5-flash-lite achieved safe recovery and correct root-cause IDs in episodes 2 and 3, but failed strict criteria due to inexact initial service inventories.",
+      "NVIDIA Nemotron-3.5-lightning incurred strict failures in episodes 4 and 5 due to both inexact service inventories and incorrect root-cause hypotheses (submitting H01 instead of H03).",
+      "All evaluated episodes successfully committed the optimal repair action R04 with a matching cost of 8 and a repair cost delta of 0."
+    ],
+    "limitations": "The findings are derived from a small sample size of six synthetic episodes representing a single task ID. Consequently, these results may not generalize to wider production incident distributions or more complex multi-system failure topologies.",
+    "chart_choice": "score_by_model",
+    "chart_explanation": "This chart illustrates the variance in strict performance and partial scores across the three evaluated models, highlighting differences in impact F1 and root-cause accuracy.",
+    "supporting_episodes": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ]
+  },
+  "chart": {
+    "type": "score_by_model",
+    "rows": [
+      {
+        "label": "claude-sonnet-5-5",
+        "value": 100.0,
+        "denominator": 2
+      },
+      {
+        "label": "gemini-3.5-flash-lite",
+        "value": 88.76,
+        "denominator": 2
+      },
+      {
+        "label": "nvidia/nemotron-3.5-lightning:free",
+        "value": 68.0,
+        "denominator": 2
+      }
+    ],
+    "data_origin": "Computed from independent deterministic regrades, not generated by the LLM"
+  },
+  "episode_count": 6,
+  "gradeable_count": 6,
+  "sources": [
+    ""
+  ]
+}
