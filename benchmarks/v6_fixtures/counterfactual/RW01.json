@@ -16,7 +16,7 @@
       },
       {
         "id": "H03",
-        "description": "Metadata synchronization fails when regional replication acknowledgements cannot be established consistently"
+        "description": "Replication divergence, failed recovery readiness, and paused background jobs jointly disrupt dependent services"
       },
       {
         "id": "H04",

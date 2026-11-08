@@ -101,6 +101,34 @@ class V6CounterfactualTests(unittest.TestCase):
         self.assertTrue(incomplete['replay_verified'])
         self.assertNotIn('grade', incomplete)
 
+    def test_ten_million_input_token_ceiling_and_anthropic_runner_import(self):
+        import subprocess
+        import sys
+        from benchmarks.input_budget import MAX_MAX_INPUT_TOKENS
+
+        self.assertEqual(MAX_MAX_INPUT_TOKENS, 10_000_000)
+        self.assertEqual(InputTokenBudget(10_000_000).limit, 10_000_000)
+        with self.assertRaises(ValueError):
+            InputTokenBudget(10_000_001)
+        # Regression: an undefined _stop_signal import previously prevented
+        # all direct Anthropic runs, even before the API call.
+        result = subprocess.run(
+            [sys.executable, str(Path(__file__).resolve().parents[1] / 'tools/run_anthropic.py'), '--help'],
+            capture_output=True, text=True, check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('--max-input-tokens', result.stdout)
+
+    def test_mixed_runner_forwards_20k_output_ceiling_to_all_providers(self):
+        from tools.run_mixed_providers import commands
+        models = ['nvidia/mock:free', 'anthropic/claude-test', 'google-ai-studio/gemini-test']
+        paths = ['results/openrouter.jsonl', 'results/anthropic.jsonl', 'results/gemini.jsonl']
+        lines = list(commands(models, 'RW01V6CF', 1, 4, 0, 20_000, 'low', paths, 10_000_000))
+        self.assertEqual(len(lines), 3)
+        for line in lines:
+            self.assertEqual(line[line.index('--max-tokens') + 1], '20000')
+            self.assertEqual(line[line.index('--max-input-tokens') + 1], '10000000')
+
     def test_missing_provider_input_usage_prevents_further_calls(self):
         budget = InputTokenBudget(30000)
         budget.before_request()

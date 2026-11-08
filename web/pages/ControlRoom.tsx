@@ -107,12 +107,12 @@ export function ControlRoom() {
           <summary>Advanced settings</summary>
           <div className="agent-settings-grid">
             <Field label="Max input tokens per trial">
-              <input aria-label="Maximum cumulative input tokens per trial" type="number" min={4096} max={2000000} step={1000}
+              <input aria-label="Maximum cumulative input tokens per trial" type="number" min={4096} max={10000000} step={1000}
                 disabled={settingsLocked} value={maxInputTokens}
                 onChange={e => { setMaxInputTokens(Number(e.target.value)); setApproved(false); }}/>
             </Field>
             <Field label="Max output tokens per response">
-              <input aria-label="Maximum output tokens per model response" type="number" min={512} max={16000}
+              <input aria-label="Maximum output tokens per model response" type="number" min={512} max={20000}
                 disabled={settingsLocked} value={maxTokens}
                 onChange={e => { setMaxTokens(Number(e.target.value)); setApproved(false); }}/>
             </Field>

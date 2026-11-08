@@ -441,7 +441,7 @@ def main() -> None:
             or args.tasks[0] not in TASK_IDS or not args.models[0].endswith(':free')
             or args.max_requests != MAX_MODEL_CALLS):
         raise SystemExit('Choose 1–5 free models, one public incident and 1–5 repeated trials; approve provider-call budget')
-    if not (512 <= args.max_tokens <= 16000
+    if not (512 <= args.max_tokens <= 20000
             and MIN_MAX_INPUT_TOKENS <= args.max_input_tokens <= MAX_MAX_INPUT_TOKENS
             and 0 <= args.temperature <= 1 and 3 <= args.delay <= 30):
         raise SystemExit('Invalid model generation limits')

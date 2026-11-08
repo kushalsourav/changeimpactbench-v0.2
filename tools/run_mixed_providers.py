@@ -14,6 +14,8 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+from benchmarks.input_budget import MIN_MAX_INPUT_TOKENS, MAX_MAX_INPUT_TOKENS
 GOOGLE_PREFIX = 'google-ai-studio/'
 ANTHROPIC_PREFIX = 'anthropic/'
 
@@ -76,8 +78,10 @@ def main():
             or path.exists() or not 1 <= len(args.models) <= 5
             or len(set(args.models)) != len(args.models)):
         p.error('Output must be a fresh results/*.jsonl; one to five distinct models')
-    if not 4096 <= args.max_input_tokens <= 2000000:
-        p.error('Input token budget must be between 4096 and 2000000 per trial')
+    if not 512 <= args.max_tokens <= 20_000:
+        p.error('Max output tokens per response must be between 512 and 20000')
+    if not MIN_MAX_INPUT_TOKENS <= args.max_input_tokens <= MAX_MAX_INPUT_TOKENS:
+        p.error(f'Input token budget must be between {MIN_MAX_INPUT_TOKENS} and {MAX_MAX_INPUT_TOKENS} per trial')
     path.parent.mkdir(parents=True, exist_ok=True)
     staging = results / '.mixed_staging' / path.stem
     staging.mkdir(parents=True, exist_ok=False)

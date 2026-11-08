@@ -12,7 +12,7 @@ from typing import Any
 
 DEFAULT_MAX_INPUT_TOKENS = 1_000_000
 MIN_MAX_INPUT_TOKENS = 4_096
-MAX_MAX_INPUT_TOKENS = 2_000_000
+MAX_MAX_INPUT_TOKENS = 10_000_000
 
 
 class InputTokenBudgetExceeded(Exception):

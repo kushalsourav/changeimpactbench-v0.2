@@ -465,10 +465,10 @@ export function useWorkbench() {
     trialCount >= 1 &&
     trialCount <= 5 &&
     maxTokens >= 512 &&
-    maxTokens <= 16000 &&
+    maxTokens <= 20000 &&
     Number.isInteger(maxInputTokens) &&
     maxInputTokens >= 4096 &&
-    maxInputTokens <= 2000000 &&
+    maxInputTokens <= 10000000 &&
     delay >= 3 &&
     delay <= 30 &&
     temperature >= 0 &&

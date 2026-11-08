@@ -42,10 +42,22 @@ class V6APIReadOnlyTests(unittest.TestCase):
         request = LaunchRequest(models=['nvidia/mock:free'], tasks=['RW01V6CF'],
                                 max_input_tokens=75000)
         self.assertEqual(request.max_input_tokens, 75000)
-        for value in (4095, 2000001):
+        self.assertEqual(LaunchRequest(models=['nvidia/mock:free'], tasks=['RW01V6CF'],
+                                       max_input_tokens=10_000_000).max_input_tokens, 10_000_000)
+        for value in (4095, 10_000_001):
             with self.assertRaises(ValidationError):
                 LaunchRequest(models=['nvidia/mock:free'], tasks=['RW01V6CF'],
                               max_input_tokens=value)
+
+    def test_output_token_ceiling_20k_without_starting_provider(self):
+        req = LaunchRequest(models=['nvidia/mock:free'], tasks=['RW01V6CF'],
+                            max_tokens=20_000, max_input_tokens=10_000_000)
+        self.assertEqual(req.max_tokens, 20_000)
+        self.assertEqual(req.max_input_tokens, 10_000_000)
+        for value in (511, 20_001):
+            with self.assertRaises(ValidationError):
+                LaunchRequest(models=['nvidia/mock:free'], tasks=['RW01V6CF'],
+                              max_tokens=value)
 
     def test_valid_launch_not_executed_without_approval(self):
         record=LaunchRequest(models=['nvidia/mock:free'],tasks=['RW02V6CF'],confirm=False)

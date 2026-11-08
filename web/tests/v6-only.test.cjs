@@ -76,4 +76,8 @@ test('input token budget is wired from the Run page to backend request and saved
   assert.match(source('hooks/useWorkbench.tsx'), /max_input_tokens: maxInputTokens/);
   assert.match(source('pages/Overview.tsx'), /selected\.max_input_tokens/);
   assert.match(source('lib/saved-run-facts.ts'), /input_token_budget/);
+  assert.match(source('pages/ControlRoom.tsx'), /max=\{10000000\}/);
+  assert.match(source('pages/ControlRoom.tsx'), /max=\{20000\}/);
+  assert.match(source('hooks/useWorkbench.tsx'), /maxTokens <= 20000/);
+  assert.match(source('hooks/useWorkbench.tsx'), /maxInputTokens <= 10000000/);
 });

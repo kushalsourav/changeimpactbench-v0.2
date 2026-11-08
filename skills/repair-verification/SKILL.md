@@ -11,7 +11,9 @@ You have the investigator's evidence-based repair brief. Treat it as a
 1. Examine repair options and costs. A complete safe repair restores every
    *initially* unavailable service, creates no new outages, and has the lowest
    available modeled cost among complete safe options.
-2. You may simulate at most **three** distinct or repeated repair candidates.
+2. For legacy V4/V5 tasks, you may simulate at most **three** distinct or
+   repeated repair candidates. V6 tasks use the separate V6.md skill and allow
+   **five** accepted simulations, as enforced by the active task configuration.
    Every successful simulation reports how many simulations remain.
    Do not call `simulate_repair` when the remaining allowance is zero.
 3. Commit only **one** candidate with `apply_repair` to the synthetic sandbox.

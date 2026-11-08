@@ -18,8 +18,8 @@ from importlib.metadata import PackageNotFoundError, version
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from benchmarks.native_agent import MAX_MODEL_CALLS, MAX_TOOLS, ACTIVE_TASK_IDS, agent_prompt
-from benchmarks.runner import make_native_tools, run_episode
-from benchmarks.input_budget import DEFAULT_MAX_INPUT_TOKENS, MIN_MAX_INPUT_TOKENS, MAX_MAX_INPUT_TOKENS, _stop_signal
+from benchmarks.runner import make_native_tools, run_episode, _stop_signal
+from benchmarks.input_budget import DEFAULT_MAX_INPUT_TOKENS, MIN_MAX_INPUT_TOKENS, MAX_MAX_INPUT_TOKENS
 from api.services.anthropic_catalog import MODEL, allowed_model_ids
 
 CACHE = {'type': 'ephemeral'}
@@ -198,7 +198,7 @@ def main():
     args = parser.parse_args()
     if 'anthropic/' + args.model not in allowed_model_ids():
         parser.error('Model is not approved for direct Anthropic API evaluations')
-    if not (1 <= args.trials <= 5 and 512 <= args.max_tokens <= 16000
+    if not (1 <= args.trials <= 5 and 512 <= args.max_tokens <= 20000
             and MIN_MAX_INPUT_TOKENS <= args.max_input_tokens <= MAX_MAX_INPUT_TOKENS
             and 0 <= args.temperature <= 1 and 3 <= args.delay <= 30):
         parser.error('Invalid generation limits or trial count')

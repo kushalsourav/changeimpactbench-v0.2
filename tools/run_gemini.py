@@ -95,7 +95,7 @@ def main():
     parser.add_argument('--delay', type=float, default=4)
     parser.add_argument('--output', required=True)
     args = parser.parse_args()
-    if not (1 <= args.trials <= 5 and 512 <= args.max_tokens <= 16000
+    if not (1 <= args.trials <= 5 and 512 <= args.max_tokens <= 20000
             and MIN_MAX_INPUT_TOKENS <= args.max_input_tokens <= MAX_MAX_INPUT_TOKENS
             and 0 <= args.temperature <= 1 and 3 <= args.delay <= 30):
         parser.error('Invalid generation limits or trial count')

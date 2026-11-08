@@ -31,8 +31,8 @@ class LaunchRequest(BaseModel):
     models: list[str] = Field(min_length=1, max_length=5)
     tasks: list[str] = Field(min_length=1, max_length=1)
     trials: int = Field(default=1, ge=1, le=5)
-    max_tokens: int = Field(default=8000, ge=512, le=16000)
-    max_input_tokens: int = Field(default=1000000, ge=4096, le=2000000)
+    max_tokens: int = Field(default=8000, ge=512, le=20000)
+    max_input_tokens: int = Field(default=1000000, ge=4096, le=10000000)
     reasoning_effort: Literal['none','minimal','low','medium','high'] | None = 'low'
     delay: float = Field(default=4.0, ge=3.0, le=30.0)
     temperature: float = Field(default=0.0, ge=0, le=1)
