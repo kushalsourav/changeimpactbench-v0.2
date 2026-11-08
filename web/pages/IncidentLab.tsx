@@ -14,7 +14,7 @@ export function IncidentLab() {
   const { info, task, nodeId, setNodeId, previewActionId, setPreviewActionId, repairState, setRepairState, labMode, setLabMode, labSideView, setLabSideView, recordIndex, setRecordIndex, trial, reviewer, chooseTrial, launch, rows, completed, incomplete, selected, activeLabTaskId, labCommittedAction, actionId, recordedPreview, labTask, affected, repairs, repair, shownDown, directFailures, labDataset, setLabDataset, tasks, run } = useWorkbenchState();
   return (
             <>
-              {!run && <div className="incident-public-chooser"><strong>Explore a documented outage reconstruction</strong><select aria-label="Explore incident dataset" value={labDataset} onChange={(e) => setLabDataset(e.target.value)}>{tasks.map((t) => <option key={t.id} value={t.id}>{incidentLabel(t.id)}</option>)}</select><small>This is a reviewer-only reference graph, not an observation revealed to an AI agent.</small></div>}
+              {!run && <div className="incident-public-chooser"><strong>Explore a V6 synthetic counterfactual incident</strong><select aria-label="Explore incident dataset" value={labDataset} onChange={(e) => setLabDataset(e.target.value)}>{tasks.map((t) => <option key={t.id} value={t.id}>{incidentLabel(t.id)}</option>)}</select><small>This is a reviewer-only reference graph, not an observation revealed to an AI agent.</small></div>}
               {!labTask || !activeLabTaskId ? (
                 <Panel title="Loading incident reconstruction" description="Incident Lab can be explored before any model evaluation.">
                   <Empty title="Loading reconstructed incident topology" detail="Select a dataset above to explore its service graph without any saved model run." />
@@ -22,7 +22,7 @@ export function IncidentLab() {
               ) : (
                 <>
                   <div className="incident-lab-layout">
-                  {labTask?.case.provenance?.source_url && <div className="incident-source-note"><strong>Documented incident, reconstructed lab:</strong> <a href={String(labTask.case.provenance.source_url)} target="_blank" rel="noopener noreferrer">Original postmortem</a> · The topology and candidate repairs are models, not captured production internals.</div>}
+                  {labTask?.case.provenance?.source_url && <div className="incident-source-note"><strong>Public incident inspiration; synthetic simulator:</strong> <a href={String(labTask.case.provenance.source_url)} target="_blank" rel="noopener noreferrer">Original postmortem</a> · The topology and candidate repairs are models, not captured production internals.</div>}
                     <Panel
                       title={incidentName(activeLabTaskId)}
                       description={labTask ? `${incidentLabel(activeLabTaskId)} · ${labTask.case.facts.topology.length} services · ${affected.length} initially unavailable · reviewer-only reference` : `Loading ${activeLabTaskId} topology`}

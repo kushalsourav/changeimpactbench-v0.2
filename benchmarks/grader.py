@@ -10,7 +10,6 @@ from benchmarks.native_agent import (
 )
 from benchmarks.spec import digest, service_codes, synthetic_task
 from benchmarks.skills import repair_system_prompt
-from benchmarks.frozen_replay import frozen_replay
 from oracle import reference_answer, initial_failures
 
 def _f1(expected: set[str], actual: set[str]) -> float:
@@ -34,11 +33,7 @@ def replay_record(record: dict) -> dict:
     stored for inspection but no hidden chain-of-thought is inferred.
     """
     task_id = record.get('task_id')
-    # Exact-hash archived replay protects frozen records from new tool semantics.
-    from benchmarks.native_agent import implementation_hashes
-    historical = frozen_replay(record, implementation_hashes())
-    if historical is not None:
-        return historical
+    # Old snapshots cannot be graded under the current evaluator.
     if task_id not in GRAPH_BASE:
         raise ValueError('Unknown new LangGraph benchmark task')
     case = source_case(task_id)
@@ -125,7 +120,7 @@ def replay_record(record: dict) -> dict:
                                     ('inspect_metrics', 'inspect_logs', 'inspect_config',
                                      'scan_service_health', 'simulate_repair')) for s in cited)
     evidence_score = (10 if provenance and support_count >= 2 else 5 if provenance and support_count else 0)
-    # V5 rejects empty citation theater: some cited evidence must directly
+    # V6CF rejects empty citation theater: some cited evidence must directly
     # bear on a genuinely failed local check; another independent observation
     # must establish scope, propagation, or counterfactual effect.
     if synthetic_task(task_id):
@@ -146,7 +141,7 @@ def replay_record(record: dict) -> dict:
     procedure_score = max(0, 10 - 5 * len(errors))
     if env.underlying.violations:
         procedure_score = 0
-    outcome_based = task_id.endswith(('V4', 'V5', 'V6N', 'V6CF'))
+    outcome_based = True
     strict = (set(final['failed_services']) == set(expected['failed_services']) and root_ok
               and fix_ok and env.underlying.committed == expected['fix_id'] and safe
               and complete and (outcome_based or not errors) and evidence_score == 10)
@@ -170,7 +165,7 @@ def replay_record(record: dict) -> dict:
     if evidence_score != 10: reasons.append('insufficient_evidence_provenance')
     grade = {
         'pass': strict, 'strict_pass': strict, 'score': score,
-        'pass_contract': 'outcome-v6' if task_id.endswith(('V6N','V6CF')) else 'outcome-v5' if synthetic_task(task_id) else 'outcome-v4' if outcome_based else 'workflow-v3',
+        'pass_contract': 'outcome-v6' if outcome_based else 'workflow-v3',
         'affected_f1': round(f1, 5), 'root_correct': root_ok, 'fix_correct': fix_ok,
         'format_valid': True, 'recovery_safe': safe, 'recovery_success': complete,
         'unsafe_commit': unsafe, 'committed_action': env.underlying.committed,

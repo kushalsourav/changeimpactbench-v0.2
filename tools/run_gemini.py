@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run Gemini Developer API through the FROZEN V4 LangGraph agent contract.
+"""Run Gemini Developer API through the V6CF LangGraph agent contract.
 
 This is an additive provider adapter. Do not modify benchmarks/runner.py:
 recorded implementation hashes are verified against that exact source.
@@ -112,7 +112,7 @@ def main():
                           graph_factory=gemini_graph_factory)
         rec['provider'] = 'google-ai-studio-gemini-developer-api'
         rec['provider_adapter'] = 'tools/run_gemini.py'
-        rec['provider_adapter_implementation_note'] = 'additive adapter, frozen V4 core source hashes unchanged'
+        rec['provider_adapter_implementation_note'] = 'direct Gemini adapter; V6CF source hashes recorded per episode'
         rec['runtime']['packages']['langchain-google-genai'] = _google_version()
         with output.open('a', encoding='utf-8') as f:
             f.write(json.dumps(rec, ensure_ascii=False, default=str) + '\n')

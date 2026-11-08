@@ -25,6 +25,7 @@ export type Task = {
   context: string;
   alert?: string;
   dataset_name?: string;
+  original_source_name?: string;
   source_seed?: string;
   dataset_origin?: string;
   source_url?: string;

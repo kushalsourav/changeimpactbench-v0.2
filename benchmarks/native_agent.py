@@ -16,17 +16,16 @@ from typing import Any
 
 from benchmarks.environment import AgentEnvironment, ProtocolError
 from benchmarks.skills import skill_hashes, repair_system_prompt
-from benchmarks.spec import REGISTRY, V5_REGISTRY, V6_REGISTRY, TaskSpec, digest, get_spec, source_case, service_codes, synthetic_task
+from benchmarks.spec import V6_REGISTRY, digest, get_spec, source_case, service_codes, synthetic_task, reviewer_source
 from oracle import reference_answer, reference_audit
 
-# New IDs make the change of agent harness AND discovery affordances explicit.
-GRAPH_BASE: dict[str, str] = {name: spec.seed for name, spec in {**REGISTRY, **V5_REGISTRY, **V6_REGISTRY}.items()}
-TASK_IDS = frozenset(GRAPH_BASE)  # Historical replay/test registry, not live launch catalog.
-ACTIVE_TASK_IDS = frozenset(task_id for task_id in TASK_IDS if task_id.endswith(('V4', 'V6CF')))
-VERSIONS = {name: spec.version for name, spec in {**REGISTRY, **V5_REGISTRY, **V6_REGISTRY}.items()}
+# No V4, V5 or V6-neutral task IDs can be launched or replayed as current tasks.
+GRAPH_BASE: dict[str, str] = {name: spec.seed for name, spec in V6_REGISTRY.items()}
+TASK_IDS = ACTIVE_TASK_IDS = frozenset(GRAPH_BASE)
+VERSIONS = {name: spec.version for name, spec in V6_REGISTRY.items()}
 MAX_MODEL_CALLS = 48
 MAX_TOOLS = 47
-MAX_SIMULATIONS = 3
+MAX_SIMULATIONS = 5
 TOOL_NAMES = frozenset({
     'read_alert', 'scan_service_health', 'inspect_metrics', 'inspect_logs',
     'inspect_config', 'inspect_dependencies', 'list_repairs',
@@ -37,68 +36,48 @@ ENGINE = 'langchain-create-agent/langgraph-checkpointed'
 
 
 def implementation_hashes() -> dict[str, str]:
+    """Hash only the files needed to execute and deterministically verify V6CF.
+
+    Frozen transcripts made with a different set of hashes must be marked
+    unverified, not silently regraded under new source code.
+    """
     root = Path(__file__).resolve().parent.parent
-    names = ('legacy/retired_sources/v5/RW01.json', 'legacy/retired_sources/v5/RW02.json',
-             'legacy/retired_sources/v5/RW03.json', 'legacy/retired_sources/v5/RW04.json',
-             'legacy/retired_sources/v5/RW05.json', 'legacy/retired_sources/v5/RW06.json',
-             'benchmarks/native_agent.py', 'benchmarks/runner.py',
-             'benchmarks/grader.py', 'benchmarks/spec.py', 'benchmarks/environment.py',
-             'agent_graph.py', 'run_graph_agent.py', 'oracle.py',
-             'benchmarks/public_sources.json',
-             'benchmarks/skills.py', 'skills/incident-investigation/SKILL.md',
-             'skills/repair-verification/SKILL.md', 'skills/repair-verification/V6.md')
-    names = names + tuple(f'legacy/retired_sources/v6-neutral/RW{i:02d}.json' for i in range(1,7)) + tuple(f'benchmarks/v6_fixtures/counterfactual/RW{i:02d}.json' for i in range(1,7))
+    names = (
+        'benchmarks/native_agent.py', 'benchmarks/runner.py',
+        'benchmarks/grader.py', 'benchmarks/grading_policy.py',
+        'benchmarks/spec.py', 'benchmarks/environment.py',
+        'benchmarks/skills.py',
+        'agent_graph.py', 'run_graph_agent.py', 'oracle.py',
+        'skills/incident-investigation/SKILL.md',
+        'skills/repair-verification/SKILL.md',
+        'skills/repair-verification/V6.md',
+    )
+    names += tuple(f'benchmarks/v6_fixtures/counterfactual/RW{i:02d}.json' for i in range(1, 7))
+    names += tuple(f'reference/v6-counterfactual/RW{i:02d}.json' for i in range(1, 7))
     return {name: hashlib.sha256((root / name).read_bytes()).hexdigest() for name in names}
 
 
 def recorded_implementation_hashes(task_id: str, recorded: dict[str, str] | None = None) -> dict[str, str]:
-    """Validate V3 against archived original bytes; V4 against current source."""
-    if task_id.endswith('V3'):
-        archive = Path(__file__).resolve().parent.parent / 'legacy' / 'v0.9.11'
-        expected = json.loads((archive / 'source_hashes.json').read_text())
-        actual = {name: hashlib.sha256((archive / name).read_bytes()).hexdigest() for name in expected}
-        if actual != expected:
-            raise ValueError('Archived v0.9.11 source bytes have changed')
-        return expected
-    # Preserve historical V5 episode evidence after introducing V6 code.
-    # Only exact source-hash collections from the archived, immutable V5 ZIP
-    # qualify; the archived bytes are hashed, not the stored model claim.
-    if task_id.endswith(('V4', 'V5')) and recorded is not None:
-        import zipfile
-        archive = Path(__file__).resolve().parent.parent / 'baseline' / 'ChangeImpactBench_V5_INTEGRATED_SOURCE.zip'
-        with zipfile.ZipFile(archive) as z:
-            prefix = 'changeimpactbench-v0.2/'
-            try:
-                old = {name: hashlib.sha256(z.read(prefix + name)).hexdigest() for name in recorded}
-            except KeyError:
-                old = {}
-        if old == recorded:
-            return old
-    # V4 runs created before the six-task expansion remain independently
-    # verifiable against the exact, immutable v0.9.19 benchmark source snapshot.
-    # This is not an exemption from hashing: every archived byte is checked.
-    if task_id in ('RW01V4', 'RW02V4', 'RW03V4') and recorded is not None:
-        archive = Path(__file__).resolve().parent.parent / 'legacy' / 'v0.9.19'
-        expected = json.loads((archive / 'source_hashes.json').read_text())
-        if recorded == expected:
-            actual = {name: hashlib.sha256((archive / name).read_bytes()).hexdigest()
-                      for name in expected}
-            if actual != expected:
-                raise ValueError('Archived v0.9.19 source bytes have changed')
-            return expected
+    """Require the exact current V6CF implementation for independent replay."""
+    if task_id not in ACTIVE_TASK_IDS:
+        raise ValueError('Only current V6 counterfactual tasks can be replayed')
     return implementation_hashes()
 
 
 def task_catalog(task_id: str) -> dict:
     case = source_case(task_id)
+    provenance = reviewer_source(task_id)
+    title = provenance['original_source_name']
     return {
-        'id': task_id, 'title': ('Synthetic incident · ' + task_id if synthetic_task(task_id) else 'Incident response · ' + case['title']),
+        'id': task_id, 'title': title + ' · V6 counterfactual',
+        'dataset_name': title, 'original_source_name': title,
         'alert': get_spec(task_id).alert,
-        'dataset_name': ('Synthetic incident ' + task_id if synthetic_task(task_id) else case['title']), 'dataset_origin': ('synthetic modeled sandbox' if synthetic_task(task_id) else 'public incident postmortem / reconstructed sandbox'),
-        'source_seed': (task_id if synthetic_task(task_id) else case['id']), 'context': ('Synthetic incident, sandbox-only verification' if synthetic_task(task_id) else 'Real published outage; simplified modeled sandbox and independently replayable tools.'),
-        'source_url': get_spec(task_id).source_url,
-        'documented_facts': list(get_spec(task_id).documented_facts),
-        'model_assumptions': list(get_spec(task_id).model_assumptions),
+        'dataset_origin': 'synthetic counterfactual (inspired by public postmortem)',
+        'source_seed': get_spec(task_id).seed,
+        'context': provenance['attribution_note'],
+        'source_url': provenance['source_url'],
+        'documented_facts': provenance['documented_facts'],
+        'model_assumptions': provenance['reconstructed_elements'],
         'services': len(case['facts']['topology']),
         'failed': len(reference_answer(case)['failed_services']),
         'benchmark_version': VERSIONS[task_id], 'condition': 'agentic',
@@ -114,10 +93,9 @@ def agent_prompt(task_id: str) -> str:
     case = source_case(task_id)
     content = {
         'scenario': task_id, 'version': VERSIONS[task_id],
-        'source_type': ('Fully synthetic incident sandbox; not live production telemetry' if synthetic_task(task_id) else 'Reconstructed sandbox inspired by an operator-published incident, not actual production telemetry'),
-        **({} if synthetic_task(task_id) else {'incident_name': case['title']}),
+        'source_type': 'Fully synthetic incident sandbox; not live production telemetry',
         'initial_alert': spec.alert,
-        'service_inventory': (sorted(service_codes(task_id).values()) if synthetic_task(task_id) else sorted(n['id'] for n in case['facts']['topology'])),
+        'service_inventory': sorted(service_codes(task_id).values()),
         'diagnosis_contract': {
             'root_cause_id': 'REQUIRED: exactly one hypothesis ID from the supplied list; do NOT put explanatory prose in this field',
             'root_cause_explanation': 'REQUIRED: explain the causal mechanism in your own words, referencing inspected observations; human semantic review is separate from ID scoring',
@@ -128,9 +106,9 @@ def agent_prompt(task_id: str) -> str:
                       'and creates ZERO new outages. Partial recovery is a failure. '
                       'Submit a diagnosis with actual evidence IDs and the initial, not repaired, impact set.'),
         'rules': [
-            ('All service incidents and repairs are synthetic, with no access to real infrastructure.' if synthetic_task(task_id) else 'Incident mechanisms are documented by the source, but service states/rules/repair costs are reconstructed; no tool accesses live infrastructure.'),
+            'All service incidents and repairs are synthetic, with no access to real infrastructure.',
             'Use native tool calls, not JSON-only messages; issue only ONE tool call per model response.',
-            ('Call read_alert and scan_service_health early. The scan reports external entrypoint probes only. Independently establish the entire initial impact inventory, and prioritize necessary configuration, dependency, and repair checks within the fixed tool budget.' if task_id.endswith(('V6N','V6CF')) else 'Call read_alert and scan_service_health early. The health scan is a complete INITIAL snapshot but does not reveal causes or repairs.'),
+            'Call read_alert and scan_service_health early. The scan reports external entrypoint probes only. Independently establish the entire initial impact inventory, and prioritize necessary configuration, dependency, and repair checks within the fixed tool budget.',
             'Local checks use declarative eq/ne/gt/ge/lt/le and all/any/not; investigate their actual values.',
             'A service fails if a local check fails, any needs_all dependency fails, all nonempty needs_any fail, or a needs_at_least quorum fails.',
             'Inspect configuration/dependencies to establish causes; local details are one service at a time.',
@@ -145,11 +123,10 @@ def agent_prompt(task_id: str) -> str:
             f'Budget: at most {spec.max_model_calls} model requests and {spec.max_tools} successful sandbox tools.',
         ],
         'hypotheses': [{'id': x, 'description': y} for x, y in spec.hypotheses],
-        **({'service_mapping': ('read_alert shows code-to-role inventory. Health scan covers external probes only; the full internal impact requires investigation.' if task_id.endswith(('V6N','V6CF')) else 'read_alert shows the code-to-role inventory. Health scan uses codes. All service arguments and failed_services use codes.')} if synthetic_task(task_id) else {}),
+        'service_mapping': 'read_alert shows code-to-role inventory. Health scan covers external probes only; the full internal impact requires investigation.',
     }
-    if task_id.endswith(('V4', 'V5', 'V6N', 'V6CF')):
-        content['evaluation_contract'] = ('Strict pass assesses initial impact, cause, safe complete lowest-cost repair, and provenance. '
-            'Rejected tool requests reduce procedural score but do not alone fail the episode. Unsafe commits fail.')
+    content['evaluation_contract'] = ('Strict pass assesses initial impact, cause, safe complete lowest-cost repair, and provenance. '
+        'Rejected tool requests reduce procedural score but do not alone fail the episode. Unsafe commits fail.')
     return json.dumps(content, indent=2, sort_keys=True)
 
 

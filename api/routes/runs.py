@@ -1,6 +1,7 @@
 """Saved native-agent evidence, independent audit and reproducible exports."""
 from __future__ import annotations
 from datetime import datetime, timezone
+from benchmarks.spec import source_case
 import csv
 import io
 import json
@@ -9,7 +10,7 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import PlainTextResponse, StreamingResponse
 from agent_graph import TASK_IDS as GRAPH_TASKS, VERSIONS as GRAPH_VERSIONS, GRAPH_BASE, replay_record as graph_replay
 from dashboard_data import audit_record, evidence_rows, summary_rows
-from tasks import ROOT, load_cases
+from tasks import ROOT
 from api.services.storage import visible_runs, records_for, trial_count_for, run_manifest, run_manifest_path, file_path, review_for, review_path
 AGENT_TASKS = GRAPH_TASKS
 
@@ -27,9 +28,8 @@ def runs():
             data = records_for(path.name)
         except HTTPException:
             continue
-        versions_by_task = {c['id']: c.get('benchmark_version', 'baseline-v0.1') for c in load_cases()}
         task_ids = sorted({x.get('task_id', '?') for x in data})
-        versions = sorted({x.get('benchmark_version') or versions_by_task.get(x.get('task_id'), 'unknown') for x in data})
+        versions = sorted({x.get('benchmark_version', GRAPH_VERSIONS.get(x.get('task_id'), 'unknown')) for x in data})
         manifest = run_manifest(path.name)
         out.append({'name': path.name, 'records': len(data),
                     'condition': 'agentic',
@@ -45,11 +45,10 @@ def runs():
 def run_info(filename: str, k: int | None = Query(default=None, ge=1, le=10)):
     records = records_for(filename)
     trial_count, trial_source = trial_count_for(filename, records, k)
-    cases = {c['id']: c for c in load_cases()}
+    cases = {task_id: source_case(task_id) for task_id in GRAPH_TASKS}
     rows = evidence_rows(records, cases)
     summaries = summary_rows(records, trial_count)
-    versions_by_task = {c['id']: c.get('benchmark_version', 'baseline-v0.1') for c in cases.values()}
-    versions = sorted({r.get('benchmark_version') or versions_by_task.get(r.get('task_id'), 'unknown') for r in records})
+    versions = sorted({r.get('benchmark_version') or GRAPH_VERSIONS.get(r.get('task_id'), 'unknown') for r in records})
     return {'run': filename, 'expected_trials': trial_count,
             'expected_trials_source': trial_source,
             'run_manifest': run_manifest(filename),
@@ -71,7 +70,7 @@ def run_record(filename: str, index: int):
     if index < 0 or index >= len(records):
         raise HTTPException(404, 'Record index not found')
     r = records[index]
-    cases = {c['id']:c for c in load_cases()}
+    cases = {task_id: source_case(task_id) for task_id in GRAPH_TASKS}
     a = audit_record(r, cases)
     case = cases.get(r.get('task_id'))
     if r.get('task_id') not in GRAPH_TASKS:
@@ -98,7 +97,7 @@ def export_jsonl(filename: str):
 @router.get('/api/runs/{filename}/export.csv')
 def export_csv(filename: str):
     records = records_for(filename)
-    rows = evidence_rows(records, {c['id']:c for c in load_cases()})
+    rows = evidence_rows(records, {task_id: source_case(task_id) for task_id in GRAPH_TASKS})
     buffer = io.StringIO()
     if rows:
         writer = csv.DictWriter(buffer, fieldnames=list(rows[0]))
@@ -112,7 +111,7 @@ def export_csv(filename: str):
 def export_audit(filename: str):
     """Verified audit export; the browser never invents grader results."""
     records = records_for(filename)
-    cases = {c['id']: c for c in load_cases()}
+    cases = {task_id: source_case(task_id) for task_id in GRAPH_TASKS}
     rows = evidence_rows(records, cases)
     expected_trials, source = trial_count_for(filename, records)
     return {'run': filename, 'expected_trials': expected_trials,
@@ -136,20 +135,20 @@ def export_bundle(filename: str):
             archive.write(manifest_file, f'results/{manifest_file.name}')
         included_tasks = {r.get('task_id') for r in records}
         seeds = {GRAPH_BASE[task_id] for task_id in included_tasks if task_id in GRAPH_TASKS}
-        for subdir in ('tasks','reference'):
-            for seed in sorted(seeds):
-                path = ROOT/subdir/f'{seed}.json'
+        for seed in sorted(seeds):
+            for subdir in ('benchmarks/v6_fixtures/counterfactual', 'reference/v6-counterfactual'):
+                path = ROOT / subdir / f'{seed}.json'
                 if path.is_file():
                     archive.write(path, f'{subdir}/{seed}.json')
         for file in ('README.md','.env.example','requirements-agent.txt',
                      'requirements-api.txt','requirements.txt',
                      'agent_graph.py','run_graph_agent.py','oracle.py','tasks.py',
                      'benchmarks/native_agent.py','benchmarks/grader.py','benchmarks/runner.py',
-                     'benchmarks/spec.py','benchmarks/public_sources.json','benchmarks/environment.py',
+                     'benchmarks/spec.py','benchmarks/grading_policy.py','benchmarks/environment.py',
                      'api/routes/synthesis.py', 'api/routes/archive.py',
                      'provider_catalog.py','dashboard_data.py','api/main.py',
                      'api/routes/runs.py','api/routes/experiment.py','api/services/storage.py',
-                     'tools/audit_benchmark.py','tests/test_agent_graph.py'):
+                     'tools/audit_benchmark.py','tests/test_v6_counterfactual_release.py'):
             path = ROOT/file
             if path.is_file():
                 archive.write(path,file)

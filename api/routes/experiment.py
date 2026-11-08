@@ -105,7 +105,7 @@ def start_experiment(req: LaunchRequest):
         manifest = {
             'schema_version': 8, 'condition':'agentic',
             'agent_framework':'langchain-create-agent/langgraph-checkpointed',
-            'dataset_origin':'operator-published public postmortem / modeled sandbox reconstruction',
+            'dataset_origin':'fully synthetic V6 counterfactual; original published incidents used only for inspiration',
             'agentic_source_hashes':graph_hashes(),
             'max_agent_turns':GRAPH_CALLS,
             'source_url': __import__('benchmarks.spec',fromlist=['get_spec']).get_spec(req.tasks[0]).source_url,

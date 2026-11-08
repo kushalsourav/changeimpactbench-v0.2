@@ -63,7 +63,7 @@ def make_native_tools(env: GraphEnvironment) -> list:
 
     @tool
     def scan_service_health(tool_call_id: Annotated[str, InjectedToolCallId]) -> str:
-        """One initial snapshot: healthy/unavailable for EVERY service; does not reveal root causes."""
+        """One INITIAL snapshot of external entrypoint probes only; internal impact needs investigation."""
         return env.execute('scan_service_health', {}, tool_call_id)
 
     @tool

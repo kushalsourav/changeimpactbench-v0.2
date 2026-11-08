@@ -20,10 +20,11 @@ sys.path.insert(0, str(ROOT))
 
 from dashboard_data import audit_record, parse_jsonl
 from api.services.storage import visible_runs
-from tasks import load_cases
+from benchmarks.spec import source_case
+from agent_graph import ACTIVE_TASK_IDS
 
 MAX_BYTES = 50 * 1024 * 1024
-SOURCE_DIRS = ('api','benchmarks','docs','reference','tasks','tests','tools','scripts','web','skills')
+SOURCE_DIRS = ('api','benchmarks','reference','tests','tools','scripts','web','skills')
 SOURCE_FILES = ('README.md','.env.example','.gitignore','requirements.txt',
                 'requirements-api.txt','requirements-agent.txt','requirements-dev.txt','pyproject.toml',
                 'agent_graph.py','run_graph_agent.py','oracle.py','tasks.py','dashboard_data.py',
@@ -57,17 +58,17 @@ def source_members() -> list[Path]:
 def build_archive(video_url: str, dest: Path) -> dict:
     if not re.fullmatch(r'https://[^\s]+',video_url):
         raise ValueError('A real public HTTPS video URL is required; no placeholder permitted')
-    # Only prospective v3 records are compatible with the submitted code.
-    # Historical v1/v2 files remain in results/ but MUST NOT be regraded under v3
-    # or silently pooled into this submission.
+    # Exact current-hash V6CF records only; never regrade old source versions.
     results = visible_runs()
     if not results:
-        raise ValueError('No current v3 model JSONL results exist. Historical v1/v2 runs are archived, not scored under v3.')
-    cases={c['id']:c for c in load_cases()}
+        raise ValueError('No active V6CF model JSONL results exist. Run real models using the Control Room first.')
+    cases={task_id:source_case(task_id) for task_id in ACTIVE_TASK_IDS}
     meta=[]
     for path in results:
         records=parse_jsonl(path.read_text(encoding='utf-8'))
         for i,record in enumerate(records):
+            if record.get('task_id') not in ACTIVE_TASK_IDS:
+                raise ValueError(f'Unexpected retired task in release evidence: {record.get("task_id")}')
             audit=audit_record(record,cases)
             if audit['status']=='unverified' or audit['prompt_sha_matches'] is False or \
                audit['reference_matches'] is False or audit['stored_grade_matches'] is False:

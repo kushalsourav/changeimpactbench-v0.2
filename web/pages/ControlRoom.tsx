@@ -34,14 +34,14 @@ export function ControlRoom() {
     <section className="agent-launch-intro">
       <span className="research-eyebrow">CHANGEIMPACTBENCH / NATIVE AGENT EXPERIMENT</span>
       <h1>Run an AI incident responder</h1>
-      <p>Choose a V6 neutral/counterfactual incident (or preserved V5/V4 scenarios) and an approved provider model. The existing LangGraph tools record every action for independent replay.</p>
+      <p>Choose one V6 counterfactual incident and an approved provider model. The existing LangGraph tools record every action for independent replay.</p>
     </section>
 
     <Panel title="Compare incident responders" description="One versioned incident · multiple AI models · independent trials and evidence">
       <div className="simple-launch-fields">
         <Field label="Incident">
           <select aria-label="Select agentic incident" value={selectedTasks[0] || 'RW01V6CF'} onChange={e => {setSelectedTasks([e.target.value]);setApproved(false);}}>
-            {tasks.filter(t => t.id.endsWith('V6CF') || t.id.endsWith('V4')).map(t => <option key={t.id} value={t.id}>{incidentLabel(t.id)}</option>)}
+            {tasks.map(t => <option key={t.id} value={t.id}>{t.original_source_name || t.dataset_name || incidentName(t.id)} · V6 counterfactual ({t.id})</option>)}
           </select>
         </Field>
         <Field label={`Models · ${selectedModels.length} selected (up to 5 across providers)`}>
@@ -70,7 +70,7 @@ export function ControlRoom() {
         <strong>{incidentName(incident.id)}</strong>
         <span className="muted">{incident.services} modeled services · {incident.failed} initially unavailable in reconstruction · {incident.id}</span>
         <p>{incident.alert || incident.dataset_name || incident.title.replace('Incident response · ', '')}</p>
-        <small>{(incident.id.endsWith('V5') || incident.id.endsWith('V6N') || incident.id.endsWith('V6CF')) ? 'Fully synthetic versioned scenario. Clues and repair effects must be investigated through sandbox tools; no actual outage telemetry.' : 'Based on a published operator postmortem. The service graph, candidate repairs and costs are reconstructed for evaluation—not original production telemetry.'}</small>
+        <small>{'Fully synthetic V6 counterfactual scenario inspired by the named public incident. The agent does not see the original incident title or postmortem; no actual outage telemetry is used.'}</small>
         {incident.source_url && <p><a href={incident.source_url} target="_blank" rel="noopener noreferrer">Read original incident postmortem</a></p>}
         {incident.documented_facts?.length ? <details><summary>Source-backed facts vs simulation assumptions</summary>
           <strong>Reported by incident operator</strong><ul>{incident.documented_facts.map(x=><li key={x}>{x}</li>)}</ul>

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Direct Anthropic provider adapter to frozen ChangeImpactBench V4 LangGraph.
+"""Direct Anthropic provider adapter to ChangeImpactBench V6CF LangGraph.
 
 Same agent tools, dynamic repair skill, checkpoint, episode recorder, replay
 and grader as all other providers. Provider-only change. No hidden retries.
@@ -58,10 +58,10 @@ def mark_cache_breakpoints(messages: list) -> list:
 
 
 def drop_stale_investigation_thinking(messages: list) -> list:
-    """Drop signed thinking invalidated by the V4 investigation -> repair prompt swap.
+    """Drop signed thinking invalidated by the V6CF investigation -> repair prompt swap.
 
     Claude Sonnet 5.5 binds prior thinking signatures to the system prompt.
-    V4 intentionally changes the system prompt after `prepare_repair`.
+    V6CF intentionally changes the system prompt after `prepare_repair`.
     Keep all visible text, native tool calls, tool results and later repair-phase
     thinking; remove ONLY old investigation-phase thinking/redacted_thinking.
     This is performed on the outgoing provider message copy, not the recorded
@@ -110,7 +110,7 @@ def cached_anthropic_class():
 
     class CachedChatAnthropic(ChatAnthropic):
         def bind_tools(self, tools, *, tool_choice=None, **kwargs):
-            # Anthropic defaults to parallel native tool use; V4 requires exactly
+            # Anthropic defaults to parallel native tool use; V6CF requires exactly
             # one tool per model response. Enforce this at the provider API,
             # not by rewriting model trajectories after the fact.
             kwargs['parallel_tool_calls'] = False
@@ -183,7 +183,7 @@ def anthropic_graph_factory(env, model_id, token, max_tokens, effort, temperatur
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Direct Anthropic API with frozen V4 LangGraph tool evaluation')
+    parser = argparse.ArgumentParser(description='Direct Anthropic API with V6 counterfactual LangGraph tool evaluation')
     parser.add_argument('--model', required=True)
     parser.add_argument('--task', choices=sorted(ACTIVE_TASK_IDS), required=True)
     parser.add_argument('--trials', type=int, default=1)
@@ -216,7 +216,7 @@ def main():
                               graph_factory=anthropic_graph_factory)
             rec['provider'] = 'anthropic'
             rec['provider_adapter'] = 'tools/run_anthropic.py'
-            rec['provider_adapter_implementation_note'] = 'additive adapter; frozen V4 core source hashes unchanged'
+            rec['provider_adapter_implementation_note'] = 'direct Anthropic adapter; V6CF source hashes recorded per episode'
             try:
                 rec['runtime']['packages']['langchain-anthropic'] = version('langchain-anthropic')
             except PackageNotFoundError:

@@ -84,15 +84,12 @@ def review_for(filename: str, index: int, record: dict) -> dict | None:
 
 
 def _native_record(record: dict) -> bool:
-    """Only completed records for the five current frozen graph task versions.
-
-    Older JSONL files are not surfaced as selectable experiments. They require
-    a separate migration reset; hiding is not a substitute for deletion.
-    """
-    from agent_graph import TASK_IDS, VERSIONS, ENGINE
+    """Only V6CF records using the currently declared task/version/engine."""
+    from agent_graph import ACTIVE_TASK_IDS, VERSIONS, ENGINE, implementation_hashes
     task = record.get('task_id')
-    return (task in TASK_IDS and record.get('benchmark_version') == VERSIONS[task]
-            and record.get('agent_framework') == ENGINE)
+    return (task in ACTIVE_TASK_IDS and record.get('benchmark_version') == VERSIONS[task]
+            and record.get('agent_framework') == ENGINE
+            and record.get('source_hashes') == implementation_hashes())
 
 
 def visible_runs() -> list[Path]:

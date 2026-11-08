@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from tasks import ROOT
-from api.routes import health, tasks, comparison, runs, review, experiment, synthesis, archive
+from api.routes import health, tasks, comparison, runs, review, experiment, synthesis
 
 load_dotenv(ROOT / '.env', override=False)
 app = FastAPI(title='ChangeImpactBench Evidence API', version='0.9.21')
@@ -16,7 +16,7 @@ app.add_middleware(
     allow_methods=['GET','POST'],
     allow_headers=['Content-Type'],
 )
-for module in (health, tasks, comparison, runs, review, experiment, synthesis, archive):
+for module in (health, tasks, comparison, runs, review, experiment, synthesis):
     app.include_router(module.router)
 
 # Compatibility imports for existing local test consumers; use api.routes/services

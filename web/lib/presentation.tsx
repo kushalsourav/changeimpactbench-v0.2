@@ -79,33 +79,12 @@ export const modelDisplay = (id: string, advertised?: string) => {
 export const short = (model: string) => modelDisplay(model).split(' · ').at(-1) || model;
 /** Human-first labels are presentation only; frozen task IDs remain in every record. */
 export const INCIDENT_NAMES: Record<string, string> = {
-  RW01V6N: 'Synthetic incident 01 · V6 neutral',
-  RW02V6N: 'Synthetic incident 02 · V6 neutral',
-  RW03V6N: 'Synthetic incident 03 · V6 neutral',
-  RW04V6N: 'Synthetic incident 04 · V6 neutral',
-  RW05V6N: 'Synthetic incident 05 · V6 neutral',
-  RW06V6N: 'Synthetic incident 06 · V6 neutral',
-  RW01V6CF: 'Synthetic incident 01 · V6 counterfactual',
-  RW02V6CF: 'Synthetic incident 02 · V6 counterfactual',
-  RW03V6CF: 'Synthetic incident 03 · V6 counterfactual',
-  RW04V6CF: 'Synthetic incident 04 · V6 counterfactual',
-  RW05V6CF: 'Synthetic incident 05 · V6 counterfactual',
-  RW06V6CF: 'Synthetic incident 06 · V6 counterfactual',
-  RW01V5: 'Synthetic incident 01 · V5',
-  RW01V4: 'GitHub 2018 · MySQL failover',
-  RW01V3: 'GitHub 2018 · MySQL failover',
-  RW02V5: 'Synthetic incident 02 · V5',
-  RW02V4: 'Cloudflare 2022 · Routing outage',
-  RW02V3: 'Cloudflare 2022 · Routing outage',
-  RW03V5: 'Synthetic incident 03 · V5',
-  RW03V4: 'Cloudflare 2019 · WAF regex outage',
-  RW03V3: 'Cloudflare 2019 · WAF regex outage',
-  RW04V5: 'Synthetic incident 04 · V5',
-  RW04V4: 'Cloudflare 2020 · Backbone routing',
-  RW05V5: 'Synthetic incident 05 · V5',
-  RW05V4: 'Cloudflare 2023 · Control plane',
-  RW06V5: 'Synthetic incident 06 · V5',
-  RW06V4: 'Cloudflare 2025 · Workers KV',
+  RW01V6CF: "GitHub · October 2018 MySQL failover · V6 counterfactual",
+  RW02V6CF: "Cloudflare · June 2022 routing outage · V6 counterfactual",
+  RW03V6CF: "Cloudflare · July 2019 WAF regex outage · V6 counterfactual",
+  RW04V6CF: "Cloudflare · July 2020 backbone routing incident · V6 counterfactual",
+  RW05V6CF: "Cloudflare · November 2023 control-plane outage · V6 counterfactual",
+  RW06V6CF: "Cloudflare · June 2025 Workers KV dependency outage · V6 counterfactual",
 };
 export const incidentName = (id: string) => INCIDENT_NAMES[id] || id;
 export const incidentLabel = (id: string) => `${incidentName(id)} (${id})`;
@@ -130,8 +109,8 @@ export const runLabel = (r: RunFile): string => {
 };
 export const runDisplay = runLabel;
 export const date = (v?: string) => (v ? new Date(v).toLocaleString() : 'Not recorded');
-export const GRAPH_TASKS = ['RW01V4', 'RW02V4', 'RW03V4', 'RW04V4', 'RW05V4', 'RW06V4', 'RW01V6CF', 'RW02V6CF', 'RW03V6CF', 'RW04V6CF', 'RW05V6CF', 'RW06V6CF'];
-export const isGraphTask = (id: string) => GRAPH_TASKS.includes(id) || ['RW01V3', 'RW02V3', 'RW03V3'].includes(id);
+export const GRAPH_TASKS = ['RW01V6CF', 'RW02V6CF', 'RW03V6CF', 'RW04V6CF', 'RW05V6CF', 'RW06V6CF'];
+export const isGraphTask = (id: string) => GRAPH_TASKS.includes(id);
 export const isAgenticTask = (id: string) => isGraphTask(id);
 export const agentTraceItems = (record: Record<string, unknown>) => {
   const accepted = ((record.trajectory || []) as AgentEvent[]).map((event) => ({

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-python3 -m unittest discover -s tests -q
-python3 -m unittest discover -s api/tests -q
+python3 -m unittest discover -s tests -p 'test_*.py' -q
+python3 -m unittest discover -s api/tests -p 'test_*.py' -q
 python3 tools/audit_benchmark.py --output reports/offline_audit.json
-( cd web && NODE_PATH="$(npm root -g):${NODE_PATH:-}" node --test tests/*.test.cjs )
+( cd web && node --test tests/*.test.cjs )
 if [[ "${1:-}" == "--final" ]]; then
   if [[ ! -f web/node_modules/next/package.json || ! -f web/node_modules/typescript/package.json ]]; then
     echo 'Frontend packages missing: run (cd web && npm ci)' >&2
@@ -12,4 +12,4 @@ if [[ "${1:-}" == "--final" ]]; then
   fi
   ( cd web && npm run lint && npm run build )
 fi
-echo 'Native-only offline checks complete. Real provider trials, human review and production build are separate.'
+echo 'V6CF deterministic validity gates complete. Offline scripted traces are not real model trials.'

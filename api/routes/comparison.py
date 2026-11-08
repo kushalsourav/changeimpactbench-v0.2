@@ -4,17 +4,17 @@ from fastapi import APIRouter, HTTPException
 from agent_graph import TASK_IDS as AGENT_TASKS, VERSIONS as GRAPH_VERSIONS
 from dashboard_data import audit_record
 from api.services.storage import visible_runs, records_for, review_for
-from tasks import load_cases
+from benchmarks.spec import source_case
 
 router = APIRouter()
 
 
 @router.get('/api/agentic/comparison')
-def compare_agentic(task_id: str = 'RW01V2'):
+def compare_agentic(task_id: str = 'RW01V6CF'):
     """Cross-run aggregate, with task VERSION and model settings as strict grouping keys."""
     if task_id not in AGENT_TASKS:
         raise HTTPException(400, 'Choose one agentic task version')
-    cases = {c['id']: c for c in load_cases()}
+    cases = {task_id: source_case(task_id)}
     batches: dict[tuple, dict] = {}
     for path in visible_runs():
         try:

@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 from typing import Any
 from agent_graph import TASK_IDS as AGENT_TASKS, GRAPH_BASE
-from benchmarks.grading_policy import replay_record, SOURCE_CONTRACT
+from benchmarks.grading_policy import replay_record
 from oracle import patch_facts, reference_answer, reference_audit, simulate
 from tasks import ROOT
 
@@ -57,26 +57,19 @@ def audit_record(record: dict, cases: dict[str, dict] | None = None) -> dict:
     replay = replay_record(record)
     expected = replay['expected']
     seed = GRAPH_BASE[task_id]
-    reference_path = ROOT / 'reference' / f'{seed}.json'
+    from benchmarks.spec import reference_path, source_case, service_codes
     try:
-        historical_reference = json.loads(reference_path.read_text(encoding='utf-8')) if reference_path.is_file() else None
-        if task_id.endswith(('V5', 'V6N', 'V6CF')):
-            # Verify the historic reference independently in original names,
-            # then verify the encoded V5/V6 replay against the versioned oracle.
-            # No bypass: BOTH comparisons must succeed, and the task's frozen
-            # source/prompt/trajectory hashes are checked by replay_record.
-            from oracle import reference_answer
-            from benchmarks.spec import source_case, service_codes
-            original = reference_answer(source_case(task_id))
-            encoded = dict(original)
-            codes = service_codes(task_id)
-            encoded['failed_services'] = sorted(codes[n] for n in original['failed_services'])
-            ref_ok = historical_reference == reference_answer(source_case(seed + 'V4')) and encoded == expected
-        else:
-            ref_ok = historical_reference == expected
-    except (ValueError, OSError):
+        # The human-reviewed, original-named reference is a required independent
+        # fixture. Compare it in service names, then compare oracle codes with replay.
+        stored = json.loads(reference_path(task_id).read_text(encoding='utf-8'))
+        original = reference_answer(source_case(task_id))
+        encoded = dict(original)
+        codes = service_codes(task_id)
+        encoded['failed_services'] = sorted(codes[n] for n in original['failed_services'])
+        ref_ok = stored == original and encoded == expected
+    except (ValueError, OSError, KeyError):
         ref_ok = False
-    result.update({'grading_contract':record.get('grading_contract', 'legacy-synthetic'), 'expected': expected,
+    result.update({'grading_contract':record.get('grading_contract', 'synthetic-replay'), 'expected': expected,
                    'prompt_sha_matches':replay['verified'],
                    'reference_matches':ref_ok, 'grade':replay['grade'],
                    'warnings':list(replay['warnings']),
@@ -85,12 +78,11 @@ def audit_record(record: dict, cases: dict[str, dict] | None = None) -> dict:
         result['warnings'].append(f'Synthetic source reference {seed} mismatches current oracle')
     if replay['grade'] is not None:
         saved = record.get('grade')
-        result['stored_grade_matches'] = isinstance(saved, dict) and (saved == replay['grade'] if record.get('grading_contract') == SOURCE_CONTRACT else all(
+        result['stored_grade_matches'] = isinstance(saved, dict) and all(
             saved.get(key) == replay['grade'].get(key) for key in
             ('pass','strict_pass','score','affected_f1','root_correct','fix_correct',
              'recovery_safe','recovery_success','unsafe_commit','violations',
              'procedure_score','protocol_errors','counterfactual_checks','commit_was_simulated'))
-        )
         if not result['stored_grade_matches']:
             result['warnings'].append('Stored score differs from independent replay')
     if not replay['verified'] or not ref_ok:

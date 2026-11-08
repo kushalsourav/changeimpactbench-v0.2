@@ -34,8 +34,8 @@ class AgentEnvironment:
         self.actions = {a['id']: a for a in self.case['actions']}
         self.codes = service_codes(spec.id)
         self.reverse_codes = {code: name for name, code in self.codes.items()}
-        self.v5 = synthetic_task(spec.id)
-        self.v6 = spec.id.endswith(('V6N', 'V6CF'))
+        self.synthetic_codes = True
+        self.v6 = spec.id.endswith('V6CF')
 
     def encode(self, services):
         return sorted(self.codes.get(n, n) for n in services)
@@ -62,7 +62,7 @@ class AgentEnvironment:
         if set(args) != expected:
             raise ProtocolError(f'{tool} expects exactly {sorted(expected)}')
         if tool in SERVICE_TOOLS and (not isinstance(args['service'], str)
-                                     or args['service'] not in (self.reverse_codes if self.v5 else self.nodes)):
+                                     or args['service'] not in (self.reverse_codes if self.synthetic_codes else self.nodes)):
             raise ProtocolError('Unknown service ID')
         if tool in ACTION_TOOLS and (not isinstance(args['action_id'], str)
                                     or args['action_id'] not in self.actions):
@@ -75,7 +75,7 @@ class AgentEnvironment:
             services, citations = args['failed_services'], args['evidence_ids']
             valid_ids = {x['observation']['event_id'] for x in self.steps}
             if (not isinstance(services, list) or not services
-                or not all(isinstance(v, str) and v in (self.reverse_codes if self.v5 else self.nodes) for v in services)
+                or not all(isinstance(v, str) and v in (self.reverse_codes if self.synthetic_codes else self.nodes) for v in services)
                 or len(services) != len(set(services))
                 or not isinstance(citations, list) or len(citations) < 2
                 or not all(isinstance(x, str) and x in valid_ids for x in citations)
@@ -142,7 +142,7 @@ class AgentEnvironment:
                            'observations': list(self.spec.observations),
                            'hypotheses': [{'id': id_, 'description': description}
                                           for id_, description in self.spec.hypotheses],
-                           **({'service_inventory': [{'service_code': code, 'role': name} for name, code in sorted(self.codes.items())]} if self.v5 else {}),
+                           **({'service_inventory': [{'service_code': code, 'role': name} for name, code in sorted(self.codes.items())]} if self.synthetic_codes else {}),
                            'scope': 'Synthetic research fixture; reference result withheld'}
         elif tool == 'prepare_repair':
             self.repair_brief = deepcopy(args)
@@ -156,8 +156,8 @@ class AgentEnvironment:
         elif tool == 'list_repairs':
             observation = {'candidate_repairs': [
                 {'id': a['id'], 'cost': a['cost'],
-                 'meaning': (a.get('operational_description', 'Operator-proposed change; verify conditions and counterfactual effects') if self.v6 else 'Proposed operational change; simulate to verify service impact' if self.v5 else f"Candidate with {len(a['changes'])} configuration edit(s)"),
-                 **({} if self.v5 else {'changes': deepcopy(a['changes'])})}
+                 'meaning': (a.get('operational_description', 'Operator-proposed change; verify conditions and counterfactual effects') if self.v6 else 'Proposed operational change; simulate to verify service impact' if self.synthetic_codes else f"Candidate with {len(a['changes'])} configuration edit(s)"),
+                 **({} if self.synthetic_codes else {'changes': deepcopy(a['changes'])})}
                 for a in self.case['actions']]}
         elif tool in SERVICE_TOOLS:
             name = self.reverse_codes.get(args['service'], args['service'])
@@ -196,9 +196,9 @@ class AgentEnvironment:
                                'synthetic_request_errors_per_minute': 60 if name in before_down else 0,
                                **({'is_direct_local_fault': name in direct} if self.spec.id.endswith('V3') else {})}
             else:
-                # V5/V6: do not announce direct versus cascading failures in logs.
+                # V6CF: do not announce direct versus cascading failures in logs.
                 # Only inspection of local rules and dependencies can distinguish them.
-                if self.spec.id.endswith(('V5', 'V6N', 'V6CF')):
+                if self.spec.id.endswith('V6CF'):
                     message = ('service unavailable; investigate configuration and dependencies'
                                if name in before_down else 'health probe passing')
                 else:
@@ -255,7 +255,7 @@ class AgentEnvironment:
             services = args['failed_services']
             ids = args['evidence_ids']
             if (not isinstance(services, list) or not all(isinstance(x, str) for x in services)
-                or len(set(services)) != len(services) or any(s not in (self.reverse_codes if self.v5 else self.nodes) for s in services)
+                or len(set(services)) != len(services) or any(s not in (self.reverse_codes if self.synthetic_codes else self.nodes) for s in services)
                 or not isinstance(args['root_cause_id'], str)
                 or args['root_cause_id'] not in {label for label, _ in self.spec.hypotheses}
                 or not isinstance(args['root_cause_explanation'], str)

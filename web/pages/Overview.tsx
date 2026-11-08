@@ -31,11 +31,11 @@ export function Overview() {
               <section className="research-hero" aria-label="Research question">
                 <div className="research-eyebrow">CHANGEIMPACTBENCH / AI RELIABILITY RESEARCH</div>
                 <h1>Can an AI fix an outage and explain what failed?</h1>
-                <p>We reconstruct publicly documented GitHub and Cloudflare outages as controlled, source-grounded investigation tasks. An AI uses bounded tools to investigate, then an independent Python grader checks the diagnosis and modeled repair. These are not production telemetry replays.</p>
+                <p>Six fully synthetic V6 counterfactual incidents are inspired by published GitHub and Cloudflare postmortems. Agents investigate through bounded tools; an independent Python oracle verifies the diagnosis and sandbox repair. The original incident names appear for reviewer attribution only—not in agent prompts or actual production telemetry.</p>
                 <div className="research-hero-actions">
                   <button className="button primary" onClick={() => setPage('lab')}>Explore the incident <ArrowRight size={15}/></button>
                   <button className="button" onClick={() => setPage('control')}>Run an AI experiment <Play size={14}/></button>
-                  <span>Public incident sources · Reconstructed sandbox · Verifiable outcomes</span>
+                  <span>Public-source inspiration · Synthetic sandbox · Verified outcomes</span>
                 </div>
               </section>
               {selected && selectedTrialReady && trial ? (
@@ -96,7 +96,7 @@ export function Overview() {
                 <div><strong>2 · Verify</strong><span>Deterministic Python independently replays tool requests, repair state and submitted facts.</span></div>
                 <div><strong>3 · Review</strong><span>Visible tool evidence and provider-exposed summaries can be reviewed; hidden model thoughts are not available.</span></div>
               </section>
-              <p className="muted">Previous v1 contract scores are retained as historical evidence but excluded from v2 results. <a href={`${API}/api/archive/runs`} target="_blank" rel="noopener noreferrer">View the archived run index</a> (stored scores are not regraded under v2).</p>
+              <p className="muted">Only V6 counterfactual tasks appear in active research results; old snapshots cannot be regraded using a different source hash.</p>
               </details>
               <div className="research-comparison-heading"><div><span className="research-eyebrow">ACROSS EXPERIMENTS</span><h2>Does this behavior repeat across models?</h2><p>Every chart below uses real saved episodes. Different versions and generation settings are never pooled.</p></div></div>
               <Panel title="Model comparison · observed evidence" description="Same task version and model settings only. Real completed episodes are the denominator; provider errors are excluded.">
