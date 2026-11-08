@@ -83,17 +83,21 @@ def review_for(filename: str, index: int, record: dict) -> dict | None:
 
 
 
-def _native_record(record: dict) -> bool:
-    """Only V6CF records using the currently declared task/version/engine."""
-    from agent_graph import ACTIVE_TASK_IDS, VERSIONS, ENGINE, implementation_hashes
+def _loadable_record(record: dict) -> bool:
+    """Accept compatible saved evidence even when its source snapshot is older.
+
+    Source hashes are verified by the independent replay/audit layer. Hiding a
+    hash-mismatched record here made durable results disappear after any code
+    update and prevented the UI from showing the appropriate unverified state.
+    """
+    from agent_graph import ACTIVE_TASK_IDS, VERSIONS, ENGINE
     task = record.get('task_id')
     return (task in ACTIVE_TASK_IDS and record.get('benchmark_version') == VERSIONS[task]
-            and record.get('agent_framework') == ENGINE
-            and record.get('source_hashes') == implementation_hashes())
+            and record.get('agent_framework') == ENGINE)
 
 
 def visible_runs() -> list[Path]:
-    """Reject stale/incompatible files before the UI sees their filenames."""
+    """List compatible evidence; replay reports stale source snapshots safely."""
     visible = []
     for path in RESULTS.glob('*.jsonl'):
         if not path.is_file() or not SAFE_FILE.fullmatch(path.name) or path.name.startswith('_'):
@@ -103,14 +107,14 @@ def visible_runs() -> list[Path]:
             records = [json.loads(line) for line in lines if line.strip()]
         except (OSError, ValueError):
             continue
-        if records and all(isinstance(r, dict) and _native_record(r) for r in records):
+        if records and all(isinstance(r, dict) and _loadable_record(r) for r in records):
             visible.append(path)
     return sorted(visible, key=lambda path: path.stat().st_mtime, reverse=True)
 
 
 def records_for(name: str) -> list[dict]:
-    """Version-scoped evidence: historical/orphaned run links return 404."""
+    """Version-scoped evidence; source drift is surfaced by audit, not hidden."""
     rows = _read_records_for(name)
-    if not rows or not all(_native_record(row) for row in rows):
+    if not rows or not all(_loadable_record(row) for row in rows):
         raise HTTPException(404, 'No active LangGraph episode at this evidence path')
     return rows

@@ -3,11 +3,11 @@ const assert = require('node:assert/strict');
 const { readFileSync, existsSync } = require('node:fs');
 const { join } = require('node:path');
 const root = join(__dirname, '..');
-const source = name => readFileSync(join(root, name), 'utf8');
+const source = (name) => readFileSync(join(root, name), 'utf8');
 
 test('frontend exposes only V6 counterfactual task IDs', () => {
   const text = source('lib/presentation.tsx');
-  const ids = [...text.matchAll(/RW\d{2}V6CF/g)].map(x => x[0]);
+  const ids = [...text.matchAll(/RW\d{2}V6CF/g)].map((x) => x[0]);
   assert.equal(new Set(ids).size, 6);
   assert.ok(!/RW\d{2}V(?:4|5|6N)/.test(text));
   assert.match(text, /Cloudflare/);
@@ -44,10 +44,17 @@ test('Live UI shows actual workflow and neutral dependency graph', () => {
   assert.match(text, /workflow\.steps\.map/);
   assert.match(text, /topology\.case\.facts\.topology/);
   assert.match(text, /observedHealth=\{observedHealth\}/);
+  assert.match(text, /serviceCodes=\{topology\.service_codes\}/);
   assert.doesNotMatch(text, /progress\s*\}/);
   const graph = source('components/Topology.tsx');
   assert.match(graph, /observation === 'healthy'/);
   assert.match(graph, /Observed unavailable/);
+  assert.match(graph, /not checked/);
+  assert.match(graph, /nodeObservations/);
+  assert.match(graph, /<svg/);
+  assert.doesNotMatch(graph, /ReactFlow/);
+  assert.match(text, /Repair checks/);
+  assert.match(text, /observationsFromLog/);
 });
 
 test('Results remain connected to saved trials and evidence', () => {
@@ -63,14 +70,16 @@ test('compact white UI excludes mock playback, theme toggle, and long launch int
   const shell = source('components/ResearchShell.tsx');
   const control = source('pages/ControlRoom.tsx');
   const stylesheet = source('app/cib-light.css');
-  assert.doesNotMatch(control, /Test an AI incident responder|Choose an incident and a model to begin/);
+  assert.doesNotMatch(
+    control,
+    /Test an AI incident responder|Choose an incident and a model to begin/,
+  );
   assert.doesNotMatch(shell, /Toggle theme|Moon|Sun|Play.*Restart|Load run file/);
   assert.match(stylesheet, /--desk:#fff/);
   assert.match(control, /currentEpisodeLog/);
   assert.match(control, /healthFromLog/);
   assert.match(source('pages/Overview.tsx'), /savedRunFacts/);
 });
-
 
 test('input token budget is wired from the Run page to backend request and saved results', () => {
   assert.match(source('hooks/useWorkbench.tsx'), /max_input_tokens: maxInputTokens/);

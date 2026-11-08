@@ -115,7 +115,13 @@ export type Case = {
     topology: NodeInfo[];
     [key: string]: unknown;
   };
-  provenance?: {source_url?:string; documented_facts?:string[]; reconstructed_elements?:string[]; origin?:string;measurement_note?:string};
+  provenance?: {
+    source_url?: string;
+    documented_facts?: string[];
+    reconstructed_elements?: string[];
+    origin?: string;
+    measurement_note?: string;
+  };
   hypotheses: {
     id: string;
     description: string;
@@ -128,6 +134,7 @@ export type Case = {
 };
 export type TaskDetail = {
   case: Case;
+  service_codes?: Record<string, string>;
   prompt: string;
   reference: {
     failed_services: string[];
@@ -199,6 +206,7 @@ export type RunStatus = {
   models?: string[];
   trials?: number;
   condition?: 'agentic';
+  restored_from_disk?: boolean;
 };
 export type AgentEvent = {
   tool: string;

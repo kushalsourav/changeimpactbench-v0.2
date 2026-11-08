@@ -203,6 +203,37 @@ def _as_text(content: Any) -> str:
     return content if isinstance(content, str) else json.dumps(content, ensure_ascii=False, default=str)
 
 
+def _live_observation(tool: str, result: object) -> object:
+    """Keep the evidence needed by the live UI without printing bulky tool payloads."""
+    if not isinstance(result, dict):
+        return result
+    if tool == 'list_repairs':
+        candidates = result.get('candidate_repairs')
+        if isinstance(candidates, list):
+            return {'candidate_repairs': [
+                {key: item[key] for key in ('id', 'cost') if key in item}
+                for item in candidates if isinstance(item, dict)
+            ]}
+    fields = {
+        'read_alert': ('alert',),
+        'scan_service_health': ('statuses', 'observed_count', 'kind'),
+        'inspect_metrics': ('service', 'health_probe', 'synthetic_request_errors_per_minute'),
+        'inspect_config': ('service', 'configured_local_check', 'referenced_values', 'rule',
+                           'candidate_precondition_checks'),
+        'inspect_dependencies': ('service', 'upstream', 'direct_consumers'),
+        'inspect_logs': ('service', 'lines'),
+        'prepare_repair': ('phase', 'handoff_accepted', 'available_simulations'),
+        'simulate_repair': ('action_id', 'cost', 'restored_count', 'unavailable_after_count',
+                            'newly_unavailable_count', 'simulations_remaining', 'simulated_only'),
+        'apply_repair': ('action_id', 'restored_count', 'unavailable_after_count',
+                         'newly_unavailable_count', 'committed_in_sandbox'),
+        'submit_diagnosis': ('received', 'final_status'),
+    }.get(tool)
+    if fields is None:
+        return result
+    return {key: result[key] for key in fields if key in result}
+
+
 def collect_graph_updates(updates, env: GraphEnvironment, record: dict) -> None:
     """Read-only collector. Stream iteration does NOT implement model/tool routing."""
     for update in updates:
@@ -260,7 +291,9 @@ def collect_graph_updates(updates, env: GraphEnvironment, record: dict) -> None:
                 except ValueError:
                     observed = {'tool_error': text[:300]}
                 if isinstance(observed, dict) and 'event_id' in observed:
-                    print(f"    {observed['event_id']} {observed['tool']} → {json.dumps(observed.get('result', {}))[:145]}", flush=True)
+                    tool = observed['tool']
+                    visible = _live_observation(tool, observed.get('result', {}))
+                    print(f"    {observed['event_id']} {tool} → {json.dumps(visible, separators=(',', ':'))}", flush=True)
                 elif isinstance(observed, dict) and observed.get('rejected'):
                     print(f"    protocol error: {observed.get('reason','rejected')}", flush=True)
                 else:

@@ -1,8 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { ArrowRight, CheckCircle2, Circle, LoaderCircle, Play, RefreshCw, Square } from 'lucide-react';
+import { AlertTriangle, ArrowRight, CheckCircle2, Circle, LoaderCircle, Play, RefreshCw, Square } from 'lucide-react';
 import { modelDisplay, duration, incidentName } from '../lib/presentation';
 import { currentEpisodeLog, parseLiveWorkflow } from '../lib/live-activity';
+import { observationsFromLog } from '../lib/live-observations';
 import { healthFromLog } from '../lib/observed-health';
 import { getJSON } from '../lib/api';
 import type { TaskDetail } from '../lib/api';
@@ -43,8 +44,12 @@ export function ControlRoom() {
   const workflow = parseLiveWorkflow(job.log || '', inProgress);
   const episodeLog = currentEpisodeLog(job.log || '');
   const observedHealth = healthFromLog(episodeLog);
+  const liveObservations = observationsFromLog(episodeLog);
   const observedUnavailable = Object.values(observedHealth).filter(value => value === 'unavailable').length;
   const simulated = workflow.activity.filter(item => item.kind === 'tool' && item.tool === 'simulate_repair').length;
+  const activeService = [...workflow.activity].reverse().find(item =>
+    item.kind === 'tool' && item.target.startsWith('svc-'),
+  )?.target;
   const inputSnapshots = [...episodeLog.matchAll(/input tokens: (\d+) \/ (\d+) \(cumulative provider-reported\)/g)];
   const inputLatest = inputSnapshots.at(-1);
   const activeModels = job.models?.length ? job.models : selectedModels;
@@ -148,11 +153,9 @@ export function ControlRoom() {
 
     {started && <div className="cib-live-layout">
       <div className="cib-live-left">
-        <Panel title="Investigation" side={<Status value={job.status}/> }>
+        <Panel title={incidentName(activeTaskId)} side={<Status value={job.status}/> }>
           <div className="simple-run-heading">
-            <div><strong>{incidentName(activeTaskId)}</strong>
-              <span className="muted">{activeModels.map(x => modelDisplay(x)).join(' · ') || 'Selected model'} · {duration(elapsedLive)}</span>
-            </div>
+            <div><span className="muted">{activeModels.map(x => modelDisplay(x)).join(' · ') || 'Selected model'} · {duration(elapsedLive)}</span></div>
             <div className="toolbar">
               {inProgress && <button className="button danger" onClick={stop}><Square size={14}/>Stop</button>}
               {!inProgress && job.output_file && (job.records_saved || 0) > 0 && <button className="button primary" onClick={() => void viewResult()}>View results <ArrowRight size={14}/></button>}
@@ -160,28 +163,51 @@ export function ControlRoom() {
           </div>
           <div className="live-metrics">
             <div><small>Model requests</small><strong>{job.requests_started || 0} / {job.requests_planned || '—'}</strong></div>
-            <div><small>Unavailable observed</small><strong>{Object.keys(observedHealth).length ? observedUnavailable : '—'}</strong></div>
-            <div><small>Simulations</small><strong>{simulated}</strong></div>
-            <div><small>Input tokens</small><strong>{inputLatest ? `${Number(inputLatest[1]).toLocaleString()} / ${Number(inputLatest[2]).toLocaleString()}` : '—'}</strong></div>
+            <div><small>Unavailable found</small><strong>{Object.keys(observedHealth).length ? observedUnavailable : '—'}</strong></div>
+            <div><small>Simulations used</small><strong>{simulated} / 5</strong></div>
           </div>
-          <div className="cib-run-meta">{workflow.episode ? `Episode ${workflow.episode} · ` : ''}{job.records_saved || 0} / {plannedEpisodes} trials saved</div>
+          <div className="cib-run-meta">
+            {job.restored_from_disk ? 'Recovered from results folder · ' : ''}
+            {workflow.episode ? `Episode ${workflow.episode} · ` : ''}{job.records_saved || 0} / {plannedEpisodes} trials saved
+            {inputLatest ? ` · ${Number(inputLatest[1]).toLocaleString()} / ${Number(inputLatest[2]).toLocaleString()} input tokens` : ''}
+          </div>
           {clockStale && <p role="status" className="muted">Live updates paused. Check the backend connection.</p>}
         </Panel>
         <Panel title="What the AI is doing">
           <ol className="cib-step-list" aria-label="Recorded investigation workflow">
             {workflow.steps.map(step => <li key={step.key} className={`workflow-stage workflow-${step.state}`}>
               {step.state === 'done' ? <CheckCircle2 size={18} aria-label="Recorded"/> :
+                step.state === 'warning' ? <AlertTriangle size={18} aria-label="Unverified"/> :
                 step.state === 'current' ? <LoaderCircle size={18} aria-label="Waiting for evidence"/> :
                 <Circle size={18} aria-label="Not recorded"/>}
-              <span>{step.label}</span><small>{step.state === 'done' ? 'Recorded' : step.state === 'current' ? 'In progress' : step.state === 'not-reached' ? 'Not reached' : ''}</small>
+              <span>{step.label}</span><small>{step.detail || (step.state === 'current' ? 'In progress' : step.state === 'not-reached' ? 'Not reached' : '')}</small>
             </li>)}
           </ol>
         </Panel>
+        {liveObservations.repairs.length > 0 && <Panel title="Repair checks">
+          <div className="cib-repair-checks" aria-label="Recorded repair simulations and applications">
+            {liveObservations.repairs.map(repair => {
+              const tone = repair.newOutages === 0 ? 'safe' : repair.newOutages != null ? 'unsafe' : 'neutral';
+              const facts = [
+                repair.cost != null ? `cost ${repair.cost}` : '',
+                repair.restored != null ? `${repair.restored} restored` : '',
+                repair.remaining != null ? `${repair.remaining} remain` : '',
+                repair.newOutages != null ? `${repair.newOutages} new outage${repair.newOutages === 1 ? '' : 's'}` : '',
+              ].filter(Boolean);
+              return <div className={`cib-repair-row cib-repair-${tone}`} key={`${repair.eventId}-${repair.kind}`}>
+                <div><strong>{repair.action}</strong><span>{repair.kind === 'applied' ? 'Applied in sandbox' : 'Simulation only'}</span></div>
+                <p>{facts.join(' · ') || 'Outcome fields were not visible in this older log.'}</p>
+                <small>{repair.newOutages === 0 ? 'No new outages' : repair.newOutages != null ? 'Introduced new outages' : 'Outcome recorded'} · {repair.eventId}</small>
+              </div>;
+            })}
+          </div>
+        </Panel>}
         <Panel title="Recorded activity">
           <div className="live-activity cib-activity" role="log" aria-live="polite">
             {workflow.activity.length ? workflow.activity.slice(-60).reverse().map(item =>
               <div className={`live-activity-item live-activity-${item.kind}`} key={item.key}>
-                <strong>{item.title}</strong><span>{item.detail}</span>
+                <div className="cib-activity-head"><strong>{item.title}</strong><span>{item.id}{item.turn ? ` · turn ${item.turn}` : ''}</span></div>
+                <span>{item.detail}</span>
               </div>,
             ) : <p className="muted">Waiting for the first recorded tool event.</p>}
           </div>
@@ -190,7 +216,9 @@ export function ControlRoom() {
       <div className="cib-live-right">
         <Panel title="Service dependency view">
           <div className="cib-graph">
-            {topology ? <Topology key={activeTaskId} nodes={topology.case.facts.topology} failed={[]} observedHealth={observedHealth}/> :
+            {topology ? <Topology key={activeTaskId} nodes={topology.case.facts.topology} failed={[]}
+              observedHealth={observedHealth} serviceCodes={topology.service_codes} selected={activeService}
+              nodeObservations={liveObservations.nodes}/> :
               <div className="live-topology-placeholder">{activeTaskId ? 'Loading service map…' : 'Service map unavailable.'}</div>}
           </div>
           <p className="cib-graph-note">Reference connections; service colors reflect only observed health checks, not hidden ground truth.</p>

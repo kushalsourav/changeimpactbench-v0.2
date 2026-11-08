@@ -4,6 +4,7 @@ import json
 from fastapi import APIRouter, HTTPException
 from agent_graph import ACTIVE_TASK_IDS as GRAPH_TASKS, VERSIONS as GRAPH_VERSIONS, agent_prompt as graph_prompt, source_case as graph_case, task_catalog as graph_catalog
 from oracle import reference_answer, reference_audit, initial_failures, patch_facts
+from benchmarks.spec import service_codes
 
 router = APIRouter()
 
@@ -31,5 +32,6 @@ def task_info(task_id: str):
     return {'case':case, 'prompt':graph_prompt(task_id),
             'reference':reference_answer(original),
             'direct_failed_services':sorted(direct_before),'audit':audit,
+            'service_codes':service_codes(task_id),
             'condition':'agentic', 'reference_visible_to_agent':False}
 

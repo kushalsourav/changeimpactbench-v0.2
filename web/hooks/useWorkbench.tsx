@@ -233,7 +233,10 @@ export function useWorkbench() {
       getJSON<RunStatus>('/api/experiment/status')
         .then((s) => {
           setJobUpdatedMs(Date.now());
-          setJob(s);
+          // Ignore an idle response that began before a successful launch.
+          // The next poll/SSE packet carries the active run snapshot.
+          setJob(previous => s.status === 'idle' &&
+            (previous.status === 'running' || previous.status === 'stopping') ? previous : s);
           // A finished job is handled only once. Repeated polling must never
           // override a manually selected saved experiment.
           const terminal = ['finished', 'error', 'stopped'].includes(s.status);
@@ -313,11 +316,15 @@ export function useWorkbench() {
     setStarting(true);
     try {
       const r = await postJSON<{
+        id: string;
         output_file: string;
         requests_planned: number;
         started_utc: string;
         elapsed_seconds: number;
         condition?: 'agentic';
+        task_id: string;
+        models: string[];
+        trials: number;
       }>('/api/experiment/start', {
         models: selectedModels,
         tasks: selectedTasks,
@@ -333,12 +340,16 @@ export function useWorkbench() {
       setJobUpdatedMs(Date.now());
       setClockNowMs(Date.now());
       setJob({
+        id: r.id,
         status: 'running',
         output_file: r.output_file,
         requests_planned: r.requests_planned,
         started_utc: r.started_utc,
         elapsed_seconds: r.elapsed_seconds,
         condition: r.condition,
+        task_id: r.task_id,
+        models: r.models,
+        trials: r.trials,
       });
       setApproved(false);
     } catch (e) {

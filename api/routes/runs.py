@@ -8,8 +8,8 @@ import json
 from pathlib import Path
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import PlainTextResponse, StreamingResponse
-from agent_graph import TASK_IDS as GRAPH_TASKS, VERSIONS as GRAPH_VERSIONS, GRAPH_BASE, replay_record as graph_replay
-from dashboard_data import audit_record, evidence_rows, summary_rows
+from agent_graph import TASK_IDS as GRAPH_TASKS, VERSIONS as GRAPH_VERSIONS, GRAPH_BASE
+from dashboard_data import audit_record, evidence_rows, summary_rows, replay_saved_record
 from tasks import ROOT
 from api.services.storage import visible_runs, records_for, trial_count_for, run_manifest, run_manifest_path, file_path, review_for, review_path
 AGENT_TASKS = GRAPH_TASKS
@@ -75,7 +75,7 @@ def run_record(filename: str, index: int):
     case = cases.get(r.get('task_id'))
     if r.get('task_id') not in GRAPH_TASKS:
         raise HTTPException(422, 'This is not an active LangGraph episode')
-    replay = graph_replay(r)
+    replay = replay_saved_record(r)
     expected, predicted = replay['expected'], replay['predicted']
     diagnosis = {'expected':expected,'predicted':predicted,'can_parse':bool(predicted),
                  'missed_services':sorted(set(expected['failed_services']) - set((predicted or {}).get('failed_services',[]))),
@@ -166,4 +166,3 @@ def export_bundle(filename: str):
     blob.seek(0)
     return StreamingResponse(blob, media_type='application/zip',
         headers={'Content-Disposition':f'attachment; filename="{Path(filename).stem}_evidence.zip"'})
-

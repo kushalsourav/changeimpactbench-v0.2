@@ -34,7 +34,8 @@ export function healthFromTrajectory(events: unknown): ObservedHealth {
 export function healthFromLog(log: string): ObservedHealth {
   const statuses: ObservedHealth = {};
   for (const line of (log || '').split(/\r?\n/)) {
-    const match = line.trim().match(/^EV\d+\s+(scan_service_health|inspect_metrics)\s*→\s*(.*)$/);
+    const visible = line.trim().replace(/^\[ChangeImpactBench agent pid=\d+\]\s*/, '').trim();
+    const match = visible.match(/^EV\d+\s+(scan_service_health|inspect_metrics)\s*(?:→|->)\s*(.*)$/);
     if (!match) continue;
     const [, tool, value] = match;
     try {

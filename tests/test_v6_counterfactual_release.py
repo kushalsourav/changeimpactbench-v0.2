@@ -12,7 +12,7 @@ from agent_graph import ACTIVE_TASK_IDS, TASK_IDS, GraphEnvironment, agent_promp
 from benchmarks.spec import reference_path, source_case, service_codes, get_spec, reference_trajectory, public_action_ids
 from benchmarks.grader import replay_record
 from benchmarks.environment import AgentEnvironment
-from dashboard_data import audit_record
+from dashboard_data import audit_record, replay_saved_record
 from oracle import reference_answer, simulate, patch_facts
 from run_graph_agent import run_episode
 from benchmarks.input_budget import (InputTokenBudget, InputTokenBudgetExceeded,
@@ -79,6 +79,16 @@ class FakeBudgetedGraph:
 
 
 class V6CounterfactualTests(unittest.TestCase):
+    def test_live_output_only_runner_transition_keeps_saved_grade_replayable(self):
+        record = run_scripted('RW01V6CF')
+        legacy = deepcopy(record)
+        legacy['source_hashes']['benchmarks/runner.py'] = (
+            '7007f8a01282ed54751cf12090260c471a2858ffe88a1242a4aa7bd9f1e2baa9'
+        )
+        self.assertTrue(replay_saved_record(legacy)['verified'])
+        legacy['source_hashes']['benchmarks/runner.py'] = '0' * 64
+        self.assertFalse(replay_saved_record(legacy)['verified'])
+
     def test_cumulative_provider_input_budget_stops_before_next_request(self):
         budget = InputTokenBudget(4096)
         response = SimpleNamespace(result=[SimpleNamespace(usage_metadata={'input_tokens': 4500})])

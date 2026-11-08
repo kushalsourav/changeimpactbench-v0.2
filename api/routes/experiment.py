@@ -104,6 +104,7 @@ def start_experiment(req: LaunchRequest):
                              cwd=ROOT, env=os.environ.copy(), start_new_session=True,
                              text=True, encoding='utf-8', errors='replace', bufsize=1)
         start_log_tee(p, log_path)
+        started_utc = datetime.now(timezone.utc).isoformat()
         manifest = {
             'schema_version': 8, 'condition':'agentic',
             'agent_framework':'langchain-create-agent/langgraph-checkpointed',
@@ -113,7 +114,7 @@ def start_experiment(req: LaunchRequest):
             'source_url': __import__('benchmarks.spec',fromlist=['get_spec']).get_spec(req.tasks[0]).source_url,
             'planned_provider_requests_are_upper_bound':True,
             'experiment_id':jid,'output_file':output_file,
-            'created_utc':datetime.now(timezone.utc).isoformat(),
+            'created_utc':started_utc,'started_utc':started_utc,
             'models':req.models,'tasks':req.tasks,
             'benchmark_version':GRAPH_VERSIONS[req.tasks[0]],
             'trials':req.trials,'max_tokens':req.max_tokens,
@@ -130,7 +131,6 @@ def start_experiment(req: LaunchRequest):
         run_manifest_path(output_file).write_text(
             json.dumps(manifest, indent=2) + '\n', encoding='utf-8'
         )
-        started_utc = datetime.now(timezone.utc).isoformat()
         started_monotonic = time.monotonic()
         active.clear()
         active.update({'process':p,'id':jid,'output_file':output_file,
@@ -164,4 +164,3 @@ def experiment_stream():
     """Server-sent observable execution events; no model internal reasoning."""
     return StreamingResponse(stream_experiment(), media_type="text/event-stream",
         headers={"Cache-Control":"no-cache", "X-Accel-Buffering":"no"})
-
