@@ -23,7 +23,7 @@ def process_state() -> dict:
         status = ('stopping' if active.get('stop_requested') else 'running') if code is None else ('stopped' if active.get('stop_requested') else ('finished' if code == 0 else 'error'))
         log_path = active['log_path']
         full_log = log_path.read_text(encoding='utf-8', errors='replace') if log_path.exists() else ''
-        log = full_log[-14000:]
+        log = full_log[-120000:]
         # The runner emits [n/total] as a request begins. Count these lines on
         # the SERVER, not with browser regexes. A request is finished only after
         # its score or API error has been printed.

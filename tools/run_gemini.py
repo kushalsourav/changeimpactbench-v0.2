@@ -19,6 +19,7 @@ sys.path.insert(0, str(ROOT))
 
 from benchmarks.native_agent import MAX_MODEL_CALLS, MAX_TOOLS, ACTIVE_TASK_IDS, agent_prompt
 from benchmarks.runner import make_native_tools, run_episode
+from benchmarks.input_budget import DEFAULT_MAX_INPUT_TOKENS, MIN_MAX_INPUT_TOKENS, MAX_MAX_INPUT_TOKENS
 
 
 def gemini_graph_factory(env, model_id, token, max_tokens, effort, temperature, delay):
@@ -40,6 +41,7 @@ def gemini_graph_factory(env, model_id, token, max_tokens, effort, temperature, 
 
     @wrap_model_call
     def monitor_calls(request, handler):
+        env.input_token_budget.before_request()
         sequence[0] += 1
         turn = sequence[0]
         env.model_requests_started = turn
@@ -50,6 +52,7 @@ def gemini_graph_factory(env, model_id, token, max_tokens, effort, temperature, 
             time.sleep(gap)
         try:
             answer = handler(request)
+            env.input_token_budget.after_response(answer)
             print(f'    turn={turn}/{MAX_MODEL_CALLS} · Gemini completed', flush=True)
             return answer
         except Exception as exc:
@@ -87,11 +90,13 @@ def main():
     parser.add_argument('--task', choices=sorted(ACTIVE_TASK_IDS), required=True)
     parser.add_argument('--trials', type=int, default=1)
     parser.add_argument('--max-tokens', type=int, default=8000)
+    parser.add_argument('--max-input-tokens', type=int, default=DEFAULT_MAX_INPUT_TOKENS)
     parser.add_argument('--temperature', type=float, default=0)
     parser.add_argument('--delay', type=float, default=4)
     parser.add_argument('--output', required=True)
     args = parser.parse_args()
     if not (1 <= args.trials <= 5 and 512 <= args.max_tokens <= 16000
+            and MIN_MAX_INPUT_TOKENS <= args.max_input_tokens <= MAX_MAX_INPUT_TOKENS
             and 0 <= args.temperature <= 1 and 3 <= args.delay <= 30):
         parser.error('Invalid generation limits or trial count')
     if any(ch.isspace() for ch in args.model) or not args.model:
@@ -109,7 +114,7 @@ def main():
     for trial in range(1, args.trials + 1):
         rec = run_episode(args.task, args.model, trial, token, args.max_tokens,
                           'not_configured', args.temperature, args.delay,
-                          graph_factory=gemini_graph_factory)
+                          graph_factory=gemini_graph_factory, max_input_tokens=args.max_input_tokens)
         rec['provider'] = 'google-ai-studio-gemini-developer-api'
         rec['provider_adapter'] = 'tools/run_gemini.py'
         rec['provider_adapter_implementation_note'] = 'direct Gemini adapter; V6CF source hashes recorded per episode'

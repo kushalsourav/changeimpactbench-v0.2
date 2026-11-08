@@ -19,9 +19,11 @@ test('Run a Test uses server tasks and retains editable output token and reasoni
   assert.match(text, /tasks\.map\(/);
   assert.match(text, /original_source_name/);
   assert.match(text, /setMaxTokens/);
+  assert.match(text, /setMaxInputTokens/);
+  assert.match(text, /Max input tokens per trial/);
   assert.match(text, /setEffort/);
   assert.match(text, /Max output tokens per response/);
-  assert.match(text, /not input context/);
+  assert.match(text, /last request may cross it/);
   assert.match(text, /Approve up to/);
   assert.doesNotMatch(text, /NATIVE AGENT EXPERIMENT|A saved episode can be non-gradeable/);
 });
@@ -41,17 +43,37 @@ test('Live UI shows actual workflow and neutral dependency graph', () => {
   assert.match(text, /parseLiveWorkflow\(job\.log/);
   assert.match(text, /workflow\.steps\.map/);
   assert.match(text, /topology\.case\.facts\.topology/);
-  assert.match(text, /failed=\{\[\]\} unknown/);
+  assert.match(text, /observedHealth=\{observedHealth\}/);
   assert.doesNotMatch(text, /progress\s*\}/);
   const graph = source('components/Topology.tsx');
-  assert.match(graph, /unknown \? 'unknown'/);
-  assert.match(graph, /Status not shown during investigation/);
+  assert.match(graph, /observation === 'healthy'/);
+  assert.match(graph, /Observed unavailable/);
 });
 
 test('Results remain connected to saved trials and evidence', () => {
   const text = source('pages/Overview.tsx');
-  assert.match(text, /info\.rows\.map/);
+  assert.match(text, /info\?\.rows\.map/);
   assert.match(text, /openSavedEvidence/);
+  assert.match(text, /setRecordIndex\(index\)/);
   assert.match(text, /comparisonTask/);
   assert.match(text, /crossRun/);
+});
+
+test('compact white UI excludes mock playback, theme toggle, and long launch introduction', () => {
+  const shell = source('components/ResearchShell.tsx');
+  const control = source('pages/ControlRoom.tsx');
+  const stylesheet = source('app/cib-light.css');
+  assert.doesNotMatch(control, /Test an AI incident responder|Choose an incident and a model to begin/);
+  assert.doesNotMatch(shell, /Toggle theme|Moon|Sun|Play.*Restart|Load run file/);
+  assert.match(stylesheet, /--desk:#fff/);
+  assert.match(control, /currentEpisodeLog/);
+  assert.match(control, /healthFromLog/);
+  assert.match(source('pages/Overview.tsx'), /savedRunFacts/);
+});
+
+
+test('input token budget is wired from the Run page to backend request and saved results', () => {
+  assert.match(source('hooks/useWorkbench.tsx'), /max_input_tokens: maxInputTokens/);
+  assert.match(source('pages/Overview.tsx'), /selected\.max_input_tokens/);
+  assert.match(source('lib/saved-run-facts.ts'), /input_token_budget/);
 });

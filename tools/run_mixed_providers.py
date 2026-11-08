@@ -18,10 +18,11 @@ GOOGLE_PREFIX = 'google-ai-studio/'
 ANTHROPIC_PREFIX = 'anthropic/'
 
 
-def commands(models, task, trials, delay, temperature, max_tokens, effort, outputs):
+def commands(models, task, trials, delay, temperature, max_tokens, effort, outputs, max_input_tokens=1_000_000):
     for model, output in zip(models, outputs, strict=True):
         common = ['--trials', str(trials), '--delay', str(delay),
                   '--temperature', str(temperature), '--max-tokens', str(max_tokens),
+                  '--max-input-tokens', str(max_input_tokens),
                   '--output', output]
         if model.startswith(GOOGLE_PREFIX):
             yield [sys.executable, '-u', str(ROOT / 'tools/run_gemini.py'),
@@ -65,6 +66,7 @@ def main():
     p.add_argument('--delay', type=float, required=True)
     p.add_argument('--temperature', type=float, required=True)
     p.add_argument('--max-tokens', type=int, required=True)
+    p.add_argument('--max-input-tokens', type=int, default=1_000_000)
     p.add_argument('--reasoning-effort', default='low')
     p.add_argument('--output', required=True)
     args = p.parse_args()
@@ -74,6 +76,8 @@ def main():
             or path.exists() or not 1 <= len(args.models) <= 5
             or len(set(args.models)) != len(args.models)):
         p.error('Output must be a fresh results/*.jsonl; one to five distinct models')
+    if not 4096 <= args.max_input_tokens <= 2000000:
+        p.error('Input token budget must be between 4096 and 2000000 per trial')
     path.parent.mkdir(parents=True, exist_ok=True)
     staging = results / '.mixed_staging' / path.stem
     staging.mkdir(parents=True, exist_ok=False)
@@ -84,7 +88,7 @@ def main():
     provider_errors = 0
     for index, cmd in enumerate(commands(args.models, args.task, args.trials,
                                          args.delay, args.temperature, args.max_tokens,
-                                         args.reasoning_effort, outputs), 1):
+                                         args.reasoning_effort, outputs, args.max_input_tokens), 1):
         print(f'=== Model {index}/{len(args.models)}: {args.models[index-1]} ===', flush=True)
         # Children inherit the same process group, so Stop terminates all subprocesses.
         result = subprocess.run(cmd, cwd=ROOT, env=os.environ.copy(), check=False)

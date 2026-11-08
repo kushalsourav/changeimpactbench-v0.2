@@ -120,6 +120,8 @@ def evidence_rows(records: list[dict], cases: dict[str, dict]) -> list[dict]:
                 "format_valid": g.get("format_valid"),
                 "latency_s": r.get("elapsed_seconds"),
                 "prompt_tokens": usage.get("prompt_tokens"),
+                "max_input_tokens": r.get("max_input_tokens_requested"),
+                "termination_reason": r.get("termination_reason"),
                 "completion_tokens": usage.get("completion_tokens"),
                 "reasoning_tokens": r.get("reasoning_tokens"),
                 "finish_reason": r.get("finish_reason", ""),
@@ -161,7 +163,7 @@ def summary_rows(records: list[dict], k: int) -> list[dict]:
             'mean_partial':round(score,4) if score is not None else None,
             'pass_power_k':round(sum(all(e['pass'] for e in group) for group in full)/len(full),4) if full and k>=2 else None,
             'full_trial_groups':len(full),
-            'agentic_non_gradeable':sum(a['status'] in ('budget_exhausted','unsupported_tool_protocol','incomplete_workflow') for _,a in items),
+            'agentic_non_gradeable':sum(a['status'] in ('budget_exhausted','input_budget_exhausted','input_usage_unavailable','unsupported_tool_protocol','incomplete_workflow') for _,a in items),
             'unsafe_committed_episodes':sum(a.get('unsafe_committed') is True for _,a in items)})
     return rows
 

@@ -7,7 +7,24 @@ export function summarizeTool(tool: string, argumentText: string): string {
     const parsed: unknown = JSON.parse(argumentText);
     if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) result = parsed as Record<string, unknown>;
   } catch { /* subprocess log truncates observations; don't guess missing values */ }
-  if (!result) return 'Observation recorded; full values available in Episode evidence.';
+  if (!result) {
+    // The durable logfile intentionally truncates observation JSON. Only use
+    // literal fields present in the recorded text; never infer from the oracle.
+    const field = (name: string) => new RegExp(`\"${name}\"\\s*:\\s*(\\d+)`).exec(argumentText)?.[1];
+    if (tool === 'simulate_repair' || tool === 'apply_repair') {
+      const action = /"action_id"\s*:\s*"([^"]+)"/.exec(argumentText)?.[1] || 'Repair';
+      const restored = field('restored_count'), newOutages = field('newly_unavailable_count');
+      if (restored && newOutages) return `${action}: ${restored} restored · ${newOutages} new outage${newOutages === '1' ? '' : 's'}`;
+    }
+    if (tool === 'read_alert') return 'Incident alert received';
+    if (tool === 'scan_service_health') return 'External service probes recorded';
+    if (tool === 'inspect_config') return /"configured_local_check"\s*:\s*false/.test(argumentText)
+      ? 'No local failure check configured' : 'Configuration inspected';
+    if (tool === 'inspect_dependencies') return 'Dependencies inspected';
+    if (tool === 'list_repairs') return 'Candidate repairs reviewed';
+    if (tool === 'prepare_repair') return 'Repair plan handed off';
+    return 'Tool observation recorded';
+  }
   if (tool === 'scan_service_health') {
     const statuses = result.statuses;
     if (statuses && typeof statuses === 'object') {
@@ -32,7 +49,7 @@ export function summarizeTool(tool: string, argumentText: string): string {
     if (typeof status === 'string') return `Health probe: ${status}`;
   }
   if (result.rejected) return `Rejected: ${String(result.reason || 'invalid request')}`;
-  return 'Observation recorded; full details available in Episode evidence.';
+  return 'Tool observation recorded';
 }
 
 export function parseLiveActivity(log: string): LiveActivity[] {
@@ -52,7 +69,7 @@ export function parseLiveActivity(log: string): LiveActivity[] {
         detail: summarizeTool(tool, data), kind: 'tool' });
       continue;
     }
-    if (/protocol error:|(?:provider|Anthropic|Gemini) failed|error:|budget exhausted/i.test(line)) {
+    if (/protocol error:|(?:provider|Anthropic|Gemini) failed|error:|budget exhausted|Input-token budget reached|Provider omitted input-token usage/i.test(line)) {
       result.push({ key: `problem-${index}`, turn, tool: 'warning', title: `Turn ${turn ?? '?'} · Issue recorded`, detail: line.slice(0, 350), kind: 'problem' });
     } else if (/score=|Run saved:/.test(line)) {
       result.push({ key: `result-${index}`, turn, tool: 'result', title: 'Episode result saved', detail: line.slice(0, 250), kind: 'result' });
@@ -75,10 +92,10 @@ export const WORKFLOW_STAGES = [
 export type WorkflowStep = {
   key: string;
   label: string;
-  state: 'done' | 'current' | 'pending';
+  state: 'done' | 'current' | 'pending' | 'not-reached';
 };
 export type WorkflowState = { steps: WorkflowStep[]; episode: string; activity: LiveActivity[] };
-export function parseLiveWorkflow(fullLog: string, running: boolean): WorkflowState {
+export function currentEpisodeLog(fullLog: string): string {
   const lines = (fullLog || '').split(/\r?\n/);
   // The last score is a reliable episode boundary for each provider adapter.
   // A new episode cannot inherit a previous one's completed stages.
@@ -91,10 +108,17 @@ export function parseLiveWorkflow(fullLog: string, running: boolean): WorkflowSt
   const nextTrialHasStarted = /turn=\d+\/\d+\s*·\s*(?:provider|Anthropic|Gemini) request/.test(afterScore);
   const segment = lastScore < 0 ? fullLog
     : nextTrialHasStarted ? afterScore : lines.slice(precedingScore + 1).join('\n');
+  return segment;
+}
+
+export function parseLiveWorkflow(fullLog: string, running: boolean): WorkflowState {
+  const segment = currentEpisodeLog(fullLog);
   const activity = parseLiveActivity(segment);
   const tools = new Set(activity.filter(a => a.kind === 'tool').map(a => a.tool));
   const requestSeen = /turn=\d+\/\d+\s*·\s*(?:provider|Anthropic|Gemini) request/.test(segment);
-  const graded = /^\s+score=/m.test(segment);
+  const terminal = /^\s+score=(\S+)\s+pass=(\S+)\s+status=(\S+)/m.exec(segment);
+  const graded = Boolean(terminal && terminal[1] !== 'None' && terminal[3] === 'completed');
+  const ended = Boolean(terminal);
   const completedKeys = new Set<string>();
   if (requestSeen || tools.size || graded) completedKeys.add('received');
   for (const stage of WORKFLOW_STAGES) {
@@ -107,7 +131,7 @@ export function parseLiveWorkflow(fullLog: string, running: boolean): WorkflowSt
   return {
     steps: WORKFLOW_STAGES.map((stage, i) => ({
       key: stage.key, label: stage.label,
-      state: completedKeys.has(stage.key) ? 'done' : i === current ? 'current' : 'pending',
+      state: completedKeys.has(stage.key) ? 'done' : i === current ? 'current' : ended && !running ? 'not-reached' : 'pending',
     })),
     episode: /\[(\d+\/\d+)\].*trial=\d+/.exec(segment)?.[1] || '',
     activity,

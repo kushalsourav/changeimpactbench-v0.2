@@ -66,6 +66,8 @@ export type EvidenceRow = {
   format_valid: boolean | null;
   latency_s: number | null;
   prompt_tokens: number | null;
+  max_input_tokens: number | null;
+  termination_reason?: string | null;
   completion_tokens: number | null;
   reasoning_tokens: number | null;
   finish_reason: string;

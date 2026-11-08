@@ -44,6 +44,7 @@ def implementation_hashes() -> dict[str, str]:
     root = Path(__file__).resolve().parent.parent
     names = (
         'benchmarks/native_agent.py', 'benchmarks/runner.py',
+        'benchmarks/input_budget.py',
         'benchmarks/grader.py', 'benchmarks/grading_policy.py',
         'benchmarks/spec.py', 'benchmarks/environment.py',
         'benchmarks/skills.py',

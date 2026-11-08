@@ -64,6 +64,7 @@ export function useWorkbench() {
   const [reviewMessage, setReviewMessage] = useState('');
   const [trialCount, setTrialCount] = useState(1),
     [maxTokens, setMaxTokens] = useState(8000),
+    [maxInputTokens, setMaxInputTokens] = useState(1000000),
     [effort, setEffort] = useState('low'),
     [temperature, setTemperature] = useState(0),
     [delay, setDelay] = useState(4),
@@ -77,10 +78,21 @@ export function useWorkbench() {
   const [jobUpdatedMs, setJobUpdatedMs] = useState(0);
   const onStreamStatus = useCallback((state: RunStatus, logDelta: string, replaceLog: boolean) => {
     setJobUpdatedMs(Date.now());
-    setJob((previous) => ({
-      ...previous, ...state,
-      log: replaceLog ? logDelta : ((previous.log || '') + logDelta).slice(-14000),
-    }));
+    setJob(previous => {
+      const old = previous.log || '';
+      let next = replaceLog || (state.id && previous.id && state.id !== previous.id) ? logDelta : old;
+      // Status polling can be ahead of SSE. A log delta already covered by a
+      // status snapshot must not be appended again or fabricate duplicate tools.
+      if (!replaceLog && logDelta && !(old.includes(logDelta) && state.id === previous.id)) {
+        const overlapMax = Math.min(old.length, logDelta.length);
+        let overlap = 0;
+        for (let n = overlapMax; n > 0; n--) {
+          if (old.endsWith(logDelta.slice(0, n))) { overlap = n; break; }
+        }
+        next = old + logDelta.slice(overlap);
+      }
+      return { ...previous, ...state, log: next.slice(-120000) };
+    });
   }, []);
   useExecutionStream(job.status === 'running' || job.status === 'stopping', onStreamStatus);
   const handledTerminalJob = useRef<string | null>(null);
@@ -257,7 +269,7 @@ export function useWorkbench() {
     setThemeLoaded(true);
   }, []);
   useEffect(() => {
-    if (themeLoaded) document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    if (themeLoaded) document.documentElement.dataset.theme = 'light';
   }, [dark, themeLoaded]);
   const chooseTrial = (index: number) => {
     setRecordIndex(index);
@@ -311,6 +323,7 @@ export function useWorkbench() {
         tasks: selectedTasks,
         trials: trialCount,
         max_tokens: maxTokens,
+        max_input_tokens: maxInputTokens,
         reasoning_effort: effort,
         temperature,
         delay,
@@ -453,6 +466,9 @@ export function useWorkbench() {
     trialCount <= 5 &&
     maxTokens >= 512 &&
     maxTokens <= 16000 &&
+    Number.isInteger(maxInputTokens) &&
+    maxInputTokens >= 4096 &&
+    maxInputTokens <= 2000000 &&
     delay >= 3 &&
     delay <= 30 &&
     temperature >= 0 &&
@@ -510,6 +526,6 @@ export function useWorkbench() {
   };
 
   return {
-    page, setPage, collapsed, setCollapsed, dark, setDark, health, setHealth, runs, setRuns, run, setRun, info, setInfo, tasks, setTasks, task, setTask, nodeId, setNodeId, previewActionId, setPreviewActionId, repairState, setRepairState, labMode, setLabMode, labSideView, setLabSideView, recordIndex, setRecordIndex, trial, setTrial, analysisTab, setAnalysisTab, expandedEvent, setExpandedEvent, loading, setLoading, error, setError, search, setSearch, filter, setFilter, modelFilter, setModelFilter, models, setModels, catalogError, setCatalogError, catalogLoading, setCatalogLoading, catalogLoaded, setCatalogLoaded, catalogFilter, setCatalogFilter, flowNotice, setFlowNotice, selectedModels, setSelectedModels, selectedTasks, setSelectedTasks, comparisonTask, setComparisonTask, crossRun, setCrossRun, reviewer, setReviewer, reviewNotes, setReviewNotes, reviewStatus, setReviewStatus, reviewChecks, setReviewChecks, reviewBusy, setReviewBusy, reviewMessage, setReviewMessage, trialCount, setTrialCount, maxTokens, setMaxTokens, effort, setEffort, temperature, setTemperature, delay, setDelay, approved, setApproved, job, setJob, starting, setStarting, themeLoaded, setThemeLoaded, clockNowMs, setClockNowMs, jobUpdatedMs, setJobUpdatedMs, handledTerminalJob, pendingEvidence, runFetchSequence, taskFetchSequence, recordFetchSequence, condition, taskId, selectPage, refreshRuns, refreshRun, chooseTrial, openSavedEvidence, loadModels, launch, stop, rows, matching, summaries, completed, passed, apiErrors, incomplete, avgPartial, totalLatency, avgLatency, tokens, eligibleReliability, maxK, comparison, latencyByModel, usageByModel, taskRows, selected, activeLabTaskId, validLabRecord, labCommittedAction, actionId, recordedPreview, recordedCommitState, labTask, agentEvents, commitEvent, committedAction, matchedSimulation, simulatedRemaining, committedRemaining, decisionMiss, plan, readyToRun, shownModels, inProgress, clockLagMs, elapsedLive, clockStale, affected, repairs, repair, shownDown, directFailures, issueCount, selectedTrialReady, explanation, storyServices, actualEffect, storyInitialDown, storyAfterDown, crossRunCompleted, crossRunChart, counts, labDataset, setLabDataset
+    page, setPage, collapsed, setCollapsed, dark, setDark, health, setHealth, runs, setRuns, run, setRun, info, setInfo, tasks, setTasks, task, setTask, nodeId, setNodeId, previewActionId, setPreviewActionId, repairState, setRepairState, labMode, setLabMode, labSideView, setLabSideView, recordIndex, setRecordIndex, trial, setTrial, analysisTab, setAnalysisTab, expandedEvent, setExpandedEvent, loading, setLoading, error, setError, search, setSearch, filter, setFilter, modelFilter, setModelFilter, models, setModels, catalogError, setCatalogError, catalogLoading, setCatalogLoading, catalogLoaded, setCatalogLoaded, catalogFilter, setCatalogFilter, flowNotice, setFlowNotice, selectedModels, setSelectedModels, selectedTasks, setSelectedTasks, comparisonTask, setComparisonTask, crossRun, setCrossRun, reviewer, setReviewer, reviewNotes, setReviewNotes, reviewStatus, setReviewStatus, reviewChecks, setReviewChecks, reviewBusy, setReviewBusy, reviewMessage, setReviewMessage, trialCount, setTrialCount, maxTokens, setMaxTokens, maxInputTokens, setMaxInputTokens, effort, setEffort, temperature, setTemperature, delay, setDelay, approved, setApproved, job, setJob, starting, setStarting, themeLoaded, setThemeLoaded, clockNowMs, setClockNowMs, jobUpdatedMs, setJobUpdatedMs, handledTerminalJob, pendingEvidence, runFetchSequence, taskFetchSequence, recordFetchSequence, condition, taskId, selectPage, refreshRuns, refreshRun, chooseTrial, openSavedEvidence, loadModels, launch, stop, rows, matching, summaries, completed, passed, apiErrors, incomplete, avgPartial, totalLatency, avgLatency, tokens, eligibleReliability, maxK, comparison, latencyByModel, usageByModel, taskRows, selected, activeLabTaskId, validLabRecord, labCommittedAction, actionId, recordedPreview, recordedCommitState, labTask, agentEvents, commitEvent, committedAction, matchedSimulation, simulatedRemaining, committedRemaining, decisionMiss, plan, readyToRun, shownModels, inProgress, clockLagMs, elapsedLive, clockStale, affected, repairs, repair, shownDown, directFailures, issueCount, selectedTrialReady, explanation, storyServices, actualEffect, storyInitialDown, storyAfterDown, crossRunCompleted, crossRunChart, counts, labDataset, setLabDataset
   };
 }

@@ -32,6 +32,7 @@ class LaunchRequest(BaseModel):
     tasks: list[str] = Field(min_length=1, max_length=1)
     trials: int = Field(default=1, ge=1, le=5)
     max_tokens: int = Field(default=8000, ge=512, le=16000)
+    max_input_tokens: int = Field(default=1000000, ge=4096, le=2000000)
     reasoning_effort: Literal['none','minimal','low','medium','high'] | None = 'low'
     delay: float = Field(default=4.0, ge=3.0, le=30.0)
     temperature: float = Field(default=0.0, ge=0, le=1)
@@ -92,6 +93,7 @@ def start_experiment(req: LaunchRequest):
             '--models', *req.models, '--task', req.tasks[0],
             '--trials', str(req.trials), '--delay', str(req.delay),
             '--temperature', str(req.temperature), '--max-tokens', str(req.max_tokens),
+            '--max-input-tokens', str(req.max_input_tokens),
             '--reasoning-effort', req.reasoning_effort or 'low',
             '--output', f'results/{output_file}']
         # The subprocess inherits the backend process's environment, not the web browser.
@@ -115,6 +117,8 @@ def start_experiment(req: LaunchRequest):
             'models':req.models,'tasks':req.tasks,
             'benchmark_version':GRAPH_VERSIONS[req.tasks[0]],
             'trials':req.trials,'max_tokens':req.max_tokens,
+            'max_input_tokens':req.max_input_tokens,
+            'input_token_budget_policy':'cumulative provider-reported tokens per trial; next-request gate',
             'reasoning_effort': req.reasoning_effort,
             'google_reasoning_effort_forwarded': False,
             'provider': ('anthropic' if anthropic_batch else 'google-ai-studio-gemini-developer-api' if google_batch else

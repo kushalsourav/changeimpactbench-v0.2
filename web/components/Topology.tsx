@@ -68,6 +68,7 @@ function GraphCore({
   onSelect,
   before,
   unknown,
+  observedHealth,
 }: {
   nodes: NodeInfo[];
   failed: string[];
@@ -77,6 +78,7 @@ function GraphCore({
   onSelect?: (id: string) => void;
   before?: string[];
   unknown?: boolean;
+  observedHealth?: Record<string, 'healthy' | 'unavailable'>;
 }) {
   const { fitView, zoomIn, zoomOut } = useReactFlow();
   const graph = useMemo(() => {
@@ -106,7 +108,8 @@ function GraphCore({
         const now = down.has(n.id),
           prior = original.has(n.id);
         const direct = now && directDown.has(n.id);
-        const status: Health = unknown ? 'unknown' : now
+        const observation = observedHealth?.[n.id];
+        const status: Health = observedHealth ? (observation === 'healthy' ? 'healthy' : observation === 'unavailable' ? 'failed' : 'unknown') : unknown ? 'unknown' : now
           ? !prior
             ? 'newly-damaged'
             : direct
@@ -143,8 +146,8 @@ function GraphCore({
           type: 'step',
           animated: false,
           style: {
-            stroke: down.has(d) && down.has(n.id) ? '#D93025' : '#70757A',
-            strokeWidth: down.has(d) && down.has(n.id) ? 2 : 1.5,
+            stroke: (observedHealth ? observedHealth[d] === 'unavailable' && observedHealth[n.id] === 'unavailable' : down.has(d) && down.has(n.id)) ? '#C8372D' : '#70757A',
+            strokeWidth: (observedHealth ? observedHealth[d] === 'unavailable' && observedHealth[n.id] === 'unavailable' : down.has(d) && down.has(n.id)) ? 2 : 1.5,
           },
           markerEnd: { type: MarkerType.ArrowClosed, color: '#70757A' },
         });
@@ -180,7 +183,7 @@ function GraphCore({
         ? nodes.filter((n) => down.has(n.id) !== predictedDown.has(n.id)).length
         : 0,
     };
-  }, [nodes, failed, directFailed, predicted, selected, before, unknown]);
+  }, [nodes, failed, directFailed, predicted, selected, before, unknown, observedHealth]);
   const fit = useCallback(() => {
     void fitView({ padding: 0.2, duration: 0 });
   }, [fitView]);
@@ -227,8 +230,8 @@ function GraphCore({
         <Background color="#E4E2DC" gap={24} size={1} />
       </ReactFlow>
       <div className="legend">
-        {unknown ? <span>○ Status not shown during investigation</span> : <span>✓ Healthy / restored</span>}
-        {!unknown && <><span>× Failed</span><span>↓ Downstream</span><span>! Newly damaged</span></>}
+        {observedHealth ? <><span>○ Not checked</span><span>✓ Observed healthy</span><span>× Observed unavailable</span></> : unknown ? <span>○ Status not shown during investigation</span> : <span>✓ Healthy / restored</span>}
+        {!unknown && !observedHealth && <><span>× Failed</span><span>↓ Downstream</span><span>! Newly damaged</span></>}
         <span>─ Required edge</span>
         <span>┄ Redundant edge</span>
         <span>·· Quorum (N of M) edge</span>
@@ -246,6 +249,7 @@ export function Topology(props: {
   onSelect?: (id: string) => void;
   before?: string[];
   unknown?: boolean;
+  observedHealth?: Record<string, 'healthy' | 'unavailable'>;
 }) {
   return (
     <ReactFlowProvider>

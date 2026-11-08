@@ -15,6 +15,7 @@ export type AgenticComparison = {
     benchmark_version: string;
     temperature: number | null;
     max_tokens: number | null;
+    max_input_tokens?: number | null;
     reasoning_effort: string | null;
     episodes: number;
     completed: number;

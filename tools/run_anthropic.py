@@ -18,7 +18,8 @@ from importlib.metadata import PackageNotFoundError, version
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from benchmarks.native_agent import MAX_MODEL_CALLS, MAX_TOOLS, ACTIVE_TASK_IDS, agent_prompt
-from benchmarks.runner import make_native_tools, run_episode, _stop_signal
+from benchmarks.runner import make_native_tools, run_episode
+from benchmarks.input_budget import DEFAULT_MAX_INPUT_TOKENS, MIN_MAX_INPUT_TOKENS, MAX_MAX_INPUT_TOKENS, _stop_signal
 from api.services.anthropic_catalog import MODEL, allowed_model_ids
 
 CACHE = {'type': 'ephemeral'}
@@ -138,6 +139,7 @@ def anthropic_graph_factory(env, model_id, token, max_tokens, effort, temperatur
 
     @wrap_model_call
     def monitor_calls(request, handler):
+        env.input_token_budget.before_request()
         sequence[0] += 1
         turn = sequence[0]
         env.model_requests_started = turn
@@ -148,6 +150,7 @@ def anthropic_graph_factory(env, model_id, token, max_tokens, effort, temperatur
             time.sleep(wait)
         try:
             answer = handler(request)
+            env.input_token_budget.after_response(answer)
             print(f'    turn={turn}/{MAX_MODEL_CALLS} · Anthropic completed', flush=True)
             return answer
         except Exception as exc:
@@ -188,6 +191,7 @@ def main():
     parser.add_argument('--task', choices=sorted(ACTIVE_TASK_IDS), required=True)
     parser.add_argument('--trials', type=int, default=1)
     parser.add_argument('--max-tokens', type=int, default=8000)
+    parser.add_argument('--max-input-tokens', type=int, default=DEFAULT_MAX_INPUT_TOKENS)
     parser.add_argument('--temperature', type=float, default=0)
     parser.add_argument('--delay', type=float, default=4)
     parser.add_argument('--output', required=True)
@@ -195,6 +199,7 @@ def main():
     if 'anthropic/' + args.model not in allowed_model_ids():
         parser.error('Model is not approved for direct Anthropic API evaluations')
     if not (1 <= args.trials <= 5 and 512 <= args.max_tokens <= 16000
+            and MIN_MAX_INPUT_TOKENS <= args.max_input_tokens <= MAX_MAX_INPUT_TOKENS
             and 0 <= args.temperature <= 1 and 3 <= args.delay <= 30):
         parser.error('Invalid generation limits or trial count')
     token = (os.getenv('ANTHROPIC_API_KEY') or '').strip()
@@ -213,7 +218,7 @@ def main():
         for trial in range(1, args.trials + 1):
             rec = run_episode(args.task, args.model, trial, token, args.max_tokens,
                               'not_configured', args.temperature, args.delay,
-                              graph_factory=anthropic_graph_factory)
+                              graph_factory=anthropic_graph_factory, max_input_tokens=args.max_input_tokens)
             rec['provider'] = 'anthropic'
             rec['provider_adapter'] = 'tools/run_anthropic.py'
             rec['provider_adapter_implementation_note'] = 'direct Anthropic adapter; V6CF source hashes recorded per episode'

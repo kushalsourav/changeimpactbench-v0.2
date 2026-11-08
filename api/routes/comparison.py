@@ -26,9 +26,11 @@ def compare_agentic(task_id: str = 'RW01V6CF'):
                 continue
             key = (r.get('benchmark_version'), r.get('model_requested'),
                    r.get('temperature_requested'), r.get('max_tokens_requested'),
-                   r.get('reasoning_effort_requested'))
+                   r.get('reasoning_effort_requested'),
+                   r.get('max_input_tokens_requested'))
             item = batches.setdefault(key, {'benchmark_version': key[0], 'model': key[1],
                 'temperature': key[2], 'max_tokens': key[3], 'reasoning_effort': key[4],
+                'max_input_tokens': key[5],
                 'episodes': 0, 'completed': 0, 'strict_passes': 0, 'incomplete_repairs': 0,
                 'complete_safe_repairs': 0, 'initial_impact_errors': 0, 'root_cause_errors': 0,
                 'repair_selection_errors': 0, 'protocol_error_episodes': 0,

@@ -41,6 +41,10 @@ from agent_graph import (
 )
 from tasks import ROOT
 from benchmarks.grading_policy import replay_record as active_replay_record, contract_for
+from benchmarks.input_budget import (
+    InputTokenBudget, InputTokenBudgetExceeded, InputTokenUsageUnavailable,
+    DEFAULT_MAX_INPUT_TOKENS, MIN_MAX_INPUT_TOKENS, MAX_MAX_INPUT_TOKENS,
+)
 
 
 class EpisodeInterrupted(Exception):
@@ -154,6 +158,7 @@ def build_graph(env: GraphEnvironment, model_id: str, token: str,
 
     @wrap_model_call
     def monitor_calls(request, handler):
+        env.input_token_budget.before_request()
         sequence[0] += 1
         env.model_requests_started = sequence[0]
         turn = sequence[0]
@@ -165,6 +170,7 @@ def build_graph(env: GraphEnvironment, model_id: str, token: str,
             time.sleep(wait)
         try:
             response = handler(request)
+            env.input_token_budget.after_response(response)
             print(f'    turn={turn}/{MAX_MODEL_CALLS} · provider completed', flush=True)
             return response
         except Exception as exc:
@@ -298,12 +304,14 @@ def classify_execution_error(exc: Exception) -> str:
 
 def run_episode(task_id: str, model: str, trial: int, token: str,
                 max_tokens: int, effort: str | None, temperature: float,
-                delay: float, graph_factory: Callable | None = None) -> dict:
+                delay: float, graph_factory: Callable | None = None, *,
+                max_input_tokens: int = DEFAULT_MAX_INPUT_TOKENS) -> dict:
     """Make exactly one LangGraph invocation for an episode; persist after exit."""
     if task_id not in TASK_IDS:
         raise ValueError(f'Unknown prospective agent task {task_id}')
     prompt = agent_prompt(task_id)
     env = GraphEnvironment(task_id)
+    env.input_token_budget = InputTokenBudget(max_input_tokens)
     record = {
         'timestamp_utc': datetime.now(timezone.utc).isoformat(),
         'task_id': task_id, 'benchmark_version': VERSIONS[task_id],
@@ -311,6 +319,8 @@ def run_episode(task_id: str, model: str, trial: int, token: str,
         'grading_contract': contract_for(task_id),
         'model_requested': model, 'trial': trial,
         'temperature_requested': temperature, 'max_tokens_requested': max_tokens,
+        'max_input_tokens_requested': max_input_tokens,
+        'input_token_budget_policy': 'cumulative provider-reported input tokens per trial; gate before next request',
         'reasoning_effort_requested': effort, 'delay_seconds': delay,
         'prompt': prompt, 'prompt_sha256': hashlib.sha256(prompt.encode()).hexdigest(),
         'case_sha256': digest(source_case(task_id)),
@@ -352,6 +362,14 @@ def run_episode(task_id: str, model: str, trial: int, token: str,
             record['status'] = 'completed'
         elif record['provider_requests'] >= MAX_MODEL_CALLS or len(env.steps) >= MAX_TOOLS:
             record['status'] = 'budget_exhausted'
+    except InputTokenBudgetExceeded as exc:
+        record['status'] = 'input_budget_exhausted'
+        record['termination_reason'] = 'input_token_budget'
+        print(f'    {exc}', flush=True)
+    except InputTokenUsageUnavailable as exc:
+        record['status'] = 'input_usage_unavailable'
+        record['termination_reason'] = 'provider_input_usage_missing'
+        print(f'    {exc}', flush=True)
     except EpisodeInterrupted:
         record['status'] = 'stopped'
         record['error_category'] = 'user_stopped'
@@ -370,6 +388,9 @@ def run_episode(task_id: str, model: str, trial: int, token: str,
         print(trace, file=sys.stderr, flush=True)
     finally:
         record['elapsed_seconds'] = round(time.perf_counter() - started, 3)
+        record['input_tokens_reported'] = env.input_token_budget.used
+        record['input_token_budget_reached'] = env.input_token_budget.used >= max_input_tokens
+        record['input_token_usage_available'] = not env.input_token_budget.usage_missing
         record['repair_brief'] = env.repair_brief
         if env.repair_brief is not None:
             record['repair_system_prompt'] = env.active_system_prompt()
@@ -397,7 +418,8 @@ def run_episode(task_id: str, model: str, trial: int, token: str,
     if verification['grade'] is not None:
         record['grade'] = verification['grade']
     if not verification['verified']:
-        record['status'] = 'unverified'
+        if record['status'] not in ('input_budget_exhausted', 'input_usage_unavailable'):
+            record['status'] = 'unverified'
         record['audit_warnings'] = verification['warnings']
     return record
 
@@ -408,6 +430,7 @@ def main() -> None:
     parser.add_argument('--tasks', nargs='+', required=True)
     parser.add_argument('--trials', type=int, default=1)
     parser.add_argument('--max-tokens', type=int, default=8000)
+    parser.add_argument('--max-input-tokens', type=int, default=DEFAULT_MAX_INPUT_TOKENS)
     parser.add_argument('--reasoning-effort', default='low')
     parser.add_argument('--temperature', type=float, default=0)
     parser.add_argument('--delay', type=float, default=3)
@@ -418,7 +441,9 @@ def main() -> None:
             or args.tasks[0] not in TASK_IDS or not args.models[0].endswith(':free')
             or args.max_requests != MAX_MODEL_CALLS):
         raise SystemExit('Choose 1–5 free models, one public incident and 1–5 repeated trials; approve provider-call budget')
-    if not (512 <= args.max_tokens <= 16000 and 0 <= args.temperature <= 1 and 3 <= args.delay <= 30):
+    if not (512 <= args.max_tokens <= 16000
+            and MIN_MAX_INPUT_TOKENS <= args.max_input_tokens <= MAX_MAX_INPUT_TOKENS
+            and 0 <= args.temperature <= 1 and 3 <= args.delay <= 30):
         raise SystemExit('Invalid model generation limits')
     token = os.getenv('OPENROUTER_API_KEY', '').strip()
     if not token:
@@ -433,7 +458,8 @@ def main() -> None:
         for idx, (model, trial) in enumerate(((m,t) for m in args.models for t in range(1,args.trials+1)),1):
             print(f'[{idx}/{total}] LangGraph create_agent · {model} · {args.tasks[0]} · trial={trial}', flush=True)
             record = run_episode(args.tasks[0], model, trial, token, args.max_tokens,
-                                 args.reasoning_effort, args.temperature, args.delay)
+                                 args.reasoning_effort, args.temperature, args.delay,
+                                 max_input_tokens=args.max_input_tokens)
             with output.open('a', encoding='utf-8') as stream:
                 stream.write(json.dumps(record, ensure_ascii=False, default=str) + '\n')
                 stream.flush()

@@ -38,6 +38,15 @@ class V6APIReadOnlyTests(unittest.TestCase):
         self.assertEqual(self.client.get('/api/agentic/comparison?task_id=RW01V4').status_code,400)
         self.assertEqual(self.client.get('/api/agentic/comparison?task_id=RW01V6CF').status_code,200)
 
+    def test_input_token_limit_validated_with_launch_request(self):
+        request = LaunchRequest(models=['nvidia/mock:free'], tasks=['RW01V6CF'],
+                                max_input_tokens=75000)
+        self.assertEqual(request.max_input_tokens, 75000)
+        for value in (4095, 2000001):
+            with self.assertRaises(ValidationError):
+                LaunchRequest(models=['nvidia/mock:free'], tasks=['RW01V6CF'],
+                              max_input_tokens=value)
+
     def test_valid_launch_not_executed_without_approval(self):
         record=LaunchRequest(models=['nvidia/mock:free'],tasks=['RW02V6CF'],confirm=False)
         r=self.client.post('/api/experiment/start',json=record.model_dump())

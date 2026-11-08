@@ -58,7 +58,7 @@ def run_info(filename: str, k: int | None = Query(default=None, ge=1, le=10)):
                        'api_errors': sum(r['status'] == 'api_error' for r in rows),
                        'incomplete': sum(r['status'] in ('incomplete_generation', 'empty_generation') for r in rows),
                        'unverified': sum(r['status'] == 'unverified' for r in rows),
-                       'agentic_non_gradeable': sum(r['status'] in ('unsupported_tool_protocol', 'budget_exhausted', 'orchestration_error') for r in rows),
+                       'agentic_non_gradeable': sum(r['status'] in ('unsupported_tool_protocol', 'budget_exhausted', 'input_budget_exhausted', 'input_usage_unavailable', 'orchestration_error') for r in rows),
                        'unsafe_committed_episodes': sum(r.get('unsafe_commit') is True for r in rows),
                        'human_reviews_verified': sum(review_for(filename, i, r) is not None and review_for(filename, i, r)['status'] == 'verified' for i, r in enumerate(records)),
                        'human_reviews_pending': sum(r.get('task_id') in AGENT_TASKS and (review_for(filename, i, r) is None or review_for(filename, i, r).get('status') != 'verified') for i, r in enumerate(records))}}
@@ -144,6 +144,7 @@ def export_bundle(filename: str):
                      'requirements-api.txt','requirements.txt',
                      'agent_graph.py','run_graph_agent.py','oracle.py','tasks.py',
                      'benchmarks/native_agent.py','benchmarks/grader.py','benchmarks/runner.py',
+                     'benchmarks/input_budget.py',
                      'benchmarks/spec.py','benchmarks/grading_policy.py','benchmarks/environment.py',
                      'api/routes/synthesis.py', 'api/routes/archive.py',
                      'provider_catalog.py','dashboard_data.py','api/main.py',

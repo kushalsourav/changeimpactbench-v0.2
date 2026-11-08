@@ -15,6 +15,8 @@ from benchmarks.environment import AgentEnvironment
 from dashboard_data import audit_record
 from oracle import reference_answer, simulate, patch_facts
 from run_graph_agent import run_episode
+from benchmarks.input_budget import (InputTokenBudget, InputTokenBudgetExceeded,
+    InputTokenUsageUnavailable, reported_input_tokens)
 
 TASKS = [f'RW{i:02}V6CF' for i in range(1, 7)]
 
@@ -52,7 +54,71 @@ def run_scripted(task_id: str, **changes) -> dict:
                            graph_factory=lambda env, *_: ScriptedReferenceGraph(env, **changes))
 
 
+class FakeBudgetedGraph:
+    """One real-shaped AI message; emulate next-request gate without a provider."""
+    def __init__(self, env):
+        self.env = env
+
+    def stream(self, _input, config, stream_mode):
+        self.env.graph_request_limit_active = True
+        self.env.input_token_budget.before_request()
+        self.env.model_requests_started = 1
+        self.env.model_phases[1] = self.env.phase
+        fake_message = SimpleNamespace(
+            type='ai', content='', tool_calls=[{'name': 'read_alert', 'args': {}, 'id': 'budget-1'}],
+            usage_metadata={'input_tokens': 4500, 'output_tokens': 10},
+            response_metadata={}, additional_kwargs={}, id='fake-budget-response',
+        )
+        self.env.input_token_budget.after_response(SimpleNamespace(result=[fake_message]))
+        yield {'model': {'messages': [fake_message]}}
+        self.env.provider_turn = 1
+        observed = self.env.execute('read_alert', {}, 'budget-1')
+        yield {'tools': {'messages': [SimpleNamespace(type='tool', content=observed)]}}
+        self.env.input_token_budget.before_request()
+        raise AssertionError('Next provider request must not be dispatched')
+
+
 class V6CounterfactualTests(unittest.TestCase):
+    def test_cumulative_provider_input_budget_stops_before_next_request(self):
+        budget = InputTokenBudget(4096)
+        response = SimpleNamespace(result=[SimpleNamespace(usage_metadata={'input_tokens': 4500})])
+        self.assertEqual(reported_input_tokens(response), 4500)
+        budget.before_request()
+        budget.after_response(response)
+        self.assertEqual(budget.used, 4500)
+        with self.assertRaises(InputTokenBudgetExceeded):
+            budget.before_request()
+
+        incomplete = run_episode('RW01V6CF', 'scripted/reference:free', 1,
+                                 'no-provider', 2000, 'low', 0, 3,
+                                 graph_factory=lambda env, *_: FakeBudgetedGraph(env),
+                                 max_input_tokens=4096)
+        self.assertEqual(incomplete['status'], 'input_budget_exhausted')
+        self.assertEqual(incomplete['termination_reason'], 'input_token_budget')
+        self.assertEqual(incomplete['provider_requests'], 1)
+        self.assertEqual(incomplete['usage']['prompt_tokens'], 4500)
+        self.assertEqual(incomplete['max_input_tokens_requested'], 4096)
+        self.assertTrue(incomplete['replay_verified'])
+        self.assertNotIn('grade', incomplete)
+
+    def test_missing_provider_input_usage_prevents_further_calls(self):
+        budget = InputTokenBudget(30000)
+        budget.before_request()
+        budget.after_response(SimpleNamespace(result=[SimpleNamespace(usage_metadata={})]))
+        self.assertTrue(budget.usage_missing)
+        with self.assertRaises(InputTokenUsageUnavailable):
+            budget.before_request()
+
+    def test_input_budget_reaches_every_provider_child(self):
+        from tools.run_mixed_providers import commands
+        ids = ['nvidia/mock:free', 'anthropic/claude-test', 'google-ai-studio/gemini-test']
+        output = ['results/one.jsonl', 'results/two.jsonl', 'results/three.jsonl']
+        command_lines = list(commands(ids, 'RW01V6CF', 1, 4, 0, 8000, 'low', output, 75000))
+        self.assertEqual(len(command_lines), 3)
+        for line in command_lines:
+            i = line.index('--max-input-tokens')
+            self.assertEqual(line[i+1], '75000')
+
     def test_only_six_counterfactual_task_ids(self):
         self.assertEqual(TASK_IDS, ACTIVE_TASK_IDS)
         self.assertEqual(set(TASKS), set(ACTIVE_TASK_IDS))
@@ -209,6 +275,7 @@ class V6CounterfactualTests(unittest.TestCase):
                 files = set(z.namelist())
                 self.assertIn('reference/v6-counterfactual/RW01.json', files)
                 self.assertIn('benchmarks/v6_fixtures/counterfactual/RW01.json', files)
+                self.assertIn('benchmarks/input_budget.py', files)
                 self.assertNotIn('reference/RW01.json', files)
                 self.assertNotIn('tasks/RW01.json', files)
         finally:

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Optional when extracting this ZIP over an older checkout. Does NOT delete .git,
-# your .env, virtualenv, node_modules, or installed dependencies. It WILL delete old results/ records.
+# your .env, virtualenv, node_modules, or genuine results/ records by default.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 rm -rf tasks realbench benchmarks/source_graders reference/v6-neutral legacy baseline
@@ -16,8 +16,13 @@ keep_python='test_v6_counterfactual_release.py'
 find tests -maxdepth 1 -name 'test_*.py' ! -name "$keep_python" -delete 2>/dev/null || true
 find api/tests -maxdepth 1 -name 'test_*.py' ! -name 'test_v6_counterfactual_api.py' -delete 2>/dev/null || true
 find web/tests -maxdepth 1 -name '*.test.cjs' ! -name 'v6-only.test.cjs' ! -name 'live-workflow.test.cjs' -delete 2>/dev/null || true
-# Start the V6 counterfactual evaluation with a clean results directory.
-# Preserves only the explanatory README; subsequent genuine provider runs create new records.
+# Preserve real result transcripts and manifests, which are usually gitignored.
+# Destructive deletion is now an explicit opt-in, never the default on UI updates.
 mkdir -p results
-find results -mindepth 1 -maxdepth 1 ! -name 'README.md' -exec rm -rf -- {} +
-echo 'Retired datasets/tests removed and old results cleared. .git, .env and dependencies preserved.'
+if [[ "${CIB_RESET_RESULTS:-0}" == "1" ]]; then
+  find results -mindepth 1 -maxdepth 1 ! -name 'README.md' -exec rm -rf -- {} +
+  echo 'Explicit results reset requested: past results cleared.'
+else
+  echo 'Existing results, JSONL, manifests and logs preserved.'
+fi
+echo 'Retired datasets/tests removed. .git, .env and dependencies preserved.'
