@@ -9,7 +9,7 @@ import sys
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from agent_graph import GraphEnvironment, ACTIVE_TASK_IDS, VERSIONS
-from benchmarks.spec import reference_trajectory, source_case, reference_path, service_codes
+from benchmarks.spec import reference_trajectory, source_case, reference_path, service_codes, public_action_ids
 from oracle import reference_answer, reference_audit, initial_failures, simulate, patch_facts
 
 
@@ -26,6 +26,7 @@ def run_audit() -> dict:
         harmful, _ = simulate(case, patch_facts(case['facts'], cheapest_unsafe))
         env = GraphEnvironment(task_id)
         trajectory = reference_trajectory(task_id)
+        expected_public_fix = public_action_ids(task_id)[reference['fix_id']]
         rejects = []
         for i,(tool,args) in enumerate(trajectory,1):
             env.provider_turn = i
@@ -38,7 +39,7 @@ def run_audit() -> dict:
                   and bool(harmful - initially_down)
                   and env.final is not None and set(env.final['failed_services']) == expected_codes
                   and env.final['root_cause_id'] == reference['root_cause']
-                  and env.underlying.committed == reference['fix_id']
+                  and env.underlying.committed == expected_public_fix
                   and env.committed_effect is not None and not env.committed_effect['unavailable_after']
                   and not env.committed_effect['newly_unavailable'])
         rows.append({'task_id': task_id, 'benchmark_version': VERSIONS[task_id],

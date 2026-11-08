@@ -57,7 +57,7 @@ def audit_record(record: dict, cases: dict[str, dict] | None = None) -> dict:
     replay = replay_record(record)
     expected = replay['expected']
     seed = GRAPH_BASE[task_id]
-    from benchmarks.spec import reference_path, source_case, service_codes
+    from benchmarks.spec import reference_path, source_case, service_codes, public_action_ids
     try:
         # The human-reviewed, original-named reference is a required independent
         # fixture. Compare it in service names, then compare oracle codes with replay.
@@ -66,6 +66,7 @@ def audit_record(record: dict, cases: dict[str, dict] | None = None) -> dict:
         encoded = dict(original)
         codes = service_codes(task_id)
         encoded['failed_services'] = sorted(codes[n] for n in original['failed_services'])
+        encoded['fix_id'] = public_action_ids(task_id)[original['fix_id']]
         ref_ok = stored == original and encoded == expected
     except (ValueError, OSError, KeyError):
         ref_ok = False

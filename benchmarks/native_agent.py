@@ -123,7 +123,7 @@ def agent_prompt(task_id: str) -> str:
             f'Budget: at most {spec.max_model_calls} model requests and {spec.max_tools} successful sandbox tools.',
         ],
         'hypotheses': [{'id': x, 'description': y} for x, y in spec.hypotheses],
-        'service_mapping': 'read_alert shows code-to-role inventory. Health scan covers external probes only; the full internal impact requires investigation.',
+        'service_mapping': 'read_alert lists opaque service codes only. Recover relationships by inspecting individual services. Health scan covers external probes only; full internal impact requires investigation.',
     }
     content['evaluation_contract'] = ('Strict pass assesses initial impact, cause, safe complete lowest-cost repair, and provenance. '
         'Rejected tool requests reduce procedural score but do not alone fail the episode. Unsafe commits fail.')

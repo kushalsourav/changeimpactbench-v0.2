@@ -8,7 +8,7 @@ from benchmarks.native_agent import (
     ENGINE, GRAPH_BASE, MAX_MODEL_CALLS, MAX_TOOLS, VERSIONS,
     GraphEnvironment, source_case, agent_prompt, recorded_implementation_hashes,
 )
-from benchmarks.spec import digest, service_codes, synthetic_task
+from benchmarks.spec import digest, service_codes, synthetic_task, public_action_ids
 from benchmarks.skills import repair_system_prompt
 from oracle import reference_answer, initial_failures
 
@@ -41,6 +41,7 @@ def replay_record(record: dict) -> dict:
     if synthetic_task(task_id):
         mapping = service_codes(task_id)
         expected['failed_services'] = sorted(mapping[n] for n in expected['failed_services'])
+        expected['fix_id'] = public_action_ids(task_id)[expected['fix_id']]
     prompt = agent_prompt(task_id)
     if (record.get('benchmark_version') != VERSIONS[task_id]
             or record.get('agent_framework') != ENGINE

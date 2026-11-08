@@ -42,7 +42,7 @@ for _path in sorted(V6_FIXTURES.glob('RW*.json')):
     _public = json.loads(_path.read_text(encoding='utf-8'))['task']
     _task_id = _path.stem + 'V6CF'
     V6_REGISTRY[_task_id] = TaskSpec(
-        id=_task_id, version='agentic-v6-counterfactual-2', seed=_path.stem,
+        id=_task_id, version='agentic-v6-counterfactual-3', seed=_path.stem,
         time=_public['time'], alert=_public['alert'], observations=(),
         hypotheses=tuple((h['id'], h['description']) for h in _public['hypotheses']),
         max_model_calls=_public['max_turns'], max_tools=_public['max_tools'],
@@ -63,6 +63,19 @@ def fixture_path(task_id: str) -> Path:
 def service_codes(task_id: str) -> dict[str, str]:
     fixture = json.loads(fixture_path(task_id).read_text(encoding='utf-8'))
     return {item['role']: item['service_code'] for item in fixture['task']['public_inventory']}
+
+
+def public_action_ids(task_id: str) -> dict[str, str]:
+    """One deterministic task-specific opaque repair-ID permutation.
+
+    Internal Axx IDs stay immutable in the six original fixtures and their
+    reference answers. Model-facing IDs do not reveal A95 across scenarios.
+    This map is replayed independently; no runtime randomness or provider data.
+    """
+    private_ids = [a['id'] for a in source_case(task_id)['actions']]
+    ordered = sorted(private_ids, key=lambda aid: sha256(
+        f'v6cf-public-action-v1:{task_id}:{aid}'.encode('utf-8')).hexdigest())
+    return {aid: f'R{i:02d}' for i, aid in enumerate(ordered, 1)}
 
 
 def get_spec(task_id: str) -> TaskSpec:
@@ -99,6 +112,7 @@ def reference_trajectory(task_id: str) -> list[tuple[str, dict]]:
     direct, _ = initial_failures(case['id'], case['facts'])
     result = [('read_alert', {}), ('scan_service_health', {})]
     codes = service_codes(task_id)
+    actions = public_action_ids(task_id)
     for service in sorted(n['id'] for n in case['facts']['topology']):
         result.append(('inspect_metrics', {'service': codes.get(service, service)}))
         if service in direct:
@@ -118,9 +132,9 @@ def reference_trajectory(task_id: str) -> list[tuple[str, dict]]:
         'evidence_ids': evidence_before,
     }))
     if partials:
-        result.append(('simulate_repair', {'action_id': partials[0]['id']}))
-    result.append(('simulate_repair', {'action_id': reference['fix_id']}))
-    result.append(('apply_repair', {'action_id': reference['fix_id']}))
+        result.append(('simulate_repair', {'action_id': actions[partials[0]['id']]}))
+    result.append(('simulate_repair', {'action_id': actions[reference['fix_id']]}))
+    result.append(('apply_repair', {'action_id': actions[reference['fix_id']]}))
     evidence = [f'EV{i:03d}' for i, (name, _) in enumerate(result, 1)
                 if name in ('inspect_config', 'simulate_repair')]
     cause_id = reference['root_cause']
@@ -129,7 +143,7 @@ def reference_trajectory(task_id: str) -> list[tuple[str, dict]]:
         'failed_services': sorted(codes.get(n,n) for n in reference['failed_services']),
         'root_cause_id': cause_id,
         'root_cause_explanation': f'{description}. Verified through direct local checks and downstream dependency evidence.',
-        'fix_id': reference['fix_id'], 'evidence_ids': evidence,
+        'fix_id': actions[reference['fix_id']], 'evidence_ids': evidence,
         'rationale': 'Independent local-check faults and cascading dependencies; the lowest-cost complete safe repair was checked with counterfactual simulation.'
     }))
     return result

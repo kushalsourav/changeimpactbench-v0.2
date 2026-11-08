@@ -9,7 +9,7 @@ import unittest
 from unittest.mock import patch
 
 from agent_graph import ACTIVE_TASK_IDS, TASK_IDS, GraphEnvironment, agent_prompt, implementation_hashes
-from benchmarks.spec import reference_path, source_case, service_codes, get_spec, reference_trajectory
+from benchmarks.spec import reference_path, source_case, service_codes, get_spec, reference_trajectory, public_action_ids
 from benchmarks.grader import replay_record
 from benchmarks.environment import AgentEnvironment
 from dashboard_data import audit_record
@@ -33,7 +33,7 @@ class ScriptedReferenceGraph:
             if self.wrong_cause and tool == 'submit_diagnosis':
                 args['root_cause_id'] = 'H01' if args['root_cause_id'] != 'H01' else 'H02'
             if self.unsafe and tool == 'apply_repair':
-                args['action_id'] = 'A90'
+                args['action_id'] = public_action_ids(self.env.task_id)['A90']
             if self.empty_evidence and tool == 'submit_diagnosis':
                 args['evidence_ids'] = ['EV001', 'EV002']
             ident = f'scripted-{idx}'
@@ -90,13 +90,62 @@ class V6CounterfactualTests(unittest.TestCase):
                 self.assertNotIn('Cloudflare', prompt)
                 self.assertIn('external entrypoint probes only', prompt)
                 env = AgentEnvironment(get_spec(task_id), source_case(task_id))
-                env.execute('read_alert', {})
+                alert = env.execute('read_alert', {})['result']
+                self.assertEqual(set(alert['service_inventory']), set(service_codes(task_id).values()))
+                self.assertNotIn('role', json.dumps(alert['service_inventory']))
+                self.assertNotIn('mysql', json.dumps(alert['service_inventory']))
                 scan = env.execute('scan_service_health', {})['result']
                 self.assertLess(scan['observed_count'], scan['service_count'])
+                # No copy-paste of the full failure set in a single scan.
+                self.assertLess(len(scan['statuses']), scan['service_count'])
+                repairs = env.execute('list_repairs', {})['result']['candidate_repairs']
+                codes_map = public_action_ids(task_id)
+                self.assertEqual({a['id'] for a in repairs}, set(codes_map.values()))
+                self.assertTrue(all('safe' not in a['meaning'].lower() and
+                                    'optimal' not in a['meaning'].lower() for a in repairs))
+                simulation = env.execute('prepare_repair', {
+                    'failed_services': list(sorted(service_codes(task_id).values()))[:1],
+                    'hypothesized_root_cause_id': get_spec(task_id).hypotheses[0][0],
+                    'repair_instructions': 'Investigate local rules and dependency edges before committing a safe complete repair; evaluate modeled candidates and choose based on the observed counterfactual outcomes.',
+                    'evidence_ids': [f'EV{i:03d}' for i in (1, 2)],
+                })['result']
+                self.assertTrue(simulation['handoff_accepted'])
+                simulated = env.execute('simulate_repair', {'action_id': codes_map['A90']})['result']
+                self.assertNotIn('unavailable_after_services', simulated)
+                self.assertNotIn('newly_unavailable_services', simulated)
+                self.assertGreater(simulated['newly_unavailable_count'], 0)
                 codes = service_codes(task_id)
                 observed = {n for n,c in codes.items()
                             if env.execute('inspect_metrics', {'service':c})['result']['health_probe']=='unavailable'}
                 self.assertEqual(observed, set(reference_answer(source_case(task_id))['failed_services']))
+
+    def test_public_repair_ids_hide_cross_case_optimality_shortcut(self):
+        private_optima = []
+        public_optima = []
+        for task_id in TASKS:
+            case = source_case(task_id)
+            internal = reference_answer(case)['fix_id']
+            private_optima.append(internal)
+            public = public_action_ids(task_id)
+            public_optima.append(public[internal])
+            self.assertEqual(len(set(public)), len(public))
+            self.assertEqual(set(public), {a['id'] for a in case['actions']})
+            self.assertEqual(set(public.values()), {f'R{i:02}' for i in range(1, len(public) + 1)})
+        # Original fixtures all use A95; the model must NOT see that regularity.
+        self.assertEqual(private_optima, ['A95'] * 6)
+        self.assertGreaterEqual(len(set(public_optima)), 4)
+
+    def test_hypotheses_are_competitive_and_alerts_not_postmortem_titles(self):
+        for task_id in TASKS:
+            hypotheses = get_spec(task_id).hypotheses
+            lengths = [len(description.split()) for _, description in hypotheses]
+            self.assertEqual(len(hypotheses), 6)
+            self.assertLessEqual(max(lengths) - min(lengths), 2)
+            alert = get_spec(task_id).alert
+            self.assertNotIn('Cloudflare', alert)
+            self.assertNotIn('GitHub', alert)
+            self.assertNotIn('WAF regex', alert)
+            self.assertNotIn('security-system deployment', alert)
 
     def test_reference_solution_passes_independent_replay_and_dashboard(self):
         for task_id in TASKS:

@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field
 
 from api.services.storage import RESULTS, records_for, run_manifest
 from dashboard_data import audit_record
-from benchmarks.spec import get_spec, source_case
+from benchmarks.spec import get_spec, source_case, public_action_ids
 from oracle import reference_answer
 
 router = APIRouter()
@@ -48,9 +48,10 @@ def facts_for(records: list[dict]) -> dict:
         task_id = record.get('task_id')
         case = source_case(task_id)
         reference = reference_answer(case)
-        costs = {action['id']: action['cost'] for action in case['actions']}
+        public = public_action_ids(task_id)
+        costs = {public[action['id']]: action['cost'] for action in case['actions']}
         committed = grade.get('committed_action')
-        optimal = reference['fix_id']
+        optimal = public[reference['fix_id']]
         gradeable = (audit.get('status') == 'completed'
                      and audit.get('prompt_sha_matches') is True
                      and audit.get('reference_matches') is True

@@ -63,3 +63,12 @@ Submission ZIP must be ≤50MB with a root `README.md`, code, grader, reference 
 ## In-place ZIP extraction over your existing Git checkout
 
 Extract this ZIP into the *same parent directory*, retaining the existing `changeimpactbench-v0.2/` path. Extraction overwrites files but does not delete retired files already on disk; run `bash scripts/cleanup_retired_v6.sh` **only if** you want to remove known obsolete scripts, datasets and tests from the current checkout. The cleanup preserves `.git`, `.env` and installed dependencies, but **deletes previous files under `results/`** (keeping its README). Save any experiments you may still need before running it. Then collect genuine new V6CF trials for final submission. No separate project directory or renamed version is needed.
+
+## V6CF model-facing anti-leakage interface
+
+- Only six original V6CF fixtures and six original reviewer reference answers are active; these input files are unchanged. Original postmortem titles and source URLs remain reviewer-only.
+- The model receives a neutral incident alert, similarly detailed competing hypotheses, and opaque `svc-NNN` inventory IDs (no code-to-role inventory). Diagnostic configuration values and dependency relations remain inspectable so the task is solvable rather than an opaque guessing game.
+- `scan_service_health` reveals only external endpoint probes, never the complete internal outage set; all inventory members can be investigated individually. No fake/stale measurements are introduced.
+- Repair choices have deterministic **task-specific opaque `RNN` IDs**, real costs, and target configuration fields but no optimality claims or descriptions of expected success. The original `Axx` IDs remain unchanged in the fixtures/reviewer references.
+- Counterfactual `simulate_repair` observations contain **aggregate recovery/safety counts only**, without service names, service IDs, or predicted cause labels. Counts remain visible so a model can make an evidence-based safety decision.
+- The independent grader translates private reference repair IDs to public IDs and replays actual tool calls against original fixture state. Changing this interface changes source/prompt hashes: earlier transcripts are not valid current-run evidence.

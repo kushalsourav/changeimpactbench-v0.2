@@ -7,7 +7,7 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 from oracle import initial_failures, patch_facts, simulate
-from benchmarks.spec import TaskSpec, digest, service_codes, synthetic_task
+from benchmarks.spec import TaskSpec, digest, service_codes, synthetic_task, public_action_ids
 
 class ProtocolError(ValueError):
     pass
@@ -32,6 +32,8 @@ class AgentEnvironment:
         self.violations: list[str] = []
         self.nodes = {n['id']: n for n in self.facts['topology']}
         self.actions = {a['id']: a for a in self.case['actions']}
+        self.public_actions = public_action_ids(spec.id)
+        self.private_actions = {public: private for private, public in self.public_actions.items()}
         self.codes = service_codes(spec.id)
         self.reverse_codes = {code: name for name, code in self.codes.items()}
         self.synthetic_codes = True
@@ -65,7 +67,7 @@ class AgentEnvironment:
                                      or args['service'] not in (self.reverse_codes if self.synthetic_codes else self.nodes)):
             raise ProtocolError('Unknown service ID')
         if tool in ACTION_TOOLS and (not isinstance(args['action_id'], str)
-                                    or args['action_id'] not in self.actions):
+                                    or args['action_id'] not in self.private_actions):
             raise ProtocolError('Unknown repair ID')
         if tool == 'prepare_repair':
             if self.repair_brief is not None:
@@ -142,7 +144,8 @@ class AgentEnvironment:
                            'observations': list(self.spec.observations),
                            'hypotheses': [{'id': id_, 'description': description}
                                           for id_, description in self.spec.hypotheses],
-                           **({'service_inventory': [{'service_code': code, 'role': name} for name, code in sorted(self.codes.items())]} if self.synthetic_codes else {}),
+                           'service_inventory': sorted(self.codes.values()),
+                'inventory_scope': 'Opaque component identifiers; infer relationships and failures using available inspection tools.',
                            'scope': 'Synthetic research fixture; reference result withheld'}
         elif tool == 'prepare_repair':
             self.repair_brief = deepcopy(args)
@@ -154,11 +157,13 @@ class AgentEnvironment:
                 'message': 'Repair-phase skill now active. The plan is a hypothesis. Simulate and verify independently before committing.',
             }
         elif tool == 'list_repairs':
-            observation = {'candidate_repairs': [
-                {'id': a['id'], 'cost': a['cost'],
-                 'meaning': (a.get('operational_description', 'Operator-proposed change; verify conditions and counterfactual effects') if self.v6 else 'Proposed operational change; simulate to verify service impact' if self.synthetic_codes else f"Candidate with {len(a['changes'])} configuration edit(s)"),
-                 **({} if self.synthetic_codes else {'changes': deepcopy(a['changes'])})}
-                for a in self.case['actions']]}
+            observation = {'candidate_repairs': sorted([
+                {'id': self.public_actions[a['id']], 'cost': a['cost'],
+                 # Real change targets, not misleading outcomes or optimality labels.
+                 # The model must inspect state and test the counterfactual effect.
+                 'edit_targets': sorted({'.'.join(change['path']) for change in a['changes']}),
+                 'meaning': 'Candidate configuration update; outcome is not asserted.'}
+                for a in self.case['actions']], key=lambda a: a['id'])}
         elif tool in SERVICE_TOOLS:
             name = self.reverse_codes.get(args['service'], args['service'])
             node = self.nodes[name]
@@ -173,7 +178,7 @@ class AgentEnvironment:
                             req = action['precondition']
                             value = self.facts
                             for part in req['path']: value = value[part]
-                            prereqs.append({'action_id': action['id'], 'path': req['path'],
+                            prereqs.append({'action_id': self.public_actions[action['id']], 'path': req['path'],
                                             'operator': 'eq', 'expected': req['equals'], 'observed': value})
                     if prereqs: observation['candidate_precondition_checks'] = prereqs
             elif tool == 'inspect_dependencies':
@@ -214,15 +219,15 @@ class AgentEnvironment:
             if self.simulations >= self.spec.max_simulations:
                 raise ProtocolError('Simulation-call budget exceeded')
             self.simulations += 1
-            action = self.actions[args['action_id']]
+            action = self.actions[self.private_actions[args['action_id']]]
             changed = patch_facts(self.facts, action)
             after_down, _ = simulate(self.case, changed)
-            observation = {'action_id': action['id'], 'cost': action['cost'],
+            observation = {'action_id': args['action_id'], 'cost': action['cost'],
+                           # Opaque outcomes: only aggregate counts, not service identities,
+                           # their roles, cause labels, or an oracle optimality verdict.
                            'unavailable_after_count': len(after_down),
                            'restored_count': len(before_down - after_down),
                            'newly_unavailable_count': len(after_down - before_down),
-                           'newly_unavailable_services': self.encode(after_down - before_down),
-                           'unavailable_after_services': self.encode(after_down),
                            'simulated_only': True,
                            'state_unchanged': True,
                            'simulations_remaining': self.spec.max_simulations - self.simulations}
@@ -232,15 +237,15 @@ class AgentEnvironment:
             if self.committed is not None:
                 self.violations.append('attempted_second_commit')
                 raise ProtocolError('Only one committed repair is allowed')
-            action = self.actions[args['action_id']]
+            action = self.actions[self.private_actions[args['action_id']]]
             self.facts = patch_facts(self.facts, action)
             after_down, _ = simulate(self.case, self.facts)
-            self.committed = action['id']
-            self.committed_effect = {'action_id': action['id'], 'unavailable_after': self.encode(after_down),
+            self.committed = args['action_id']
+            self.committed_effect = {'action_id': args['action_id'], 'unavailable_after': self.encode(after_down),
                                      'newly_unavailable': self.encode(after_down - before_down),
                                      'restored': self.encode(before_down - after_down),
                                      'facts_sha256': digest(self.facts)}
-            observation = {'action_id': action['id'], 'committed_in_sandbox': True,
+            observation = {'action_id': args['action_id'], 'committed_in_sandbox': True,
                            'unavailable_after_count': len(after_down),
                            'newly_unavailable_count': len(after_down - before_down),
                            'restored_count': len(before_down - after_down),
@@ -260,7 +265,7 @@ class AgentEnvironment:
                 or args['root_cause_id'] not in {label for label, _ in self.spec.hypotheses}
                 or not isinstance(args['root_cause_explanation'], str)
                 or not 20 <= len(args['root_cause_explanation'].strip()) <= 1200
-                or not isinstance(args['fix_id'], str)
+                or not isinstance(args['fix_id'], str) or args['fix_id'] not in self.private_actions
                 or not isinstance(ids, list) or not all(isinstance(x, str) for x in ids)
                 or len(set(ids)) != len(ids) or not isinstance(args['rationale'], str)
                 or not 30 <= len(args['rationale'].strip()) <= 2000):
