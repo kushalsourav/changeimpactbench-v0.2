@@ -1,15 +1,17 @@
 {
   "failed_services": [
-    "mcp-api",
-    "mcp-dns",
-    "mcp-http",
-    "mcp-ingress",
-    "mcp-spine",
-    "quorum-gateway-02",
-    "regional-edge",
-    "regional-traffic-manager",
-    "validated-shard-02"
+    "europe-http",
+    "mcp-atlanta",
+    "mcp-chicago",
+    "mcp-frankfurt",
+    "mcp-london",
+    "mcp-los-angeles",
+    "mcp-miami",
+    "mcp-paris",
+    "mcp-san-jose",
+    "mcp-tokyo",
+    "mcp-washington"
   ],
   "root_cause": "H02",
-  "fix_id": "A95"
+  "fix_id": "A23"
 }

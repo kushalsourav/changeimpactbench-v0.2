@@ -82,7 +82,7 @@ def make_native_tools(env: GraphEnvironment) -> list:
 
     @tool
     def inspect_config(service: str, tool_call_id: Annotated[str, InjectedToolCallId]) -> str:
-        """Inspect ONE service's local declarative failure rule and its current factual input values."""
+        """Inspect ONE service's raw timestamped configuration snapshot; no oracle predicate is exposed."""
         return env.execute('inspect_config', {'service': service}, tool_call_id)
 
     @tool
@@ -92,7 +92,7 @@ def make_native_tools(env: GraphEnvironment) -> list:
 
     @tool
     def list_repairs(tool_call_id: Annotated[str, InjectedToolCallId]) -> str:
-        """List candidate sandbox repair IDs, configuration edits and costs; not their effects."""
+        """List candidate operational responses, modeled cost/time/risk and intent; hidden field edits and effects are not exposed."""
         return env.execute('list_repairs', {}, tool_call_id)
 
     @tool
@@ -211,15 +211,14 @@ def _live_observation(tool: str, result: object) -> object:
         candidates = result.get('candidate_repairs')
         if isinstance(candidates, list):
             return {'candidate_repairs': [
-                {key: item[key] for key in ('id', 'cost') if key in item}
+                {key: item[key] for key in ('id', 'cost', 'estimated_minutes', 'risk', 'operational_description') if key in item}
                 for item in candidates if isinstance(item, dict)
             ]}
     fields = {
         'read_alert': ('alert',),
-        'scan_service_health': ('statuses', 'observed_count', 'kind'),
-        'inspect_metrics': ('service', 'health_probe', 'synthetic_request_errors_per_minute'),
-        'inspect_config': ('service', 'configured_local_check', 'referenced_values', 'rule',
-                           'candidate_precondition_checks'),
+        'scan_service_health': ('statuses', 'observed_count', 'kind', 'observed_at'),
+        'inspect_metrics': ('service', 'health_probe', 'signals', 'freshness', 'measurement_age_seconds'),
+        'inspect_config': ('service', 'configuration_snapshot', 'freshness', 'measurement_age_seconds'),
         'inspect_dependencies': ('service', 'upstream', 'direct_consumers'),
         'inspect_logs': ('service', 'lines'),
         'prepare_repair': ('phase', 'handoff_accepted', 'available_simulations'),

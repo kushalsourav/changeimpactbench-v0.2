@@ -62,9 +62,7 @@ export function summarizeTool(tool: string, argumentText: string): string {
       if (status) return `Health probe: ${status}`;
     }
     if (tool === 'inspect_config')
-      return /"configured_local_check"\s*:\s*false/.test(argumentText)
-        ? 'No local failure check configured'
-        : 'Configuration inspected';
+      return 'Raw configuration snapshot inspected';
     if (tool === 'inspect_dependencies') return 'Dependencies inspected';
     if (tool === 'list_repairs') return 'Candidate repairs reviewed';
     if (tool === 'prepare_repair') return 'Repair plan handed off';
@@ -101,8 +99,7 @@ export function summarizeTool(tool: string, argumentText: string): string {
     if (typeof status === 'string') return `Health probe: ${status}`;
   }
   if (tool === 'inspect_config') {
-    if (result.configured_local_check === false) return 'No local failure check configured';
-    const values = result.referenced_values;
+    const values = result.configuration_snapshot;
     if (values && typeof values === 'object' && !Array.isArray(values)) {
       const entries = Object.entries(values as Record<string, unknown>);
       if (entries.length)
@@ -110,7 +107,7 @@ export function summarizeTool(tool: string, argumentText: string): string {
           .map(([path, value]) => `${path.split('.').at(-1)} = ${String(value)}`)
           .join(' · ');
     }
-    return 'Configuration inspected';
+    return 'Raw configuration snapshot inspected';
   }
   if (tool === 'inspect_dependencies') {
     const upstream =

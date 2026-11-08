@@ -5,7 +5,7 @@ all state transitions use the independently tested declarative oracle.
 """
 from __future__ import annotations
 from copy import deepcopy
-from typing import Any
+from datetime import datetime, timedelta
 from oracle import initial_failures, patch_facts, simulate
 from benchmarks.spec import TaskSpec, digest, service_codes, synthetic_task, public_action_ids
 
@@ -38,12 +38,22 @@ class AgentEnvironment:
         self.reverse_codes = {code: name for name, code in self.codes.items()}
         self.synthetic_codes = True
         self.v6 = spec.id.endswith('V6CF')
+        self.observability = deepcopy(self.case.get('observability') or {})
 
     def encode(self, services):
         return sorted(self.codes.get(n, n) for n in services)
 
     def decode(self, services):
         return [self.reverse_codes.get(n, n) for n in services]
+
+    def observed_at(self, age_seconds: int) -> str:
+        """Return the actual sample time, preserving deterministic fixture time."""
+        snapshot = self.observability.get('snapshot_time', self.spec.time)
+        try:
+            value = datetime.fromisoformat(snapshot.replace('Z', '+00:00'))
+            return (value - timedelta(seconds=age_seconds)).isoformat().replace('+00:00', 'Z')
+        except (TypeError, ValueError):
+            return snapshot
 
     def encode_node(self, node):
         output = deepcopy(node)
@@ -88,31 +98,6 @@ class AgentEnvironment:
                 or not 60 <= len(args['repair_instructions'].strip()) <= 2200):
                 raise ProtocolError('Invalid repair handoff: cite observed events and provide an evidence-backed plan (60-2200 characters)')
 
-    def _local_details(self, service: str) -> dict:
-        entries = [r for r in self.facts['local_rules'] if r['service'] == service]
-        if not entries:
-            return {'configured_local_check': False, 'rule': None, 'referenced_values': {}}
-        rule = entries[0]['when']
-        paths: list[tuple[str, ...]] = []
-        def walk(v: Any) -> None:
-            if isinstance(v, dict):
-                if isinstance(v.get('path'), list):
-                    paths.append(tuple(v['path']))
-                for sub in v.values():
-                    walk(sub)
-            elif isinstance(v, list):
-                for sub in v:
-                    walk(sub)
-        walk(rule)
-        fields = {}
-        for path in sorted(set(paths)):
-            item = self.facts
-            for name in path:
-                item = item[name]
-            fields['.'.join(path)] = item
-        return {'configured_local_check': True, 'rule': deepcopy(rule),
-                'referenced_values': fields}
-
     def execute(self, tool: str, args: dict) -> dict:
         """Execute one validated sandbox tool and return exactly what the model sees."""
         if self.closed or len(self.steps) >= self.spec.max_tools:
@@ -122,16 +107,21 @@ class AgentEnvironment:
         before_down, _ = simulate(self.case, self.facts)
         direct, _ = initial_failures(self.case['id'], self.facts)
         if tool == 'scan_service_health':
-            # V6 exposes only externally observable entrypoint probes; the
-            # internal inventory must be resolved through individual inspections.
-            visible = ([n for n in sorted(self.nodes) if not any(
+            # Source-faithful fixtures choose a bounded set of model-facing
+            # probes. Fall back to graph entrypoints for older fixtures.
+            declared = self.observability.get('external_probes') or []
+            visible = (declared if declared else [n for n in sorted(self.nodes) if not any(
                 n in (m.get('needs_all', []) + m.get('needs_any', []) +
                       (m.get('needs_at_least') or {}).get('of', []))
-                for m in self.nodes.values())] if self.v6 else sorted(self.nodes))
+                for m in self.nodes.values())]) if self.v6 else sorted(self.nodes)
+            telemetry = self.observability.get('services') or {}
+            def reported(name):
+                row = telemetry.get(name) or {}
+                return row.get('reported_health') or ('unavailable' if name in self.original_down else 'healthy')
             observation = {
                 'snapshot': 'initial', 'kind': 'synthetic availability probes',
-                'statuses': {self.codes.get(name, name): ('unavailable' if name in self.original_down else 'healthy')
-                             for name in visible},
+                'observed_at': self.observability.get('snapshot_time', self.spec.time),
+                'statuses': {self.codes.get(name, name): reported(name) for name in visible},
                 'service_count': len(self.nodes),
                 **({'probe_scope': 'external endpoint probes only; inspect_metrics on each inventory service to determine complete internal impact',
                      'observed_count': len(visible)} if self.v6 else {}),
@@ -159,28 +149,28 @@ class AgentEnvironment:
         elif tool == 'list_repairs':
             observation = {'candidate_repairs': sorted([
                 {'id': self.public_actions[a['id']], 'cost': a['cost'],
-                 # Real change targets, not misleading outcomes or optimality labels.
-                 # The model must inspect state and test the counterfactual effect.
-                 'edit_targets': sorted({'.'.join(change['path']) for change in a['changes']}),
-                 'meaning': 'Candidate configuration update; outcome is not asserted.'}
+                 'estimated_minutes': a.get('estimated_minutes'),
+                 'risk': a.get('risk', 'unknown'),
+                 'operational_description': a.get('operational_description', 'Bounded incident response action.'),
+                 'meaning': 'Candidate operational response; outcome is not asserted.'}
                 for a in self.case['actions']], key=lambda a: a['id'])}
         elif tool in SERVICE_TOOLS:
             name = self.reverse_codes.get(args['service'], args['service'])
             node = self.nodes[name]
+            source = deepcopy((self.observability.get('services') or {}).get(name) or {})
+            age = int(source.get('measurement_age_seconds') or 0)
+            observed_at = self.observed_at(age)
+            freshness = 'stale' if age >= 60 else 'fresh'
             if tool == 'inspect_config':
-                observation = {'service': args['service'], **self._local_details(name)}
-                if self.v6:
-                    # Publish factual preconditions only through local investigation,
-                    # not through success labels or reference-optimal hints.
-                    prereqs = []
-                    for action in self.case['actions']:
-                        if action.get('precondition_service') == name and action.get('precondition'):
-                            req = action['precondition']
-                            value = self.facts
-                            for part in req['path']: value = value[part]
-                            prereqs.append({'action_id': self.public_actions[action['id']], 'path': req['path'],
-                                            'operator': 'eq', 'expected': req['equals'], 'observed': value})
-                    if prereqs: observation['candidate_precondition_checks'] = prereqs
+                # Do not expose the executable oracle predicate. Models receive
+                # the kind of raw snapshot an operator could inspect and must
+                # infer whether it explains the observed symptoms.
+                observation = {
+                    'service': args['service'], 'observed_at': observed_at,
+                    'measurement_age_seconds': age, 'freshness': freshness,
+                    'configuration_snapshot': deepcopy(source.get('configuration_snapshot') or {}),
+                    'snapshot_scope': 'raw modeled configuration; no oracle failure predicate or repair answer',
+                }
             elif tool == 'inspect_dependencies':
                 upstream = {k: deepcopy(v) for k, v in node.items() if k != 'id'}
                 consumers = [other['id'] for other in self.facts['topology']
@@ -196,23 +186,22 @@ class AgentEnvironment:
                                'direct_consumers': self.encode(consumers),
                                'consumer_dependency_rules': {self.codes.get(k,k): self.encode_node(v) for k,v in consumer_rules.items()}}
             elif tool == 'inspect_metrics':
-                observation = {'service': args['service'], 'timestamp': self.spec.time,
-                               'health_probe': 'unavailable' if name in before_down else 'healthy',
-                               'synthetic_request_errors_per_minute': 60 if name in before_down else 0,
-                               **({'is_direct_local_fault': name in direct} if self.spec.id.endswith('V3') else {})}
+                reported = source.get('reported_health') or ('unavailable' if name in before_down else 'healthy')
+                signals = deepcopy(source.get('signals') or {})
+                if not signals:
+                    signals = {'request_error_rate_pct': 100.0 if name in before_down else 0.0}
+                observation = {'service': args['service'], 'observed_at': observed_at,
+                               'measurement_age_seconds': age, 'freshness': freshness,
+                               'health_probe': reported, 'signals': signals,
+                               'interpretation_note': 'A stale or partial observation may not equal current ground truth; corroborate with dependencies and other signals.'}
             else:
-                # V6CF: do not announce direct versus cascading failures in logs.
-                # Only inspection of local rules and dependencies can distinguish them.
-                if self.spec.id.endswith('V6CF'):
-                    message = ('service unavailable; investigate configuration and dependencies'
-                               if name in before_down else 'health probe passing')
-                else:
-                    message = (('local check violation; inspect the relevant configuration values'
-                                if self.spec.id.endswith('V3') else 'synthetic service health probe failed')
-                               if name in direct else 'upstream request unavailable; trace dependencies'
-                               if name in before_down else 'health probe passing')
-                observation = {'service': args['service'], 'timestamp': self.spec.time,
-                               'lines': [f'{self.spec.time} {args["service"]} {message}']}
+                lines = deepcopy(source.get('logs') or [])
+                if not lines:
+                    lines = ['request path unavailable; correlate local signals and upstream dependencies'
+                             if name in before_down else 'routine health event; no current serving error recorded']
+                observation = {'service': args['service'], 'observed_at': observed_at,
+                               'measurement_age_seconds': age, 'freshness': freshness,
+                               'lines': [f'{observed_at} {args["service"]} {line}' for line in lines]}
         elif tool == 'simulate_repair':
             if self.repair_brief is None:
                 raise ProtocolError('Call prepare_repair with an evidence-backed plan before simulation')
@@ -276,4 +265,3 @@ class AgentEnvironment:
         reply = {'event_id': event_id, 'tool': tool, 'result': observation}
         self.steps.append({'tool': tool, 'arguments': deepcopy(args), 'observation': deepcopy(reply)})
         return reply
-

@@ -1,15 +1,22 @@
 {
   "failed_services": [
-    "access",
-    "gateway",
-    "images",
-    "kv-storage",
-    "quorum-gateway-06",
-    "turnstile",
-    "validated-shard-06",
-    "workers-ai",
-    "workers-kv"
+    "access-identity-login",
+    "ai-gateway",
+    "browser-isolation",
+    "challenge-platform",
+    "durable-objects-sqlite",
+    "gateway-proxy",
+    "images-batch-upload",
+    "kv-origin-access",
+    "pages-build",
+    "queues",
+    "stream-playlists",
+    "turnstile-siteverify",
+    "warp-registration",
+    "workers-ai-routing",
+    "workers-kv-cold-read",
+    "workers-kv-write"
   ],
   "root_cause": "H01",
-  "fix_id": "A95"
+  "fix_id": "A62"
 }

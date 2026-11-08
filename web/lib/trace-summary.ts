@@ -19,10 +19,10 @@ export function observedEventSummary(event: AgentEvent): string {
     return `${typeof probe === 'string' ? `Health probe: ${probe}` : 'Metrics inspected'}${typeof local === 'boolean' ? ` · direct local fault: ${local ? 'yes' : 'no'}` : ''}`;
   }
   if (event.tool === 'inspect_config') {
-    const values = result.referenced_values;
+    const values = result.configuration_snapshot;
     return values && typeof values === 'object' && !Array.isArray(values)
-      ? `Configuration rule and ${Object.keys(values).length} referenced values inspected`
-      : 'Synthetic configuration inspected';
+      ? `Raw configuration snapshot with ${Object.keys(values).length} observed fields inspected`
+      : 'Raw configuration snapshot inspected';
   }
   if (event.tool === 'inspect_dependencies') {
     const consumers = result.direct_consumers;

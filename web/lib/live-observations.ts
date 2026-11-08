@@ -55,12 +55,7 @@ function displayValue(value: unknown): string {
 }
 
 function configSummary(result: Record<string, unknown>, raw: string): string {
-  const configured =
-    typeof result.configured_local_check === 'boolean'
-      ? result.configured_local_check
-      : fieldBoolean(raw, 'configured_local_check');
-  if (configured === false) return 'Config: no local check';
-  const values = result.referenced_values;
+  const values = result.configuration_snapshot;
   if (values && typeof values === 'object' && !Array.isArray(values)) {
     const entries = Object.entries(values as Record<string, unknown>);
     if (entries.length) {
@@ -69,7 +64,7 @@ function configSummary(result: Record<string, unknown>, raw: string): string {
       return `Config: ${key} = ${displayValue(value)}${entries.length > 1 ? ` +${entries.length - 1}` : ''}`;
     }
   }
-  return configured === true ? 'Config check inspected' : 'Configuration inspected';
+  return 'Raw configuration inspected';
 }
 
 function dependencySummary(result: Record<string, unknown>): string {

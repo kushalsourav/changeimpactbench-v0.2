@@ -1,0 +1,171 @@
+{
+  "available": true,
+  "generated_utc": "2026-11-08T14:51:03.481170+00:00",
+  "model": "google-ai-studio/gemini-3.5-flash-lite",
+  "experiment_id": "b7994ae3ef33",
+  "experiment_id_source": "run_manifest",
+  "run_file": "ui_b7994ae3ef33.jsonl",
+  "verified_facts": {
+    "episode_count": 2,
+    "gradeable_count": 1,
+    "strict_passes": 0,
+    "strict_failures": 1,
+    "complete_safe_recoveries": 1,
+    "ungradeable_count": 1,
+    "ungradeable_by_reason": {
+      "replay_not_verified": 1
+    },
+    "episodes": [
+      {
+        "episode": 0,
+        "trial": 1,
+        "task": "RW01V6CF",
+        "model": "gemini-3.5-flash-lite",
+        "status": "completed",
+        "error_category": null,
+        "multi_tool_provider_turns": [],
+        "audit_warnings": [],
+        "verified": true,
+        "integrity": {
+          "prompt": true,
+          "reference": true,
+          "stored_grade": true
+        },
+        "strict_pass": false,
+        "partial_score": 0.95,
+        "impact_f1": 1.0,
+        "root_correct": true,
+        "recovery_success": true,
+        "recovery_safe": true,
+        "unsafe_commit": false,
+        "root_cause_id_submitted": "H03",
+        "root_cause_id_expected": "H03",
+        "criterion_scores": {
+          "impact": {
+            "earned": 20.0,
+            "available": 20,
+            "measurement": "initial-service F1"
+          },
+          "root_cause_id": {
+            "earned": 20,
+            "available": 20,
+            "measurement": "exact hypothesis ID"
+          },
+          "safe_complete_recovery": {
+            "earned": 40,
+            "available": 40,
+            "measurement": "sandbox replay"
+          },
+          "evidence_provenance": {
+            "earned": 5,
+            "available": 10,
+            "measurement": "cited direct-fault configuration and independent corroboration; not explanation semantics"
+          },
+          "protocol_discipline": {
+            "earned": 10,
+            "available": 10,
+            "measurement": "rejected tool requests and violations"
+          }
+        },
+        "strict_failure_reasons": [
+          "insufficient_evidence_provenance"
+        ],
+        "semantic_explanation_review": "human evidence review pending; free-form text not scored",
+        "tool_calls": 29,
+        "provider_requests": 29,
+        "committed_action": "R04",
+        "committed_cost": 8,
+        "reference_optimal_action": "R04",
+        "reference_optimal_cost": 8,
+        "repair_cost_delta": 0,
+        "protocol_errors": 0,
+        "gradeable": true
+      },
+      {
+        "episode": 1,
+        "trial": 1,
+        "task": "RW01V6CF",
+        "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+        "status": "unverified",
+        "error_category": "replay_not_verified",
+        "multi_tool_provider_turns": [],
+        "audit_warnings": [
+          "Recorded graph tool attempts differ from sandbox replay"
+        ],
+        "verified": false,
+        "integrity": {
+          "prompt": false,
+          "reference": true,
+          "stored_grade": false
+        },
+        "strict_pass": null,
+        "partial_score": null,
+        "impact_f1": null,
+        "root_correct": null,
+        "recovery_success": null,
+        "recovery_safe": null,
+        "unsafe_commit": null,
+        "root_cause_id_submitted": null,
+        "root_cause_id_expected": null,
+        "criterion_scores": null,
+        "strict_failure_reasons": [],
+        "semantic_explanation_review": "human evidence review pending; free-form text not scored",
+        "tool_calls": 47,
+        "provider_requests": 48,
+        "committed_action": null,
+        "committed_cost": null,
+        "reference_optimal_action": null,
+        "reference_optimal_cost": null,
+        "repair_cost_delta": null,
+        "protocol_errors": 0,
+        "gradeable": false
+      }
+    ],
+    "data_origin": "Independent Python oracle and stored native tool replay; not Google-generated content"
+  },
+  "record_sha256": "08a314905aa3b9bc5bed5df5f65702daf2b8b06833f0dcdbcacb9dc2e26ae996",
+  "record_tasks": [
+    "RW01V6CF"
+  ],
+  "record_models": [
+    "gemini-3.5-flash-lite",
+    "nvidia/nemotron-3-ultra-550b-a55b:free"
+  ],
+  "label": "LLM interpretation; not deterministic verdict or human-verified semantics",
+  "narrative_validation": {
+    "status": "passed_guardrails",
+    "warnings": [],
+    "note": "Basic automated checks only; explanation semantics still require human review"
+  },
+  "synthesis": {
+    "headline": "Strict Failure Recorded Despite High Partial Score Due to Insufficient Evidence Provenance",
+    "interpretation": "An independent analysis of gradeable episode data reveals a strict failure outcome driven by insufficient evidence provenance, despite achieving a high weighted partial score of 0.95, a correct root-cause identification, and a safe, optimal repair cost matching the reference model.",
+    "observations": [
+      "Episode 0 achieved a high partial score of 0.95 with correct root-cause ID H03 and a safe complete recovery.",
+      "The strict failure was exclusively caused by insufficient evidence provenance, earning only 5 out of 10 available points in that category.",
+      "The committed repair action R04 matched the reference optimal action cost of 8 with a cost delta of zero."
+    ],
+    "limitations": "The evaluation dataset consists of a very small sample size of a single gradeable episode, limiting broader statistical significance. Unverified episodes are excluded from gradeable analysis.",
+    "chart_choice": "score_by_model",
+    "chart_explanation": "This chart displays the model score breakdown for the gradeable episode, highlighting the disparity between high partial task scores and strict failure criteria.",
+    "supporting_episodes": [
+      0
+    ]
+  },
+  "chart": {
+    "type": "score_by_model",
+    "rows": [
+      {
+        "label": "gemini-3.5-flash-lite",
+        "value": 95.0,
+        "denominator": 1
+      }
+    ],
+    "data_origin": "Computed from independent deterministic regrades, not generated by the LLM"
+  },
+  "episode_count": 2,
+  "gradeable_count": 1,
+  "sources": [
+    ""
+  ]
+}

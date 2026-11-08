@@ -34,7 +34,7 @@ def canonical(obj: Any) -> str:
 def digest(obj: Any) -> str:
     return sha256(canonical(obj).encode('utf-8')).hexdigest()
 
-# The six original V6 counterfactual fixtures are the only active dataset.
+# The six source-faithful V6 counterfactual fixtures are the only active dataset.
 # Do not present source/postmortem metadata to the agent; keep it reviewer-only.
 V6_FIXTURES = Path(__file__).with_name('v6_fixtures') / 'counterfactual'
 V6_REGISTRY: dict[str, TaskSpec] = {}
@@ -42,7 +42,7 @@ for _path in sorted(V6_FIXTURES.glob('RW*.json')):
     _public = json.loads(_path.read_text(encoding='utf-8'))['task']
     _task_id = _path.stem + 'V6CF'
     V6_REGISTRY[_task_id] = TaskSpec(
-        id=_task_id, version='agentic-v6-counterfactual-3', seed=_path.stem,
+        id=_task_id, version=_public['version'], seed=_path.stem,
         time=_public['time'], alert=_public['alert'], observations=(),
         hypotheses=tuple((h['id'], h['description']) for h in _public['hypotheses']),
         max_model_calls=_public['max_turns'], max_tools=_public['max_tools'],
@@ -68,13 +68,13 @@ def service_codes(task_id: str) -> dict[str, str]:
 def public_action_ids(task_id: str) -> dict[str, str]:
     """One deterministic task-specific opaque repair-ID permutation.
 
-    Internal Axx IDs stay immutable in the six original fixtures and their
-    reference answers. Model-facing IDs do not reveal A95 across scenarios.
+    Internal source-specific action IDs remain reviewer-only. Model-facing IDs
+    are independently permuted so cross-case action labels reveal no shortcut.
     This map is replayed independently; no runtime randomness or provider data.
     """
     private_ids = [a['id'] for a in source_case(task_id)['actions']]
     ordered = sorted(private_ids, key=lambda aid: sha256(
-        f'v6cf-public-action-v1:{task_id}:{aid}'.encode('utf-8')).hexdigest())
+        f'v6cf-public-action-v6:{task_id}:{aid}'.encode('utf-8')).hexdigest())
     return {aid: f'R{i:02d}' for i, aid in enumerate(ordered, 1)}
 
 

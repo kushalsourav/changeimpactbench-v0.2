@@ -46,6 +46,6 @@ test('live repair observations retain zero-outage outcomes and action details', 
   assert.match(observations, /newly_unavailable_count/);
   assert.match(observations, /unavailable_after_count/);
   assert.match(observations, /committed_in_sandbox/);
-  assert.match(observations, /Config: no local check/);
+  assert.match(observations, /Raw configuration inspected/);
   assert.match(source, /newOutages != null/);
 });

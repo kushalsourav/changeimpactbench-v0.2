@@ -33,7 +33,7 @@ class V6APIReadOnlyTests(unittest.TestCase):
         self.assertFalse(data['reference_visible_to_agent'])
         self.assertNotIn('GitHub', data['prompt'])
         self.assertIn('reference', data)
-        self.assertEqual(sorted(data['service_codes'].values()), [f'svc-{i:03d}' for i in range(1,15)])
+        self.assertEqual(sorted(data['service_codes'].values()), [f'svc-{i:03d}' for i in range(1,23)])
 
     def test_retired_task_cannot_launch_or_be_accessed(self):
         for task_id in ('RW01V4','RW01V5','RW01V6N'):

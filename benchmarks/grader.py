@@ -10,7 +10,7 @@ from benchmarks.native_agent import (
 )
 from benchmarks.spec import digest, service_codes, synthetic_task, public_action_ids
 from benchmarks.skills import repair_system_prompt
-from oracle import reference_answer, initial_failures
+from oracle import reference_answer
 
 def _f1(expected: set[str], actual: set[str]) -> float:
     if not expected and not actual:
@@ -121,22 +121,30 @@ def replay_record(record: dict) -> dict:
                                     ('inspect_metrics', 'inspect_logs', 'inspect_config',
                                      'scan_service_health', 'simulate_repair')) for s in cited)
     evidence_score = (10 if provenance and support_count >= 2 else 5 if provenance and support_count else 0)
-    # V6CF rejects empty citation theater: some cited evidence must directly
-    # bear on a genuinely failed local check; another independent observation
-    # must establish scope, propagation, or counterfactual effect.
+    # V6CF rejects empty citation theater without prescribing one hidden tool
+    # sequence. Full provenance requires one service-level observation tied to
+    # the initial impact and at least two distinct operational evidence types.
     if synthetic_task(task_id):
-        direct_faults, _ = initial_failures(case['id'], case['facts'])
-        names = env.underlying.reverse_codes
-        local_support = any(event['tool'] == 'inspect_config'
-                            and event['observation']['result'].get('configured_local_check') is True
-                            and event['observation']['result'].get('rule') is not None
-                            and bool(event['observation']['result'].get('referenced_values'))
-                            and names.get(event['arguments']['service'], event['arguments']['service']) in direct_faults
-                            for event in cited)
-        corroboration = any(event['tool'] in ('scan_service_health', 'inspect_dependencies', 'simulate_repair')
-                            for event in cited)
-        if not (local_support and corroboration):
-            evidence_score = min(evidence_score, 5)
+        categories = {
+            'inspect_config': 'configuration',
+            'inspect_metrics': 'metrics',
+            'inspect_logs': 'logs',
+            'inspect_dependencies': 'topology',
+            'scan_service_health': 'scan',
+            'simulate_repair': 'simulation',
+        }
+        cited_categories = {categories[event['tool']] for event in cited
+                            if event['tool'] in categories}
+        failed_codes = set(expected['failed_services'])
+        impacted_service_support = any(
+            event['tool'] in ('inspect_config', 'inspect_metrics', 'inspect_logs',
+                              'inspect_dependencies')
+            and event['arguments'].get('service') in failed_codes
+            for event in cited
+        )
+        evidence_score = (10 if provenance and impacted_service_support
+                          and len(cited_categories) >= 2
+                          else 5 if provenance and support_count else 0)
 
     errors = [a for a in attempts if a.get('rejected_reason')]
     procedure_score = max(0, 10 - 5 * len(errors))
@@ -153,7 +161,7 @@ def replay_record(record: dict) -> dict:
         'impact': {'earned': round(20 * f1, 5), 'available': 20, 'measurement': 'initial-service F1'},
         'root_cause_id': {'earned': 20 if root_ok else 0, 'available': 20, 'measurement': 'exact hypothesis ID'},
         'safe_complete_recovery': {'earned': 40 if safe and complete else 0, 'available': 40, 'measurement': 'sandbox replay'},
-        'evidence_provenance': {'earned': evidence_score, 'available': 10, 'measurement': ('cited direct-fault configuration and independent corroboration; not explanation semantics' if synthetic_task(task_id) else 'event IDs exist; not semantic support')},
+        'evidence_provenance': {'earned': evidence_score, 'available': 10, 'measurement': ('valid citations from at least two operational evidence categories, including an initially unavailable service; not explanation semantics' if synthetic_task(task_id) else 'event IDs exist; not semantic support')},
         'protocol_discipline': {'earned': procedure_score, 'available': 10, 'measurement': 'rejected tool requests and violations'},
     }
     reasons = []
@@ -177,7 +185,7 @@ def replay_record(record: dict) -> dict:
         'repair_handoff_recorded': bool(env.repair_brief),
         'strict_failure_reasons': reasons,
         'evidence_score': evidence_score,
-        'evidence_review': ('cited direct-fault configuration and corroborating tool event verified; claim-by-claim explanation semantic review pending' if synthetic_task(task_id) else 'automated citation provenance only; human semantic review pending'),
+        'evidence_review': ('cited impacted-service observation and multiple operational evidence categories verified; claim-by-claim explanation semantic review pending' if synthetic_task(task_id) else 'automated citation provenance only; human semantic review pending'),
         'procedure_score': procedure_score, 'tool_calls': len(events),
         'simulation_calls': env.underlying.simulations,
         'protocol_errors': [{'turn': a['provider_turn'], 'reason': a['rejected_reason'],

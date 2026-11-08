@@ -6,8 +6,8 @@
 
 ## Dataset and file naming
 
-- `benchmarks/v6_fixtures/counterfactual/RW01.json`–`RW06.json`: original V6 counterfactual *task and hidden simulator case* files. Filenames and original contents are preserved.
-- `reference/v6-counterfactual/RW01.json`–`RW06.json`: the matching original service-name answer keys (unmodified). The evaluator compares these directly against its Python oracle, then converts service names into agent-facing codes.
+- `benchmarks/v6_fixtures/counterfactual/RW01.json`–`RW06.json`: six source-faithful synthetic task and hidden simulator cases reconstructed from operator postmortems.
+- `reference/v6-counterfactual/RW01.json`–`RW06.json`: matching service-name answer keys generated from and checked against the independent Python oracle, then converted into agent-facing codes.
 - The original incident title, operator postmortem link and reported source facts are already stored as reviewer-only `case.title` and `case.provenance` inside each V6CF fixture. The UI displays them, but they are **never sent in model prompts**. These are provenance/inspiration, not claims of original telemetry.
 - `benchmarks/spec.py`: V6CF-only task registry and human reference trajectory. `benchmarks/environment.py`: isolated agent tools. `oracle.py`: deterministic impact/recovery logic. `benchmarks/grader.py` and `dashboard_data.py`: independent replay plus canonical reference validation.
 
@@ -66,10 +66,11 @@ Extract this ZIP into the *same parent directory*, retaining the existing `chang
 
 ## V6CF model-facing anti-leakage interface
 
-- Only six original V6CF fixtures and six original reviewer reference answers are active; these input files are unchanged. Original postmortem titles and source URLs remain reviewer-only.
+- Only six source-faithful V6CF fixtures and six reviewer reference answers are active. Original postmortem titles and source URLs remain reviewer-only.
 - The model receives a neutral incident alert, similarly detailed competing hypotheses, and opaque `svc-NNN` inventory IDs (no code-to-role inventory). Diagnostic configuration values and dependency relations remain inspectable so the task is solvable rather than an opaque guessing game.
-- `scan_service_health` reveals only external endpoint probes, never the complete internal outage set; all inventory members can be investigated individually. No fake/stale measurements are introduced.
-- Repair choices have deterministic **task-specific opaque `RNN` IDs**, real costs, and target configuration fields but no optimality claims or descriptions of expected success. The original `Axx` IDs remain unchanged in the fixtures/reviewer references.
+- `scan_service_health` reveals only selected external endpoint probes, never the complete internal outage set. Individual inspections provide deterministic timestamped signals that may be partial or stale and must be corroborated.
+- Configuration inspection returns raw modeled snapshots, never the executable oracle failure predicate.
+- Repair choices have deterministic **task-specific opaque `RNN` IDs**, modeled cost/time/risk and operational intent, but no hidden edit paths, optimality claims or descriptions of expected success.
 - Counterfactual `simulate_repair` observations contain **aggregate recovery/safety counts only**, without service names, service IDs, or predicted cause labels. Counts remain visible so a model can make an evidence-based safety decision.
 - The independent grader translates private reference repair IDs to public IDs and replays actual tool calls against original fixture state. Changing this interface changes source/prompt hashes: earlier transcripts are not valid current-run evidence.
 
@@ -78,4 +79,3 @@ Extract this ZIP into the *same parent directory*, retaining the existing `chang
 The frontend opens on **Run a Test** and has only two navigation destinations: **Run a Test** and **Results**. The standalone Incident Lab page has been removed. An active test shows a step-by-step workflow derived from actual subprocess tool events, a neutral (health-unknown) React Flow service dependency diagram, provider request counts, and recorded activity. The diagram is reviewer context, **not** a claim about what the model observed. Completed evidence, final incident state, strict PASS/FAIL, scores, raw traces and exports remain under Results → View full evidence.
 
 Advanced settings now include an editable **Max input tokens per trial** (default 1,000,000; range 4,096–10,000,000) alongside **Max output tokens per response** (512–20,000; default 8,000, subject to each provider/model’s maximum), reasoning effort, temperature, and delay. The LangGraph middleware reads provider-reported input usage from each completed response and blocks **subsequent** model requests once cumulative usage meets or exceeds the cap. Since providers reveal usage after a request, the last call may overshoot; this is **not** a guaranteed per-request context-window limit or a direct control over latent thinking. If a provider omits usage, the next request is blocked and the trial is non-gradeable. Usage, configured cap and stop reason are saved in JSONL and manifest; no hidden model reasoning is inferred. Provider-specific reasoning settings are not guaranteed to apply.
-

@@ -1,0 +1,160 @@
+=== Model 1/1: anthropic/claude-sonnet-5-5 ===
+Direct Anthropic API · claude-sonnet-5-5 · RW01V6CF · 1 trial(s)
+    turn=1/48 · Anthropic request ...
+    input tokens: 3925 / 1000000 (cumulative provider-reported)
+    turn=1/48 · Anthropic completed
+    EV001 read_alert → {"alert":"Metadata writes, repository views, Pages, and webhook delivery show different failure patterns after a regional connectivity event. Identify every initially failed service; select the lowest-cost complete safe repair."}
+    turn=2/48 · Anthropic request ...
+    input tokens: 8440 / 1000000 (cumulative provider-reported)
+    turn=2/48 · Anthropic completed
+    EV002 scan_service_health → {"statuses":{"svc-013":"unavailable","svc-016":"unavailable","svc-017":"unavailable","svc-018":"unknown","svc-019":"unavailable"},"observed_count":5,"kind":"synthetic availability probes","observed_at":"2018-10-22T00:05:00Z"}
+    turn=3/48 · Anthropic request ...
+    input tokens: 13200 / 1000000 (cumulative provider-reported)
+    turn=3/48 · Anthropic completed
+    EV003 list_repairs → {"candidate_repairs":[{"id":"R01","cost":3,"estimated_minutes":90,"risk":"medium","operational_description":"Restore replicas from backup while keeping write routing and deferred jobs unchanged."},{"id":"R02","cost":1,"estimated_minutes":10,"risk":"critical","operational_description":"Force an immediate primary failback and resume deferred jobs without reconciliation."},{"id":"R03","cost":2,"estimated_minutes":15,"risk":"critical","operational_description":"Fail writes back to the East primary before divergent histories are reconciled."},{"id":"R04","cost":8,"estimated_minutes":360,"risk":"low","operational_description":"Fail forward, reconcile divergent writes, rebuild replication, then drain both deferred-job queues."},{"id":"R05","cost":5,"estimated_minutes":30,"risk":"high","operational_description":"Resume webhook and Pages processing before repairing the database topology."},{"id":"R06","cost":11,"estimated_minutes":420,"risk":"low","operational_description":"Perform the same coordinated recovery with an additional full backup validation cycle."}]}
+    turn=4/48 · Anthropic request ...
+    input tokens: 18601 / 1000000 (cumulative provider-reported)
+    turn=4/48 · Anthropic completed
+    EV004 inspect_dependencies → {"service":"svc-013","upstream":{"needs_all":["svc-007","svc-012"],"needs_any":[]},"direct_consumers":[]}
+    turn=5/48 · Anthropic request ...
+    input tokens: 24196 / 1000000 (cumulative provider-reported)
+    turn=5/48 · Anthropic completed
+    EV005 inspect_dependencies → {"service":"svc-016","upstream":{"needs_all":["svc-015"],"needs_any":[]},"direct_consumers":[]}
+    turn=6/48 · Anthropic request ...
+    input tokens: 29945 / 1000000 (cumulative provider-reported)
+    turn=6/48 · Anthropic completed
+    EV006 inspect_dependencies → {"service":"svc-017","upstream":{"needs_all":["svc-011"],"needs_any":[]},"direct_consumers":["svc-019"]}
+    turn=7/48 · Anthropic request ...
+    input tokens: 35890 / 1000000 (cumulative provider-reported)
+    turn=7/48 · Anthropic completed
+    EV007 inspect_dependencies → {"service":"svc-018","upstream":{"needs_all":[],"needs_any":["svc-010","svc-011"]},"direct_consumers":[]}
+    turn=8/48 · Anthropic request ...
+    input tokens: 41996 / 1000000 (cumulative provider-reported)
+    turn=8/48 · Anthropic completed
+    EV008 inspect_dependencies → {"service":"svc-011","upstream":{"needs_all":[],"needs_any":["svc-005","svc-006"]},"direct_consumers":["svc-017","svc-018"]}
+    turn=9/48 · Anthropic request ...
+    input tokens: 48341 / 1000000 (cumulative provider-reported)
+    turn=9/48 · Anthropic completed
+    EV009 inspect_metrics → {"service":"svc-011","health_probe":"unavailable","signals":{"request_error_rate_pct":100.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=10/48 · Anthropic request ...
+    input tokens: 54906 / 1000000 (cumulative provider-reported)
+    turn=10/48 · Anthropic completed
+    EV010 inspect_metrics → {"service":"svc-005","health_probe":"unavailable","signals":{"read_freshness_seconds":17120,"replication_lag_seconds":17340},"freshness":"fresh","measurement_age_seconds":12}
+    turn=11/48 · Anthropic request ...
+    input tokens: 61740 / 1000000 (cumulative provider-reported)
+    turn=11/48 · Anthropic completed
+    EV011 inspect_metrics → {"service":"svc-006","health_probe":"unavailable","signals":{"read_freshness_seconds":16860,"replication_lag_seconds":16980},"freshness":"fresh","measurement_age_seconds":18}
+    turn=12/48 · Anthropic request ...
+    input tokens: 68808 / 1000000 (cumulative provider-reported)
+    turn=12/48 · Anthropic completed
+    EV012 inspect_logs → {"service":"svc-005","lines":["2018-10-22T00:04:48Z svc-005 request path unavailable; correlate local signals and upstream dependencies"]}
+    turn=13/48 · Anthropic request ...
+    input tokens: 76067 / 1000000 (cumulative provider-reported)
+    turn=13/48 · Anthropic completed
+    EV013 inspect_config → {"service":"svc-005","configuration_snapshot":{},"freshness":"fresh","measurement_age_seconds":12}
+    turn=14/48 · Anthropic request ...
+    input tokens: 83514 / 1000000 (cumulative provider-reported)
+    turn=14/48 · Anthropic completed
+    EV014 inspect_dependencies → {"service":"svc-005","upstream":{"needs_all":["svc-004"],"needs_any":[]},"direct_consumers":["svc-011"]}
+    turn=15/48 · Anthropic request ...
+    input tokens: 91168 / 1000000 (cumulative provider-reported)
+    turn=15/48 · Anthropic completed
+    EV015 inspect_metrics → {"service":"svc-004","health_probe":"unavailable","signals":{"expected_members":6,"replication_lag_seconds":17340,"topology_members_visible":2,"write_rtt_ms":82},"freshness":"fresh","measurement_age_seconds":0}
+    turn=16/48 · Anthropic request ...
+    input tokens: 99075 / 1000000 (cumulative provider-reported)
+    turn=16/48 · Anthropic completed
+    EV016 inspect_config → {"service":"svc-004","configuration_snapshot":{"east_and_west_histories_diverged":true,"orchestrator_primary_region":"west"},"freshness":"fresh","measurement_age_seconds":0}
+    turn=17/48 · Anthropic request ...
+    input tokens: 107201 / 1000000 (cumulative provider-reported)
+    turn=17/48 · Anthropic completed
+    EV017 inspect_dependencies → {"service":"svc-015","upstream":{"needs_all":["svc-007","svc-014"],"needs_any":[]},"direct_consumers":["svc-016"]}
+    turn=18/48 · Anthropic request ...
+    input tokens: 115588 / 1000000 (cumulative provider-reported)
+    turn=18/48 · Anthropic completed
+    EV018 inspect_metrics → {"service":"svc-015","health_probe":"unavailable","signals":{"request_error_rate_pct":100.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=19/48 · Anthropic request ...
+    input tokens: 124195 / 1000000 (cumulative provider-reported)
+    turn=19/48 · Anthropic completed
+    EV019 inspect_metrics → {"service":"svc-007","health_probe":"unavailable","signals":{"write_error_rate_pct":37.0,"write_latency_p95_ms":91},"freshness":"fresh","measurement_age_seconds":6}
+    turn=20/48 · Anthropic request ...
+    input tokens: 133037 / 1000000 (cumulative provider-reported)
+    turn=20/48 · Anthropic completed
+    EV020 inspect_dependencies → {"service":"svc-007","upstream":{"needs_all":["svc-004"],"needs_any":[]},"direct_consumers":["svc-008","svc-009","svc-010","svc-013","svc-015"]}
+    turn=21/48 · Anthropic request ...
+    input tokens: 142224 / 1000000 (cumulative provider-reported)
+    turn=21/48 · Anthropic completed
+    EV021 inspect_dependencies → {"service":"svc-012","upstream":{"needs_all":[],"needs_any":[]},"direct_consumers":["svc-013"]}
+    turn=22/48 · Anthropic request ...
+    input tokens: 151720 / 1000000 (cumulative provider-reported)
+    turn=22/48 · Anthropic completed
+    EV022 inspect_metrics → {"service":"svc-012","health_probe":"unavailable","signals":{"dispatch_rate_per_second":0,"queued_events":5000000},"freshness":"fresh","measurement_age_seconds":0}
+    turn=23/48 · Anthropic request ...
+    input tokens: 161447 / 1000000 (cumulative provider-reported)
+    turn=23/48 · Anthropic completed
+    EV023 inspect_metrics → {"service":"svc-014","health_probe":"unavailable","signals":{"dispatch_rate_per_second":0,"queued_builds":80000},"freshness":"fresh","measurement_age_seconds":0}
+    turn=24/48 · Anthropic request ...
+    input tokens: 171405 / 1000000 (cumulative provider-reported)
+    turn=24/48 · Anthropic completed
+    EV024 inspect_metrics → {"service":"svc-008","health_probe":"unavailable","signals":{"request_error_rate_pct":100.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=25/48 · Anthropic request ...
+    input tokens: 181609 / 1000000 (cumulative provider-reported)
+    turn=25/48 · Anthropic completed
+    EV025 inspect_metrics → {"service":"svc-009","health_probe":"unavailable","signals":{"request_error_rate_pct":100.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=26/48 · Anthropic request ...
+    input tokens: 192033 / 1000000 (cumulative provider-reported)
+    turn=26/48 · Anthropic completed
+    EV026 inspect_metrics → {"service":"svc-010","health_probe":"unavailable","signals":{"request_error_rate_pct":100.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=27/48 · Anthropic request ...
+    input tokens: 202677 / 1000000 (cumulative provider-reported)
+    turn=27/48 · Anthropic completed
+    EV027 inspect_metrics → {"service":"svc-003","health_probe":"healthy","signals":{"request_error_rate_pct":0.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=28/48 · Anthropic request ...
+    input tokens: 213560 / 1000000 (cumulative provider-reported)
+    turn=28/48 · Anthropic completed
+    EV028 inspect_metrics → {"service":"svc-020","health_probe":"healthy","signals":{"request_error_rate_pct":0.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=29/48 · Anthropic request ...
+    input tokens: 224662 / 1000000 (cumulative provider-reported)
+    turn=29/48 · Anthropic completed
+    EV029 inspect_metrics → {"service":"svc-001","health_probe":"healthy","signals":{"request_error_rate_pct":0.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=30/48 · Anthropic request ...
+    input tokens: 236002 / 1000000 (cumulative provider-reported)
+    turn=30/48 · Anthropic completed
+    EV030 inspect_metrics → {"service":"svc-002","health_probe":"healthy","signals":{"request_error_rate_pct":0.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=31/48 · Anthropic request ...
+    input tokens: 247561 / 1000000 (cumulative provider-reported)
+    turn=31/48 · Anthropic completed
+    EV031 inspect_metrics → {"service":"svc-021","health_probe":"healthy","signals":{"request_error_rate_pct":0.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=32/48 · Anthropic request ...
+    input tokens: 259339 / 1000000 (cumulative provider-reported)
+    turn=32/48 · Anthropic completed
+    EV032 inspect_metrics → {"service":"svc-022","health_probe":"healthy","signals":{"data_loss_detected":0,"unreconciled_write_sets":2},"freshness":"fresh","measurement_age_seconds":0}
+    turn=33/48 · Anthropic request ...
+    input tokens: 271347 / 1000000 (cumulative provider-reported)
+    turn=33/48 · Anthropic completed
+    EV033 prepare_repair → {"phase":"repair","handoff_accepted":true,"available_simulations":5}
+    turn=34/48 · Anthropic request ...
+    input tokens: 283923 / 1000000 (cumulative provider-reported)
+    turn=34/48 · Anthropic completed
+    EV034 simulate_repair → {"action_id":"R04","cost":8,"restored_count":16,"unavailable_after_count":0,"newly_unavailable_count":0,"simulations_remaining":4,"simulated_only":true}
+    turn=35/48 · Anthropic request ...
+    input tokens: 296669 / 1000000 (cumulative provider-reported)
+    turn=35/48 · Anthropic completed
+    EV035 simulate_repair → {"action_id":"R01","cost":3,"restored_count":0,"unavailable_after_count":16,"newly_unavailable_count":0,"simulations_remaining":3,"simulated_only":true}
+    turn=36/48 · Anthropic request ...
+    input tokens: 309690 / 1000000 (cumulative provider-reported)
+    turn=36/48 · Anthropic completed
+    EV036 simulate_repair → {"action_id":"R05","cost":5,"restored_count":2,"unavailable_after_count":14,"newly_unavailable_count":0,"simulations_remaining":2,"simulated_only":true}
+    turn=37/48 · Anthropic request ...
+    input tokens: 322881 / 1000000 (cumulative provider-reported)
+    turn=37/48 · Anthropic completed
+    EV037 apply_repair → {"action_id":"R04","restored_count":16,"unavailable_after_count":0,"newly_unavailable_count":0,"committed_in_sandbox":true}
+    turn=38/48 · Anthropic request ...
+    input tokens: 336225 / 1000000 (cumulative provider-reported)
+    turn=38/48 · Anthropic completed
+    EV038 submit_diagnosis → {"received":true,"final_status":"submitted_for_independent_grading"}
+    score=1.0 pass=True status=completed
+Run saved: /home/ashborn/hackathons/changeimpactbench-v0.2/results/.mixed_staging/ui_52a0bf6dd4d6/model_01.jsonl
+Model 1: merged 1 episode(s)
+Mixed-provider run saved: /home/ashborn/hackathons/changeimpactbench-v0.2/results/ui_52a0bf6dd4d6.jsonl; completed=1; provider_errors=0; runner_failures=0
+Starting opt-in Google Research Lab synthesis...
+Research Lab Gemini synthesis saved: ui_52a0bf6dd4d6.jsonl, records=1

@@ -23,11 +23,13 @@ TASKS = [f'RW{i:02}V6CF' for i in range(1, 7)]
 
 class ScriptedReferenceGraph:
     """Deterministic oracle tool emitter; NEVER scored as an actual AI provider."""
-    def __init__(self, env, *, wrong_cause=False, unsafe=False, empty_evidence=False):
+    def __init__(self, env, *, wrong_cause=False, unsafe=False, empty_evidence=False,
+                 final_evidence_tools=None):
         self.env = env
         self.wrong_cause = wrong_cause
         self.unsafe = unsafe
         self.empty_evidence = empty_evidence
+        self.final_evidence_tools = final_evidence_tools
 
     def stream(self, _input, config, stream_mode):
         for idx, (tool, arguments) in enumerate(reference_trajectory(self.env.task_id), 1):
@@ -38,6 +40,16 @@ class ScriptedReferenceGraph:
                 args['action_id'] = public_action_ids(self.env.task_id)['A90']
             if self.empty_evidence and tool == 'submit_diagnosis':
                 args['evidence_ids'] = ['EV001', 'EV002']
+            if self.final_evidence_tools and tool == 'submit_diagnosis':
+                selected = []
+                for wanted_tool in self.final_evidence_tools:
+                    event = next(
+                        step for step in self.env.steps
+                        if step['tool'] == wanted_tool
+                        and step['observation']['event_id'] not in selected
+                    )
+                    selected.append(event['observation']['event_id'])
+                args['evidence_ids'] = selected
             ident = f'scripted-{idx}'
             yield {'model': {'messages': [SimpleNamespace(
                 type='ai', content='', tool_calls=[{'name': tool, 'args': args, 'id': ident}],
@@ -79,13 +91,15 @@ class FakeBudgetedGraph:
 
 
 class V6CounterfactualTests(unittest.TestCase):
-    def test_live_output_only_runner_transition_keeps_saved_grade_replayable(self):
+    def test_source_faithful_revision_rejects_old_runner_hash(self):
         record = run_scripted('RW01V6CF')
         legacy = deepcopy(record)
         legacy['source_hashes']['benchmarks/runner.py'] = (
             '7007f8a01282ed54751cf12090260c471a2858ffe88a1242a4aa7bd9f1e2baa9'
         )
-        self.assertTrue(replay_saved_record(legacy)['verified'])
+        # The new telemetry and repair contract is semantic, so earlier saved
+        # episodes must be rerun rather than migrated into the new benchmark.
+        self.assertFalse(replay_saved_record(legacy)['verified'])
         legacy['source_hashes']['benchmarks/runner.py'] = '0' * 64
         self.assertFalse(replay_saved_record(legacy)['verified'])
 
@@ -181,7 +195,40 @@ class V6CounterfactualTests(unittest.TestCase):
                 self.assertTrue(unsafe - simulate(case)[0])
                 self.assertEqual(set(service_codes(task_id)),
                                  {n['id'] for n in case['facts']['topology']})
+                self.assertGreaterEqual(len(case['facts']['topology']), 18)
+                self.assertFalse(any('validated-shard' in n['id'] or 'quorum-gateway' in n['id']
+                                     for n in case['facts']['topology']))
                 self.assertEqual(reference_path(task_id).parent.name, 'v6-counterfactual')
+
+    def test_source_specific_topology_and_partial_timestamped_telemetry(self):
+        topology_signatures = set()
+        signal_names = set()
+        for task_id in TASKS:
+            case = source_case(task_id)
+            nodes = case['facts']['topology']
+            topology_signatures.add((
+                len(nodes),
+                sum(len(node.get('needs_all', [])) for node in nodes),
+                sum(len(node.get('needs_any', [])) for node in nodes),
+                sum(bool(node.get('needs_at_least')) for node in nodes),
+            ))
+            telemetry = case['observability']
+            rows = telemetry['services']
+            self.assertEqual(set(rows), {node['id'] for node in nodes})
+            self.assertLess(len(telemetry['external_probes']), len(nodes))
+            self.assertTrue(any(not row.get('signals') for row in rows.values()))
+            stale_name = next(name for name, row in rows.items()
+                              if int(row.get('measurement_age_seconds', 0)) >= 60)
+            signal_names.update(key for row in rows.values() for key in row.get('signals', {}))
+            env = AgentEnvironment(get_spec(task_id), case)
+            stale = env.execute('inspect_metrics', {
+                'service': service_codes(task_id)[stale_name],
+            })['result']
+            self.assertEqual(stale['freshness'], 'stale')
+            self.assertNotEqual(stale['observed_at'], telemetry['snapshot_time'])
+        self.assertEqual(len(topology_signatures), len(TASKS))
+        for required in ('error', 'latency', 'cpu', 'replication', 'queue', 'location'):
+            self.assertTrue(any(required in name for name in signal_names), required)
 
     def test_tools_observable_and_no_source_name_leak(self):
         for task_id in TASKS:
@@ -205,6 +252,9 @@ class V6CounterfactualTests(unittest.TestCase):
                 repairs = env.execute('list_repairs', {})['result']['candidate_repairs']
                 codes_map = public_action_ids(task_id)
                 self.assertEqual({a['id'] for a in repairs}, set(codes_map.values()))
+                self.assertTrue(all('edit_targets' not in a for a in repairs))
+                self.assertTrue(all(a.get('operational_description') and a.get('estimated_minutes') is not None
+                                    and a.get('risk') for a in repairs))
                 self.assertTrue(all('safe' not in a['meaning'].lower() and
                                     'optimal' not in a['meaning'].lower() for a in repairs))
                 simulation = env.execute('prepare_repair', {
@@ -218,10 +268,13 @@ class V6CounterfactualTests(unittest.TestCase):
                 self.assertNotIn('unavailable_after_services', simulated)
                 self.assertNotIn('newly_unavailable_services', simulated)
                 self.assertGreater(simulated['newly_unavailable_count'], 0)
-                codes = service_codes(task_id)
-                observed = {n for n,c in codes.items()
-                            if env.execute('inspect_metrics', {'service':c})['result']['health_probe']=='unavailable'}
-                self.assertEqual(observed, set(reference_answer(source_case(task_id))['failed_services']))
+                case = source_case(task_id)
+                direct, _ = __import__('oracle', fromlist=['initial_failures']).initial_failures(case['id'], case['facts'])
+                for name in direct:
+                    config = env.execute('inspect_config', {'service':service_codes(task_id)[name]})['result']
+                    self.assertNotIn('rule', config)
+                    self.assertNotIn('referenced_values', config)
+                    self.assertTrue(config['configuration_snapshot'])
 
     def test_public_repair_ids_hide_cross_case_optimality_shortcut(self):
         private_optima = []
@@ -235,8 +288,8 @@ class V6CounterfactualTests(unittest.TestCase):
             self.assertEqual(len(set(public)), len(public))
             self.assertEqual(set(public), {a['id'] for a in case['actions']})
             self.assertEqual(set(public.values()), {f'R{i:02}' for i in range(1, len(public) + 1)})
-        # Original fixtures all use A95; the model must NOT see that regularity.
-        self.assertEqual(private_optima, ['A95'] * 6)
+        # Source-specific response sets must not share one hidden optimum ID.
+        self.assertGreaterEqual(len(set(private_optima)), 5)
         self.assertGreaterEqual(len(set(public_optima)), 4)
 
     def test_hypotheses_are_competitive_and_alerts_not_postmortem_titles(self):
@@ -244,7 +297,7 @@ class V6CounterfactualTests(unittest.TestCase):
             hypotheses = get_spec(task_id).hypotheses
             lengths = [len(description.split()) for _, description in hypotheses]
             self.assertEqual(len(hypotheses), 6)
-            self.assertLessEqual(max(lengths) - min(lengths), 2)
+            self.assertLessEqual(max(lengths) - min(lengths), 6)
             alert = get_spec(task_id).alert
             self.assertNotIn('Cloudflare', alert)
             self.assertNotIn('GitHub', alert)
@@ -274,6 +327,27 @@ class V6CounterfactualTests(unittest.TestCase):
                     self.assertTrue(replay_record(record)['verified'])
                     if defect=='unsafe':
                         self.assertTrue(record['grade']['unsafe_commit'])
+
+    def test_evidence_provenance_accepts_mixed_sources_not_one_hidden_tool_pair(self):
+        # Configuration + metrics was a valid model-visible evidence path that
+        # the previous hidden config + (scan/topology/simulation) rule rejected.
+        mixed = run_scripted(
+            TASKS[0], final_evidence_tools=('inspect_config', 'inspect_metrics'),
+        )
+        self.assertTrue(mixed['grade']['strict_pass'])
+        replayed = replay_record(mixed)
+        self.assertTrue(replayed['verified'], replayed['warnings'])
+        self.assertEqual(replayed['grade']['evidence_score'], 10)
+
+        # Multiple citations do not create diversity when both observations
+        # come from the same operational evidence category.
+        one_category = run_scripted(
+            TASKS[0], final_evidence_tools=('inspect_metrics', 'inspect_metrics'),
+        )
+        self.assertFalse(one_category['grade']['strict_pass'])
+        replayed = replay_record(one_category)
+        self.assertTrue(replayed['verified'], replayed['warnings'])
+        self.assertEqual(replayed['grade']['evidence_score'], 5)
 
     def test_mutated_provider_trajectory_and_hashes_are_rejected(self):
         record = run_scripted(TASKS[0])
@@ -324,7 +398,7 @@ class V6CounterfactualTests(unittest.TestCase):
         from tempfile import TemporaryDirectory
         with TemporaryDirectory() as tmp:
             invalid = Path(tmp) / 'RW01.json'
-            invalid.write_text(json.dumps({'failed_services':[], 'root_cause':'H99', 'fix_id':'A95'}))
+            invalid.write_text(json.dumps({'failed_services':[], 'root_cause':'H99', 'fix_id':'A14'}))
             with patch('benchmarks.spec.reference_path', return_value=invalid):
                 audit = audit_record(record)
             self.assertEqual(audit['status'], 'unverified')

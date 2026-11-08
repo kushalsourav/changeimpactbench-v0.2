@@ -129,7 +129,9 @@ export type Case = {
   actions: {
     id: string;
     cost: number;
-    meaning: string;
+    estimated_minutes?: number;
+    risk?: string;
+    operational_description?: string;
   }[];
 };
 export type TaskDetail = {

@@ -1,0 +1,61 @@
+{
+  "schema_version": 8,
+  "condition": "agentic",
+  "agent_framework": "langchain-create-agent/langgraph-checkpointed",
+  "dataset_origin": "fully synthetic V6 counterfactual; original published incidents used only for inspiration",
+  "agentic_source_hashes": {
+    "benchmarks/native_agent.py": "6e899fb81cbd3dc4f24a9ca4293c503ec31ea44d43f4c7ca51ee88f00e55a0d3",
+    "benchmarks/runner.py": "5fb71edc830307f964efdd771709783b59f01c0b50b15cab4027b20ba36340f2",
+    "benchmarks/input_budget.py": "38551f9ece266976d9e5e18613ba4a3a7d6c8ded66904cf67851be64381bb3d5",
+    "benchmarks/grader.py": "47657521cbc53d0eb91733463ef6ee688d33e1caed669f6d4c8177948f25e621",
+    "benchmarks/grading_policy.py": "e8a2b0854768d896de1dbd63fe454980240f022f924d1dee8288371294f51496",
+    "benchmarks/spec.py": "2d7c0cd68ffac25552ff7a578eaa9287d33ee3df80db96bc1ab313714b30bbfd",
+    "benchmarks/environment.py": "177bd08a3fe89f9da47dac965a7c5013554b692869377236d337a944c23a9321",
+    "benchmarks/skills.py": "581da579753f08a8e16e318e6e985093f5e5da3cb9434a270798472317c709b9",
+    "agent_graph.py": "b4e2b9a81a9ec14a39482d65e63bef87a067457a25d9e4c04c3ac622d10e950b",
+    "run_graph_agent.py": "8b9d747155da5f22f05b96adecf8219bf9dbd66f64fca7a9df8ca7567dade7d4",
+    "oracle.py": "b2f50a783341443ff1e241c590ff9c4fe28ea9841f7bc8f1876b77d9081d5112",
+    "skills/incident-investigation/SKILL.md": "f4dc45eb69b6f5bfed719ac752fc612971d56092acfdb736d66e833cb83fa317",
+    "skills/repair-verification/SKILL.md": "704650149d8b0154eea36217f1141a02a0f101e04e8070665faa7aeea821a5df",
+    "skills/repair-verification/V6.md": "6fa3c8f536c38287561209e2cb9b135138e873f3d8d55b0fda92f3bdbcea3ef4",
+    "benchmarks/v6_fixtures/counterfactual/RW01.json": "af40aef00be644a9de204c9869382132559aff83b3524cb5e6bff830e5781455",
+    "benchmarks/v6_fixtures/counterfactual/RW02.json": "f2a8fcced85f7d383ac99b544d2e72817a9edf2a56c7c21f9ca8c16d12bc4f0d",
+    "benchmarks/v6_fixtures/counterfactual/RW03.json": "213aba9fa8c04424bc81473655e0fb9c82c6aa148e7a882e4799b29bbca2c33b",
+    "benchmarks/v6_fixtures/counterfactual/RW04.json": "47ba1f6ff3892e767ee1b5ca64b8f0b009d9e3d63f4a139a26f3645141309989",
+    "benchmarks/v6_fixtures/counterfactual/RW05.json": "52ccf2d5625883c8ca12d1a4bb08ba4da85722e323021bb56f5d995d8093f937",
+    "benchmarks/v6_fixtures/counterfactual/RW06.json": "bc1777ece1a70d147f2afe51f7f52eb99a7cff2ce2a6f64ab60967247f784d71",
+    "reference/v6-counterfactual/RW01.json": "3d0ab21b15d246679e83cb388c904398f19c520483f7e0756a702c49d268f41e",
+    "reference/v6-counterfactual/RW02.json": "5d1bc38ef69a49e5ac365c7fa4a896ac8dfe27a9560aee3a0ac023b8edc3343a",
+    "reference/v6-counterfactual/RW03.json": "7ceb8581b795b0428cb0922de72ee1a5fa406cefc5530af8de78a67e7e32dc0b",
+    "reference/v6-counterfactual/RW04.json": "78a3869cacf7749b0662afa787aedb9e798f43738b2c62a43dead9b93a981cea",
+    "reference/v6-counterfactual/RW05.json": "325e39d4818f3f665b6b3def434ed816b4acf2ba3d8f6eaabe00c377b3ec7a92",
+    "reference/v6-counterfactual/RW06.json": "7c7a7c3e0c0d7ae6e9955650dea6a4590060d4ff25f41638c8ab19f12e24e94e"
+  },
+  "max_agent_turns": 48,
+  "source_url": "",
+  "planned_provider_requests_are_upper_bound": true,
+  "experiment_id": "52a0bf6dd4d6",
+  "output_file": "ui_52a0bf6dd4d6.jsonl",
+  "created_utc": "2026-11-08T14:29:24.101027+00:00",
+  "started_utc": "2026-11-08T14:29:24.101027+00:00",
+  "models": [
+    "anthropic/claude-sonnet-5-5"
+  ],
+  "tasks": [
+    "RW01V6CF"
+  ],
+  "benchmark_version": "agentic-v6-source-faithful-2",
+  "trials": 1,
+  "max_tokens": 8000,
+  "max_input_tokens": 1000000,
+  "input_token_budget_policy": "cumulative provider-reported tokens per trial; next-request gate",
+  "reasoning_effort": "low",
+  "google_reasoning_effort_forwarded": false,
+  "provider": "anthropic",
+  "provider_by_model": {
+    "anthropic/claude-sonnet-5-5": "anthropic"
+  },
+  "delay_seconds": 4.0,
+  "temperature": 0.0,
+  "requests_planned": 48
+}

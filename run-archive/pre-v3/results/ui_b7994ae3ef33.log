@@ -1,0 +1,378 @@
+=== Model 1/2: google-ai-studio/gemini-3.5-flash-lite ===
+Gemini Developer API · gemini-3.5-flash-lite · RW01V6CF · 1 trial(s)
+    turn=1/48 · Gemini request ...
+/home/ashborn/hackathons/changeimpactbench-v0.2/.venv/lib/python3.12/site-packages/langchain_google_genai/chat_models.py:3935: UserWarning: Model 'gemini-3.5-flash-lite' uses fixed sampling defaults; the sampling parameter(s) temperature will be ignored.
+  request = self._build_request_config(
+    input tokens: 2345 / 1000000 (cumulative provider-reported)
+    turn=1/48 · Gemini completed
+    EV001 read_alert → {"alert":"Metadata writes, repository views, Pages, and webhook delivery show different failure patterns after a regional connectivity event. Identify every initially failed service; select the lowest-cost complete safe repair."}
+    turn=2/48 · Gemini request ...
+/home/ashborn/hackathons/changeimpactbench-v0.2/.venv/lib/python3.12/site-packages/langchain_google_genai/chat_models.py:3935: UserWarning: Model 'gemini-3.5-flash-lite' uses fixed sampling defaults; the sampling parameter(s) temperature will be ignored.
+  request = self._build_request_config(
+    input tokens: 5155 / 1000000 (cumulative provider-reported)
+    turn=2/48 · Gemini completed
+    EV002 scan_service_health → {"statuses":{"svc-013":"unavailable","svc-016":"unavailable","svc-017":"unavailable","svc-018":"unknown","svc-019":"unavailable"},"observed_count":5,"kind":"synthetic availability probes","observed_at":"2018-10-22T00:05:00Z"}
+    turn=3/48 · Gemini request ...
+/home/ashborn/hackathons/changeimpactbench-v0.2/.venv/lib/python3.12/site-packages/langchain_google_genai/chat_models.py:3935: UserWarning: Model 'gemini-3.5-flash-lite' uses fixed sampling defaults; the sampling parameter(s) temperature will be ignored.
+  request = self._build_request_config(
+    input tokens: 8149 / 1000000 (cumulative provider-reported)
+    turn=3/48 · Gemini completed
+    EV003 inspect_metrics → {"service":"svc-013","health_probe":"unavailable","signals":{"request_error_rate_pct":100.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=4/48 · Gemini request ...
+/home/ashborn/hackathons/changeimpactbench-v0.2/.venv/lib/python3.12/site-packages/langchain_google_genai/chat_models.py:3935: UserWarning: Model 'gemini-3.5-flash-lite' uses fixed sampling defaults; the sampling parameter(s) temperature will be ignored.
+  request = self._build_request_config(
+    input tokens: 11292 / 1000000 (cumulative provider-reported)
+    turn=4/48 · Gemini completed
+    EV004 inspect_metrics → {"service":"svc-016","health_probe":"unavailable","signals":{"request_error_rate_pct":100.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=5/48 · Gemini request ...
+/home/ashborn/hackathons/changeimpactbench-v0.2/.venv/lib/python3.12/site-packages/langchain_google_genai/chat_models.py:3935: UserWarning: Model 'gemini-3.5-flash-lite' uses fixed sampling defaults; the sampling parameter(s) temperature will be ignored.
+  request = self._build_request_config(
+    input tokens: 14584 / 1000000 (cumulative provider-reported)
+    turn=5/48 · Gemini completed
+    EV005 inspect_metrics → {"service":"svc-017","health_probe":"unavailable","signals":{"request_error_rate_pct":100.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=6/48 · Gemini request ...
+/home/ashborn/hackathons/changeimpactbench-v0.2/.venv/lib/python3.12/site-packages/langchain_google_genai/chat_models.py:3935: UserWarning: Model 'gemini-3.5-flash-lite' uses fixed sampling defaults; the sampling parameter(s) temperature will be ignored.
+  request = self._build_request_config(
+    input tokens: 18025 / 1000000 (cumulative provider-reported)
+    turn=6/48 · Gemini completed
+    EV006 inspect_metrics → {"service":"svc-018","health_probe":"unknown","signals":{"error_rate_pct":21.0,"latency_p95_ms":1480},"freshness":"stale","measurement_age_seconds":95}
+    turn=7/48 · Gemini request ...
+/home/ashborn/hackathons/changeimpactbench-v0.2/.venv/lib/python3.12/site-packages/langchain_google_genai/chat_models.py:3935: UserWarning: Model 'gemini-3.5-flash-lite' uses fixed sampling defaults; the sampling parameter(s) temperature will be ignored.
+  request = self._build_request_config(
+    input tokens: 21627 / 1000000 (cumulative provider-reported)
+    turn=7/48 · Gemini completed
+    EV007 inspect_metrics → {"service":"svc-019","health_probe":"unavailable","signals":{"request_error_rate_pct":100.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=8/48 · Gemini request ...
+/home/ashborn/hackathons/changeimpactbench-v0.2/.venv/lib/python3.12/site-packages/langchain_google_genai/chat_models.py:3935: UserWarning: Model 'gemini-3.5-flash-lite' uses fixed sampling defaults; the sampling parameter(s) temperature will be ignored.
+  request = self._build_request_config(
+    input tokens: 25378 / 1000000 (cumulative provider-reported)
+    turn=8/48 · Gemini completed
+    EV008 inspect_metrics → {"service":"svc-001","health_probe":"healthy","signals":{"request_error_rate_pct":0.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=9/48 · Gemini request ...
+/home/ashborn/hackathons/changeimpactbench-v0.2/.venv/lib/python3.12/site-packages/langchain_google_genai/chat_models.py:3935: UserWarning: Model 'gemini-3.5-flash-lite' uses fixed sampling defaults; the sampling parameter(s) temperature will be ignored.
+  request = self._build_request_config(
+    input tokens: 29276 / 1000000 (cumulative provider-reported)
+    turn=9/48 · Gemini completed
+    EV009 inspect_metrics → {"service":"svc-002","health_probe":"healthy","signals":{"request_error_rate_pct":0.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=10/48 · Gemini request ...
+/home/ashborn/hackathons/changeimpactbench-v0.2/.venv/lib/python3.12/site-packages/langchain_google_genai/chat_models.py:3935: UserWarning: Model 'gemini-3.5-flash-lite' uses fixed sampling defaults; the sampling parameter(s) temperature will be ignored.
+  request = self._build_request_config(
+    input tokens: 33321 / 1000000 (cumulative provider-reported)
+    turn=10/48 · Gemini completed
+    EV010 inspect_metrics → {"service":"svc-003","health_probe":"healthy","signals":{"request_error_rate_pct":0.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=11/48 · Gemini request ...
+/home/ashborn/hackathons/changeimpactbench-v0.2/.venv/lib/python3.12/site-packages/langchain_google_genai/chat_models.py:3935: UserWarning: Model 'gemini-3.5-flash-lite' uses fixed sampling defaults; the sampling parameter(s) temperature will be ignored.
+  request = self._build_request_config(
+    input tokens: 37513 / 1000000 (cumulative provider-reported)
+    turn=11/48 · Gemini completed
+    EV011 inspect_metrics → {"service":"svc-004","health_probe":"unavailable","signals":{"expected_members":6,"replication_lag_seconds":17340,"topology_members_visible":2,"write_rtt_ms":82},"freshness":"fresh","measurement_age_seconds":0}
+    turn=12/48 · Gemini request ...
+/home/ashborn/hackathons/changeimpactbench-v0.2/.venv/lib/python3.12/site-packages/langchain_google_genai/chat_models.py:3935: UserWarning: Model 'gemini-3.5-flash-lite' uses fixed sampling defaults; the sampling parameter(s) temperature will be ignored.
+  request = self._build_request_config(
+    input tokens: 41878 / 1000000 (cumulative provider-reported)
+    turn=12/48 · Gemini completed
+    EV012 inspect_metrics → {"service":"svc-005","health_probe":"unavailable","signals":{"read_freshness_seconds":17120,"replication_lag_seconds":17340},"freshness":"fresh","measurement_age_seconds":12}
+    turn=13/48 · Gemini request ...
+/home/ashborn/hackathons/changeimpactbench-v0.2/.venv/lib/python3.12/site-packages/langchain_google_genai/chat_models.py:3935: UserWarning: Model 'gemini-3.5-flash-lite' uses fixed sampling defaults; the sampling parameter(s) temperature will be ignored.
+  request = self._build_request_config(
+    input tokens: 46406 / 1000000 (cumulative provider-reported)
+    turn=13/48 · Gemini completed
+    EV013 inspect_metrics → {"service":"svc-006","health_probe":"unavailable","signals":{"read_freshness_seconds":16860,"replication_lag_seconds":16980},"freshness":"fresh","measurement_age_seconds":18}
+    turn=14/48 · Gemini request ...
+/home/ashborn/hackathons/changeimpactbench-v0.2/.venv/lib/python3.12/site-packages/langchain_google_genai/chat_models.py:3935: UserWarning: Model 'gemini-3.5-flash-lite' uses fixed sampling defaults; the sampling parameter(s) temperature will be ignored.
+  request = self._build_request_config(
+    input tokens: 51097 / 1000000 (cumulative provider-reported)
+    turn=14/48 · Gemini completed
+    EV014 inspect_metrics → {"service":"svc-007","health_probe":"unavailable","signals":{"write_error_rate_pct":37.0,"write_latency_p95_ms":91},"freshness":"fresh","measurement_age_seconds":6}
+    turn=15/48 · Gemini request ...
+/home/ashborn/hackathons/changeimpactbench-v0.2/.venv/lib/python3.12/site-packages/langchain_google_genai/chat_models.py:3935: UserWarning: Model 'gemini-3.5-flash-lite' uses fixed sampling defaults; the sampling parameter(s) temperature will be ignored.
+  request = self._build_request_config(
+    input tokens: 55949 / 1000000 (cumulative provider-reported)
+    turn=15/48 · Gemini completed
+    EV015 inspect_metrics → {"service":"svc-008","health_probe":"unavailable","signals":{"request_error_rate_pct":100.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=16/48 · Gemini request ...
+/home/ashborn/hackathons/changeimpactbench-v0.2/.venv/lib/python3.12/site-packages/langchain_google_genai/chat_models.py:3935: UserWarning: Model 'gemini-3.5-flash-lite' uses fixed sampling defaults; the sampling parameter(s) temperature will be ignored.
+  request = self._build_request_config(
+    input tokens: 60950 / 1000000 (cumulative provider-reported)
+    turn=16/48 · Gemini completed
+    EV016 inspect_metrics → {"service":"svc-009","health_probe":"unavailable","signals":{"request_error_rate_pct":100.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=17/48 · Gemini request ...
+/home/ashborn/hackathons/changeimpactbench-v0.2/.venv/lib/python3.12/site-packages/langchain_google_genai/chat_models.py:3935: UserWarning: Model 'gemini-3.5-flash-lite' uses fixed sampling defaults; the sampling parameter(s) temperature will be ignored.
+  request = self._build_request_config(
+    input tokens: 66100 / 1000000 (cumulative provider-reported)
+    turn=17/48 · Gemini completed
+    EV017 inspect_metrics → {"service":"svc-010","health_probe":"unavailable","signals":{"request_error_rate_pct":100.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=18/48 · Gemini request ...
+/home/ashborn/hackathons/changeimpactbench-v0.2/.venv/lib/python3.12/site-packages/langchain_google_genai/chat_models.py:3935: UserWarning: Model 'gemini-3.5-flash-lite' uses fixed sampling defaults; the sampling parameter(s) temperature will be ignored.
+  request = self._build_request_config(
+    input tokens: 71399 / 1000000 (cumulative provider-reported)
+    turn=18/48 · Gemini completed
+    EV018 inspect_metrics → {"service":"svc-011","health_probe":"unavailable","signals":{"request_error_rate_pct":100.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=19/48 · Gemini request ...
+/home/ashborn/hackathons/changeimpactbench-v0.2/.venv/lib/python3.12/site-packages/langchain_google_genai/chat_models.py:3935: UserWarning: Model 'gemini-3.5-flash-lite' uses fixed sampling defaults; the sampling parameter(s) temperature will be ignored.
+  request = self._build_request_config(
+    input tokens: 76847 / 1000000 (cumulative provider-reported)
+    turn=19/48 · Gemini completed
+    EV019 inspect_metrics → {"service":"svc-012","health_probe":"unavailable","signals":{"dispatch_rate_per_second":0,"queued_events":5000000},"freshness":"fresh","measurement_age_seconds":0}
+    turn=20/48 · Gemini request ...
+/home/ashborn/hackathons/changeimpactbench-v0.2/.venv/lib/python3.12/site-packages/langchain_google_genai/chat_models.py:3935: UserWarning: Model 'gemini-3.5-flash-lite' uses fixed sampling defaults; the sampling parameter(s) temperature will be ignored.
+  request = self._build_request_config(
+    input tokens: 82454 / 1000000 (cumulative provider-reported)
+    turn=20/48 · Gemini completed
+    EV020 inspect_metrics → {"service":"svc-014","health_probe":"unavailable","signals":{"dispatch_rate_per_second":0,"queued_builds":80000},"freshness":"fresh","measurement_age_seconds":0}
+    turn=21/48 · Gemini request ...
+/home/ashborn/hackathons/changeimpactbench-v0.2/.venv/lib/python3.12/site-packages/langchain_google_genai/chat_models.py:3935: UserWarning: Model 'gemini-3.5-flash-lite' uses fixed sampling defaults; the sampling parameter(s) temperature will be ignored.
+  request = self._build_request_config(
+    input tokens: 88219 / 1000000 (cumulative provider-reported)
+    turn=21/48 · Gemini completed
+    EV021 inspect_metrics → {"service":"svc-015","health_probe":"unavailable","signals":{"request_error_rate_pct":100.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=22/48 · Gemini request ...
+/home/ashborn/hackathons/changeimpactbench-v0.2/.venv/lib/python3.12/site-packages/langchain_google_genai/chat_models.py:3935: UserWarning: Model 'gemini-3.5-flash-lite' uses fixed sampling defaults; the sampling parameter(s) temperature will be ignored.
+  request = self._build_request_config(
+    input tokens: 94133 / 1000000 (cumulative provider-reported)
+    turn=22/48 · Gemini completed
+    EV022 inspect_metrics → {"service":"svc-020","health_probe":"healthy","signals":{"request_error_rate_pct":0.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=23/48 · Gemini request ...
+/home/ashborn/hackathons/changeimpactbench-v0.2/.venv/lib/python3.12/site-packages/langchain_google_genai/chat_models.py:3935: UserWarning: Model 'gemini-3.5-flash-lite' uses fixed sampling defaults; the sampling parameter(s) temperature will be ignored.
+  request = self._build_request_config(
+    input tokens: 100194 / 1000000 (cumulative provider-reported)
+    turn=23/48 · Gemini completed
+    EV023 inspect_metrics → {"service":"svc-021","health_probe":"healthy","signals":{"request_error_rate_pct":0.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=24/48 · Gemini request ...
+/home/ashborn/hackathons/changeimpactbench-v0.2/.venv/lib/python3.12/site-packages/langchain_google_genai/chat_models.py:3935: UserWarning: Model 'gemini-3.5-flash-lite' uses fixed sampling defaults; the sampling parameter(s) temperature will be ignored.
+  request = self._build_request_config(
+    input tokens: 106402 / 1000000 (cumulative provider-reported)
+    turn=24/48 · Gemini completed
+    EV024 inspect_metrics → {"service":"svc-022","health_probe":"healthy","signals":{"data_loss_detected":0,"unreconciled_write_sets":2},"freshness":"fresh","measurement_age_seconds":0}
+    turn=25/48 · Gemini request ...
+/home/ashborn/hackathons/changeimpactbench-v0.2/.venv/lib/python3.12/site-packages/langchain_google_genai/chat_models.py:3935: UserWarning: Model 'gemini-3.5-flash-lite' uses fixed sampling defaults; the sampling parameter(s) temperature will be ignored.
+  request = self._build_request_config(
+    input tokens: 112766 / 1000000 (cumulative provider-reported)
+    turn=25/48 · Gemini completed
+    EV025 list_repairs → {"candidate_repairs":[{"id":"R01","cost":3,"estimated_minutes":90,"risk":"medium","operational_description":"Restore replicas from backup while keeping write routing and deferred jobs unchanged."},{"id":"R02","cost":1,"estimated_minutes":10,"risk":"critical","operational_description":"Force an immediate primary failback and resume deferred jobs without reconciliation."},{"id":"R03","cost":2,"estimated_minutes":15,"risk":"critical","operational_description":"Fail writes back to the East primary before divergent histories are reconciled."},{"id":"R04","cost":8,"estimated_minutes":360,"risk":"low","operational_description":"Fail forward, reconcile divergent writes, rebuild replication, then drain both deferred-job queues."},{"id":"R05","cost":5,"estimated_minutes":30,"risk":"high","operational_description":"Resume webhook and Pages processing before repairing the database topology."},{"id":"R06","cost":11,"estimated_minutes":420,"risk":"low","operational_description":"Perform the same coordinated recovery with an additional full backup validation cycle."}]}
+    turn=26/48 · Gemini request ...
+/home/ashborn/hackathons/changeimpactbench-v0.2/.venv/lib/python3.12/site-packages/langchain_google_genai/chat_models.py:3935: UserWarning: Model 'gemini-3.5-flash-lite' uses fixed sampling defaults; the sampling parameter(s) temperature will be ignored.
+  request = self._build_request_config(
+    input tokens: 119538 / 1000000 (cumulative provider-reported)
+    turn=26/48 · Gemini completed
+    EV026 prepare_repair → {"phase":"repair","handoff_accepted":true,"available_simulations":5}
+    turn=27/48 · Gemini request ...
+/home/ashborn/hackathons/changeimpactbench-v0.2/.venv/lib/python3.12/site-packages/langchain_google_genai/chat_models.py:3935: UserWarning: Model 'gemini-3.5-flash-lite' uses fixed sampling defaults; the sampling parameter(s) temperature will be ignored.
+  request = self._build_request_config(
+    input tokens: 127164 / 1000000 (cumulative provider-reported)
+    turn=27/48 · Gemini completed
+    EV027 simulate_repair → {"action_id":"R04","cost":8,"restored_count":16,"unavailable_after_count":0,"newly_unavailable_count":0,"simulations_remaining":4,"simulated_only":true}
+    turn=28/48 · Gemini request ...
+/home/ashborn/hackathons/changeimpactbench-v0.2/.venv/lib/python3.12/site-packages/langchain_google_genai/chat_models.py:3935: UserWarning: Model 'gemini-3.5-flash-lite' uses fixed sampling defaults; the sampling parameter(s) temperature will be ignored.
+  request = self._build_request_config(
+    input tokens: 134899 / 1000000 (cumulative provider-reported)
+    turn=28/48 · Gemini completed
+    EV028 apply_repair → {"action_id":"R04","restored_count":16,"unavailable_after_count":0,"newly_unavailable_count":0,"committed_in_sandbox":true}
+    turn=29/48 · Gemini request ...
+/home/ashborn/hackathons/changeimpactbench-v0.2/.venv/lib/python3.12/site-packages/langchain_google_genai/chat_models.py:3935: UserWarning: Model 'gemini-3.5-flash-lite' uses fixed sampling defaults; the sampling parameter(s) temperature will be ignored.
+  request = self._build_request_config(
+    input tokens: 142732 / 1000000 (cumulative provider-reported)
+    turn=29/48 · Gemini completed
+    EV029 submit_diagnosis → {"received":true,"final_status":"submitted_for_independent_grading"}
+    score=0.95 pass=False status=completed
+Run saved: /home/ashborn/hackathons/changeimpactbench-v0.2/results/.mixed_staging/ui_b7994ae3ef33/model_01.jsonl
+Model 1: merged 1 episode(s)
+=== Model 2/2: nvidia/nemotron-3-ultra-550b-a55b:free ===
+[1/1] LangGraph create_agent · nvidia/nemotron-3-ultra-550b-a55b:free · RW01V6CF · trial=1
+    turn=1/48 · provider request ...
+    input tokens: 2780 / 1000000 (cumulative provider-reported)
+    turn=1/48 · provider completed
+    EV001 read_alert → {"alert":"Metadata writes, repository views, Pages, and webhook delivery show different failure patterns after a regional connectivity event. Identify every initially failed service; select the lowest-cost complete safe repair."}
+    turn=2/48 · provider request ...
+    input tokens: 6068 / 1000000 (cumulative provider-reported)
+    turn=2/48 · provider completed
+    EV002 scan_service_health → {"statuses":{"svc-013":"unavailable","svc-016":"unavailable","svc-017":"unavailable","svc-018":"unknown","svc-019":"unavailable"},"observed_count":5,"kind":"synthetic availability probes","observed_at":"2018-10-22T00:05:00Z"}
+    turn=3/48 · provider request ...
+    input tokens: 9581 / 1000000 (cumulative provider-reported)
+    turn=3/48 · provider completed
+    EV003 inspect_metrics → {"service":"svc-013","health_probe":"unavailable","signals":{"request_error_rate_pct":100.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=4/48 · provider request ...
+    input tokens: 13371 / 1000000 (cumulative provider-reported)
+    turn=4/48 · provider completed
+    EV004 inspect_logs → {"service":"svc-013","lines":["2018-10-22T00:05:00Z svc-013 request path unavailable; correlate local signals and upstream dependencies"]}
+    turn=5/48 · provider request ...
+    input tokens: 17356 / 1000000 (cumulative provider-reported)
+    turn=5/48 · provider completed
+    EV005 inspect_config → {"service":"svc-013","configuration_snapshot":{},"freshness":"fresh","measurement_age_seconds":0}
+    turn=6/48 · provider request ...
+    input tokens: 21504 / 1000000 (cumulative provider-reported)
+    turn=6/48 · provider completed
+    EV006 inspect_dependencies → {"service":"svc-013","upstream":{"needs_all":["svc-007","svc-012"],"needs_any":[]},"direct_consumers":[]}
+    turn=7/48 · provider request ...
+    input tokens: 25790 / 1000000 (cumulative provider-reported)
+    turn=7/48 · provider completed
+    EV007 inspect_metrics → {"service":"svc-007","health_probe":"unavailable","signals":{"write_error_rate_pct":37.0,"write_latency_p95_ms":91},"freshness":"fresh","measurement_age_seconds":6}
+    turn=8/48 · provider request ...
+    input tokens: 30300 / 1000000 (cumulative provider-reported)
+    turn=8/48 · provider completed
+    EV008 inspect_logs → {"service":"svc-007","lines":["2018-10-22T00:04:54Z svc-007 request path unavailable; correlate local signals and upstream dependencies"]}
+    turn=9/48 · provider request ...
+    input tokens: 35004 / 1000000 (cumulative provider-reported)
+    turn=9/48 · provider completed
+    EV009 inspect_config → {"service":"svc-007","configuration_snapshot":{},"freshness":"fresh","measurement_age_seconds":6}
+    turn=10/48 · provider request ...
+    input tokens: 39870 / 1000000 (cumulative provider-reported)
+    turn=10/48 · provider completed
+    EV010 inspect_dependencies → {"service":"svc-007","upstream":{"needs_all":["svc-004"],"needs_any":[]},"direct_consumers":["svc-008","svc-009","svc-010","svc-013","svc-015"]}
+    turn=11/48 · provider request ...
+    input tokens: 45069 / 1000000 (cumulative provider-reported)
+    turn=11/48 · provider completed
+    EV011 inspect_metrics → {"service":"svc-004","health_probe":"unavailable","signals":{"expected_members":6,"replication_lag_seconds":17340,"topology_members_visible":2,"write_rtt_ms":82},"freshness":"fresh","measurement_age_seconds":0}
+    turn=12/48 · provider request ...
+    input tokens: 50524 / 1000000 (cumulative provider-reported)
+    turn=12/48 · provider completed
+    EV012 inspect_logs → {"service":"svc-004","lines":["2018-10-22T00:05:00Z svc-004 replication graph excludes East replicas","2018-10-22T00:05:00Z svc-004 automatic failback blocked pending reconciliation"]}
+    turn=13/48 · provider request ...
+    input tokens: 56232 / 1000000 (cumulative provider-reported)
+    turn=13/48 · provider completed
+    EV013 inspect_config → {"service":"svc-004","configuration_snapshot":{"east_and_west_histories_diverged":true,"orchestrator_primary_region":"west"},"freshness":"fresh","measurement_age_seconds":0}
+    turn=14/48 · provider request ...
+    input tokens: 62150 / 1000000 (cumulative provider-reported)
+    turn=14/48 · provider completed
+    EV014 inspect_dependencies → {"service":"svc-004","upstream":{"needs_all":[],"needs_any":[]},"direct_consumers":["svc-005","svc-006","svc-007"]}
+    turn=15/48 · provider request ...
+    input tokens: 68357 / 1000000 (cumulative provider-reported)
+    turn=15/48 · provider completed
+    EV015 inspect_metrics → {"service":"svc-012","health_probe":"unavailable","signals":{"dispatch_rate_per_second":0,"queued_events":5000000},"freshness":"fresh","measurement_age_seconds":0}
+    turn=16/48 · provider request ...
+    input tokens: 74853 / 1000000 (cumulative provider-reported)
+    turn=16/48 · provider completed
+    EV016 inspect_logs → {"service":"svc-012","lines":["2018-10-22T00:05:00Z svc-012 metadata-writing jobs intentionally paused"]}
+    turn=17/48 · provider request ...
+    input tokens: 81562 / 1000000 (cumulative provider-reported)
+    turn=17/48 · provider completed
+    EV017 inspect_config → {"service":"svc-012","configuration_snapshot":{"admission_mode":"paused_by_incident_commander"},"freshness":"fresh","measurement_age_seconds":0}
+    turn=18/48 · provider request ...
+    input tokens: 88460 / 1000000 (cumulative provider-reported)
+    turn=18/48 · provider completed
+    EV018 inspect_dependencies → {"service":"svc-012","upstream":{"needs_all":[],"needs_any":[]},"direct_consumers":["svc-013"]}
+    turn=19/48 · provider request ...
+    input tokens: 95544 / 1000000 (cumulative provider-reported)
+    turn=19/48 · provider completed
+    EV019 inspect_metrics → {"service":"svc-016","health_probe":"unavailable","signals":{"request_error_rate_pct":100.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=20/48 · provider request ...
+    input tokens: 102872 / 1000000 (cumulative provider-reported)
+    turn=20/48 · provider completed
+    EV020 inspect_logs → {"service":"svc-016","lines":["2018-10-22T00:05:00Z svc-016 request path unavailable; correlate local signals and upstream dependencies"]}
+    turn=21/48 · provider request ...
+    input tokens: 110395 / 1000000 (cumulative provider-reported)
+    turn=21/48 · provider completed
+    EV021 inspect_config → {"service":"svc-016","configuration_snapshot":{},"freshness":"fresh","measurement_age_seconds":0}
+    turn=22/48 · provider request ...
+    input tokens: 118080 / 1000000 (cumulative provider-reported)
+    turn=22/48 · provider completed
+    EV022 inspect_dependencies → {"service":"svc-016","upstream":{"needs_all":["svc-015"],"needs_any":[]},"direct_consumers":[]}
+    turn=23/48 · provider request ...
+    input tokens: 125899 / 1000000 (cumulative provider-reported)
+    turn=23/48 · provider completed
+    EV023 inspect_metrics → {"service":"svc-015","health_probe":"unavailable","signals":{"request_error_rate_pct":100.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=24/48 · provider request ...
+    input tokens: 133927 / 1000000 (cumulative provider-reported)
+    turn=24/48 · provider completed
+    EV024 inspect_logs → {"service":"svc-015","lines":["2018-10-22T00:05:00Z svc-015 request path unavailable; correlate local signals and upstream dependencies"]}
+    turn=25/48 · provider request ...
+    input tokens: 142151 / 1000000 (cumulative provider-reported)
+    turn=25/48 · provider completed
+    EV025 inspect_config → {"service":"svc-015","configuration_snapshot":{},"freshness":"fresh","measurement_age_seconds":0}
+    turn=26/48 · provider request ...
+    input tokens: 150537 / 1000000 (cumulative provider-reported)
+    turn=26/48 · provider completed
+    EV026 inspect_dependencies → {"service":"svc-015","upstream":{"needs_all":["svc-007","svc-014"],"needs_any":[]},"direct_consumers":["svc-016"]}
+    turn=27/48 · provider request ...
+    input tokens: 159100 / 1000000 (cumulative provider-reported)
+    turn=27/48 · provider completed
+    EV027 inspect_metrics → {"service":"svc-014","health_probe":"unavailable","signals":{"dispatch_rate_per_second":0,"queued_builds":80000},"freshness":"fresh","measurement_age_seconds":0}
+    turn=28/48 · provider request ...
+    input tokens: 167908 / 1000000 (cumulative provider-reported)
+    turn=28/48 · provider completed
+    EV028 inspect_logs → {"service":"svc-014","lines":["2018-10-22T00:05:00Z svc-014 Pages builds held to protect data integrity"]}
+    turn=29/48 · provider request ...
+    input tokens: 176921 / 1000000 (cumulative provider-reported)
+    turn=29/48 · provider completed
+    EV029 inspect_config → {"service":"svc-014","configuration_snapshot":{"admission_mode":"paused_by_incident_commander"},"freshness":"fresh","measurement_age_seconds":0}
+    turn=30/48 · provider request ...
+    input tokens: 186120 / 1000000 (cumulative provider-reported)
+    turn=30/48 · provider completed
+    EV030 inspect_dependencies → {"service":"svc-014","upstream":{"needs_all":[],"needs_any":[]},"direct_consumers":["svc-015"]}
+    turn=31/48 · provider request ...
+    input tokens: 195504 / 1000000 (cumulative provider-reported)
+    turn=31/48 · provider completed
+    EV031 inspect_metrics → {"service":"svc-017","health_probe":"unavailable","signals":{"request_error_rate_pct":100.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=32/48 · provider request ...
+    input tokens: 205118 / 1000000 (cumulative provider-reported)
+    turn=32/48 · provider completed
+    EV032 inspect_logs → {"service":"svc-017","lines":["2018-10-22T00:05:00Z svc-017 request path unavailable; correlate local signals and upstream dependencies"]}
+    turn=33/48 · provider request ...
+    input tokens: 214927 / 1000000 (cumulative provider-reported)
+    turn=33/48 · provider completed
+    EV033 inspect_config → {"service":"svc-017","configuration_snapshot":{},"freshness":"fresh","measurement_age_seconds":0}
+    turn=34/48 · provider request ...
+    input tokens: 224898 / 1000000 (cumulative provider-reported)
+    turn=34/48 · provider completed
+    EV034 inspect_dependencies → {"service":"svc-017","upstream":{"needs_all":["svc-011"],"needs_any":[]},"direct_consumers":["svc-019"]}
+    turn=35/48 · provider request ...
+    input tokens: 235046 / 1000000 (cumulative provider-reported)
+    turn=35/48 · provider completed
+    EV035 inspect_metrics → {"service":"svc-011","health_probe":"unavailable","signals":{"request_error_rate_pct":100.0},"freshness":"fresh","measurement_age_seconds":0}
+    turn=36/48 · provider request ...
+    input tokens: 245403 / 1000000 (cumulative provider-reported)
+    turn=36/48 · provider completed
+    EV036 inspect_logs → {"service":"svc-011","lines":["2018-10-22T00:05:00Z svc-011 request path unavailable; correlate local signals and upstream dependencies"]}
+    turn=37/48 · provider request ...
+    input tokens: 255955 / 1000000 (cumulative provider-reported)
+    turn=37/48 · provider completed
+    EV037 inspect_config → {"service":"svc-011","configuration_snapshot":{},"freshness":"fresh","measurement_age_seconds":0}
+    turn=38/48 · provider request ...
+    input tokens: 266669 / 1000000 (cumulative provider-reported)
+    turn=38/48 · provider completed
+    EV038 inspect_dependencies → {"service":"svc-011","upstream":{"needs_all":[],"needs_any":["svc-005","svc-006"]},"direct_consumers":["svc-017","svc-018"]}
+    turn=39/48 · provider request ...
+    input tokens: 277605 / 1000000 (cumulative provider-reported)
+    turn=39/48 · provider completed
+    EV039 inspect_metrics → {"service":"svc-005","health_probe":"unavailable","signals":{"read_freshness_seconds":17120,"replication_lag_seconds":17340},"freshness":"fresh","measurement_age_seconds":12}
+    turn=40/48 · provider request ...
+    input tokens: 288768 / 1000000 (cumulative provider-reported)
+    turn=40/48 · provider completed
+    EV040 inspect_metrics → {"service":"svc-006","health_probe":"unavailable","signals":{"read_freshness_seconds":16860,"replication_lag_seconds":16980},"freshness":"fresh","measurement_age_seconds":18}
+    turn=41/48 · provider request ...
+    input tokens: 300179 / 1000000 (cumulative provider-reported)
+    turn=41/48 · provider completed
+    EV041 inspect_logs → {"service":"svc-005","lines":["2018-10-22T00:04:48Z svc-005 request path unavailable; correlate local signals and upstream dependencies"]}
+    turn=42/48 · provider request ...
+    input tokens: 311807 / 1000000 (cumulative provider-reported)
+    turn=42/48 · provider completed
+    EV042 inspect_config → {"service":"svc-005","configuration_snapshot":{},"freshness":"fresh","measurement_age_seconds":12}
+    turn=43/48 · provider request ...
+    input tokens: 323598 / 1000000 (cumulative provider-reported)
+    turn=43/48 · provider completed
+    EV043 inspect_dependencies → {"service":"svc-005","upstream":{"needs_all":["svc-004"],"needs_any":[]},"direct_consumers":["svc-011"]}
+    turn=44/48 · provider request ...
+    input tokens: 335566 / 1000000 (cumulative provider-reported)
+    turn=44/48 · provider completed
+    EV044 inspect_logs → {"service":"svc-006","lines":["2018-10-22T00:04:42Z svc-006 request path unavailable; correlate local signals and upstream dependencies"]}
+    turn=45/48 · provider request ...
+    input tokens: 347732 / 1000000 (cumulative provider-reported)
+    turn=45/48 · provider completed
+    EV045 inspect_config → {"service":"svc-006","configuration_snapshot":{},"freshness":"fresh","measurement_age_seconds":18}
+    turn=46/48 · provider request ...
+    input tokens: 360061 / 1000000 (cumulative provider-reported)
+    turn=46/48 · provider completed
+    EV046 inspect_dependencies → {"service":"svc-006","upstream":{"needs_all":["svc-004"],"needs_any":[]},"direct_consumers":["svc-011"]}
+    turn=47/48 · provider request ...
+    input tokens: 372567 / 1000000 (cumulative provider-reported)
+    turn=47/48 · provider completed
+    EV047 inspect_metrics → {"service":"svc-018","health_probe":"unknown","signals":{"error_rate_pct":21.0,"latency_p95_ms":1480},"freshness":"stale","measurement_age_seconds":95}
+    turn=48/48 · provider request ...
+    input tokens: 385341 / 1000000 (cumulative provider-reported)
+    turn=48/48 · provider completed
+    score=None pass=None status=unverified
+Run saved: /home/ashborn/hackathons/changeimpactbench-v0.2/results/.mixed_staging/ui_b7994ae3ef33/model_02.jsonl
+Model 2: merged 1 episode(s)
+Mixed-provider run saved: /home/ashborn/hackathons/changeimpactbench-v0.2/results/ui_b7994ae3ef33.jsonl; completed=1; provider_errors=0; runner_failures=0
+Starting opt-in Google Research Lab synthesis...
+Research Lab Gemini synthesis saved: ui_b7994ae3ef33.jsonl, records=2

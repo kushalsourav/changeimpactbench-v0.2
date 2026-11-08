@@ -1,16 +1,21 @@
 {
   "failed_services": [
+    "account-management",
     "analytics-api",
-    "analytics-store",
     "billing-control",
     "control-api",
-    "control-db",
-    "dashboard",
-    "log-delivery",
-    "quorum-gateway-05",
-    "reports",
-    "validated-shard-05"
+    "customer-dashboard",
+    "dr-control-database",
+    "logpush-pipeline",
+    "magic-wan-configuration",
+    "pdx04-analytics-store",
+    "pdx04-bootstrap-control",
+    "pdx04-control-database",
+    "pdx04-facility-power",
+    "pdx04-network-edge",
+    "reporting-dashboard",
+    "stream-upload-control"
   ],
   "root_cause": "H03",
-  "fix_id": "A95"
+  "fix_id": "A53"
 }

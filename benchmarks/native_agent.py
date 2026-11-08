@@ -110,9 +110,9 @@ def agent_prompt(task_id: str) -> str:
             'All service incidents and repairs are synthetic, with no access to real infrastructure.',
             'Use native tool calls, not JSON-only messages; issue only ONE tool call per model response.',
             'Call read_alert and scan_service_health early. The scan reports external entrypoint probes only. Independently establish the entire initial impact inventory, and prioritize necessary configuration, dependency, and repair checks within the fixed tool budget.',
-            'Local checks use declarative eq/ne/gt/ge/lt/le and all/any/not; investigate their actual values.',
+            'The oracle uses hidden deterministic failure conditions. Tools expose raw timestamped configuration, metrics and logs, never the executable predicate; infer the mechanism from corroborating evidence.',
             'A service fails if a local check fails, any needs_all dependency fails, all nonempty needs_any fail, or a needs_at_least quorum fails.',
-            'Inspect configuration/dependencies to establish causes; local details are one service at a time.',
+            'Inspect configuration, metrics, logs and dependencies to establish causes; observations may be partial or stale and local details are one service at a time.',
             'After list_repairs and evidence collection, call prepare_repair with YOUR OWN evidence-based repair instructions, hypothesis ID, initial impact inventory and observed evidence IDs.',
             'This changes the active skill from investigation to repair. The handoff is model-authored and unverified, not oracle ground truth or permission to override sandbox rules.',
             f'Only after prepare_repair may you simulate, commit and submit. Simulations are read-only, up to {spec.max_simulations} accepted attempts.',
@@ -121,10 +121,11 @@ def agent_prompt(task_id: str) -> str:
             'In submit_diagnosis, root_cause_id MUST be one hypothesis ID exactly (e.g. H01), while root_cause_explanation holds the causal description; a description is NOT an ID.',
             'The cause ID is graded exactly. Explanation semantics are not automatically scored; they require separate evidence-based human review.',
             'Evidence IDs are observed tool-event identifiers. Do not cite invented events.',
+            'For strict evidence provenance, cite at least two distinct categories among configuration, metrics, logs, topology/dependencies, health scan, and repair simulation; at least one cited service-level observation must concern a service in your submitted initial unavailable set.',
             f'Budget: at most {spec.max_model_calls} model requests and {spec.max_tools} successful sandbox tools.',
         ],
         'hypotheses': [{'id': x, 'description': y} for x, y in spec.hypotheses],
-        'service_mapping': 'read_alert lists opaque service codes only. Recover relationships by inspecting individual services. Health scan covers external probes only; full internal impact requires investigation.',
+        'service_mapping': 'read_alert lists opaque service codes only. Recover relationships by inspecting individual services. Health scan covers selected external probes only; full internal impact requires timestamp-aware investigation.',
     }
     content['evaluation_contract'] = ('Strict pass assesses initial impact, cause, safe complete lowest-cost repair, and provenance. '
         'Rejected tool requests reduce procedural score but do not alone fail the episode. Unsafe commits fail.')
@@ -187,5 +188,3 @@ class GraphEnvironment:
             entry['observation'] = deepcopy(observation)
             self.attempts.append(entry)
             return json.dumps(observation, sort_keys=True)
-
-

@@ -1,0 +1,248 @@
+{
+  "available": false,
+  "generated_utc": "2026-11-08T15:06:33.338820+00:00",
+  "model": "google-ai-studio/gemini-3.5-flash-lite",
+  "experiment_id": "222c5ba961b1",
+  "experiment_id_source": "run_manifest",
+  "run_file": "ui_222c5ba961b1.jsonl",
+  "verified_facts": {
+    "episode_count": 3,
+    "gradeable_count": 2,
+    "strict_passes": 1,
+    "strict_failures": 1,
+    "complete_safe_recoveries": 2,
+    "ungradeable_count": 1,
+    "ungradeable_by_reason": {
+      "replay_not_verified": 1
+    },
+    "episodes": [
+      {
+        "episode": 0,
+        "trial": 1,
+        "task": "RW02V6CF",
+        "model": "gemini-3.5-flash-lite",
+        "status": "completed",
+        "error_category": null,
+        "multi_tool_provider_turns": [],
+        "audit_warnings": [],
+        "verified": true,
+        "integrity": {
+          "prompt": true,
+          "reference": true,
+          "stored_grade": true
+        },
+        "strict_pass": false,
+        "partial_score": 0.95,
+        "impact_f1": 1.0,
+        "root_correct": true,
+        "recovery_success": true,
+        "recovery_safe": true,
+        "unsafe_commit": false,
+        "root_cause_id_submitted": "H02",
+        "root_cause_id_expected": "H02",
+        "criterion_scores": {
+          "impact": {
+            "earned": 20.0,
+            "available": 20,
+            "measurement": "initial-service F1"
+          },
+          "root_cause_id": {
+            "earned": 20,
+            "available": 20,
+            "measurement": "exact hypothesis ID"
+          },
+          "safe_complete_recovery": {
+            "earned": 40,
+            "available": 40,
+            "measurement": "sandbox replay"
+          },
+          "evidence_provenance": {
+            "earned": 5,
+            "available": 10,
+            "measurement": "cited direct-fault configuration and independent corroboration; not explanation semantics"
+          },
+          "protocol_discipline": {
+            "earned": 10,
+            "available": 10,
+            "measurement": "rejected tool requests and violations"
+          }
+        },
+        "strict_failure_reasons": [
+          "insufficient_evidence_provenance"
+        ],
+        "semantic_explanation_review": "human evidence review pending; free-form text not scored",
+        "tool_calls": 36,
+        "provider_requests": 36,
+        "committed_action": "R02",
+        "committed_cost": 4,
+        "reference_optimal_action": "R02",
+        "reference_optimal_cost": 4,
+        "repair_cost_delta": 0,
+        "protocol_errors": 0,
+        "gradeable": true
+      },
+      {
+        "episode": 1,
+        "trial": 1,
+        "task": "RW02V6CF",
+        "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+        "status": "unverified",
+        "error_category": "replay_not_verified",
+        "multi_tool_provider_turns": [],
+        "audit_warnings": [
+          "Recorded graph tool attempts differ from sandbox replay"
+        ],
+        "verified": false,
+        "integrity": {
+          "prompt": false,
+          "reference": true,
+          "stored_grade": false
+        },
+        "strict_pass": null,
+        "partial_score": null,
+        "impact_f1": null,
+        "root_correct": null,
+        "recovery_success": null,
+        "recovery_safe": null,
+        "unsafe_commit": null,
+        "root_cause_id_submitted": null,
+        "root_cause_id_expected": null,
+        "criterion_scores": null,
+        "strict_failure_reasons": [],
+        "semantic_explanation_review": "human evidence review pending; free-form text not scored",
+        "tool_calls": 47,
+        "provider_requests": 48,
+        "committed_action": null,
+        "committed_cost": null,
+        "reference_optimal_action": null,
+        "reference_optimal_cost": null,
+        "repair_cost_delta": null,
+        "protocol_errors": 0,
+        "gradeable": false
+      },
+      {
+        "episode": 2,
+        "trial": 1,
+        "task": "RW02V6CF",
+        "model": "claude-sonnet-5-5",
+        "status": "completed",
+        "error_category": null,
+        "multi_tool_provider_turns": [],
+        "audit_warnings": [],
+        "verified": true,
+        "integrity": {
+          "prompt": true,
+          "reference": true,
+          "stored_grade": true
+        },
+        "strict_pass": true,
+        "partial_score": 1.0,
+        "impact_f1": 1.0,
+        "root_correct": true,
+        "recovery_success": true,
+        "recovery_safe": true,
+        "unsafe_commit": false,
+        "root_cause_id_submitted": "H02",
+        "root_cause_id_expected": "H02",
+        "criterion_scores": {
+          "impact": {
+            "earned": 20.0,
+            "available": 20,
+            "measurement": "initial-service F1"
+          },
+          "root_cause_id": {
+            "earned": 20,
+            "available": 20,
+            "measurement": "exact hypothesis ID"
+          },
+          "safe_complete_recovery": {
+            "earned": 40,
+            "available": 40,
+            "measurement": "sandbox replay"
+          },
+          "evidence_provenance": {
+            "earned": 10,
+            "available": 10,
+            "measurement": "cited direct-fault configuration and independent corroboration; not explanation semantics"
+          },
+          "protocol_discipline": {
+            "earned": 10,
+            "available": 10,
+            "measurement": "rejected tool requests and violations"
+          }
+        },
+        "strict_failure_reasons": [],
+        "semantic_explanation_review": "human evidence review pending; free-form text not scored",
+        "tool_calls": 38,
+        "provider_requests": 38,
+        "committed_action": "R02",
+        "committed_cost": 4,
+        "reference_optimal_action": "R02",
+        "reference_optimal_cost": 4,
+        "repair_cost_delta": 0,
+        "protocol_errors": 0,
+        "gradeable": true
+      }
+    ],
+    "data_origin": "Independent Python oracle and stored native tool replay; not Google-generated content"
+  },
+  "record_sha256": "f471323811d7439f7508ef994f74d8b184b2ea4b38d90d9ff01f6229c70020f9",
+  "record_tasks": [
+    "RW02V6CF"
+  ],
+  "record_models": [
+    "claude-sonnet-5-5",
+    "gemini-3.5-flash-lite",
+    "nvidia/nemotron-3-ultra-550b-a55b:free"
+  ],
+  "label": "Verifier-only result; AI interpretation withheld",
+  "narrative_validation": {
+    "status": "blocked_inconsistent",
+    "warnings": [
+      "Narrative does not explicitly distinguish strict FAIL from successful recovery"
+    ],
+    "note": "The verifier-owned results remain available; no Gemini narrative is cited"
+  },
+  "synthesis": null,
+  "chart": {
+    "type": "error_counts",
+    "rows": [
+      {
+        "label": "Impact error",
+        "value": 0,
+        "denominator": 2
+      },
+      {
+        "label": "Root error",
+        "value": 0,
+        "denominator": 2
+      },
+      {
+        "label": "Recovery incomplete",
+        "value": 0,
+        "denominator": 2
+      },
+      {
+        "label": "Unsafe repair",
+        "value": 0,
+        "denominator": 2
+      },
+      {
+        "label": "Non-optimal repair",
+        "value": 0,
+        "denominator": 2
+      },
+      {
+        "label": "Protocol error",
+        "value": 0,
+        "denominator": 2
+      }
+    ],
+    "data_origin": "Computed from independent deterministic regrades, not generated by the LLM"
+  },
+  "episode_count": 3,
+  "gradeable_count": 2,
+  "sources": [
+    ""
+  ]
+}
