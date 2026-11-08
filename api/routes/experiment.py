@@ -12,7 +12,7 @@ from typing import Literal
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, field_validator
-from agent_graph import TASK_IDS as GRAPH_TASKS, VERSIONS as GRAPH_VERSIONS, MAX_MODEL_CALLS as GRAPH_CALLS, implementation_hashes as graph_hashes
+from agent_graph import ACTIVE_TASK_IDS as GRAPH_TASKS, VERSIONS as GRAPH_VERSIONS, MAX_MODEL_CALLS as GRAPH_CALLS, implementation_hashes as graph_hashes
 from tasks import ROOT
 from api.services.storage import RESULTS, run_manifest_path
 from api.services.process_manager import lock, active, process_state

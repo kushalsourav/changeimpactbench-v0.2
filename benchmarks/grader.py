@@ -10,6 +10,7 @@ from benchmarks.native_agent import (
 )
 from benchmarks.spec import digest, service_codes, synthetic_task
 from benchmarks.skills import repair_system_prompt
+from benchmarks.frozen_replay import frozen_replay
 from oracle import reference_answer, initial_failures
 
 def _f1(expected: set[str], actual: set[str]) -> float:
@@ -33,6 +34,11 @@ def replay_record(record: dict) -> dict:
     stored for inspection but no hidden chain-of-thought is inferred.
     """
     task_id = record.get('task_id')
+    # Exact-hash archived replay protects frozen records from new tool semantics.
+    from benchmarks.native_agent import implementation_hashes
+    historical = frozen_replay(record, implementation_hashes())
+    if historical is not None:
+        return historical
     if task_id not in GRAPH_BASE:
         raise ValueError('Unknown new LangGraph benchmark task')
     case = source_case(task_id)
@@ -125,7 +131,10 @@ def replay_record(record: dict) -> dict:
     if synthetic_task(task_id):
         direct_faults, _ = initial_failures(case['id'], case['facts'])
         names = env.underlying.reverse_codes
-        local_support = any(event['tool'] in ('inspect_config', 'inspect_logs', 'inspect_metrics')
+        local_support = any(event['tool'] == 'inspect_config'
+                            and event['observation']['result'].get('configured_local_check') is True
+                            and event['observation']['result'].get('rule') is not None
+                            and bool(event['observation']['result'].get('referenced_values'))
                             and names.get(event['arguments']['service'], event['arguments']['service']) in direct_faults
                             for event in cited)
         corroboration = any(event['tool'] in ('scan_service_health', 'inspect_dependencies', 'simulate_repair')
@@ -148,7 +157,7 @@ def replay_record(record: dict) -> dict:
         'impact': {'earned': round(20 * f1, 5), 'available': 20, 'measurement': 'initial-service F1'},
         'root_cause_id': {'earned': 20 if root_ok else 0, 'available': 20, 'measurement': 'exact hypothesis ID'},
         'safe_complete_recovery': {'earned': 40 if safe and complete else 0, 'available': 40, 'measurement': 'sandbox replay'},
-        'evidence_provenance': {'earned': evidence_score, 'available': 10, 'measurement': 'event IDs exist; not semantic support'},
+        'evidence_provenance': {'earned': evidence_score, 'available': 10, 'measurement': ('cited direct-fault configuration and independent corroboration; not explanation semantics' if synthetic_task(task_id) else 'event IDs exist; not semantic support')},
         'protocol_discipline': {'earned': procedure_score, 'available': 10, 'measurement': 'rejected tool requests and violations'},
     }
     reasons = []
@@ -172,7 +181,7 @@ def replay_record(record: dict) -> dict:
         'repair_handoff_recorded': bool(env.repair_brief),
         'strict_failure_reasons': reasons,
         'evidence_score': evidence_score,
-        'evidence_review': 'automated citation provenance only; human semantic review pending',
+        'evidence_review': ('cited direct-fault configuration and corroborating tool event verified; claim-by-claim explanation semantic review pending' if synthetic_task(task_id) else 'automated citation provenance only; human semantic review pending'),
         'procedure_score': procedure_score, 'tool_calls': len(events),
         'simulation_calls': env.underlying.simulations,
         'protocol_errors': [{'turn': a['provider_turn'], 'reason': a['rejected_reason'],

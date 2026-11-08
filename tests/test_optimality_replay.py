@@ -1,5 +1,6 @@
 """Scripted offline counterexamples: strict cost optimum is separate from safe recovery."""
 from __future__ import annotations
+from benchmarks.grader import replay_record as _legacy_replay
 from types import SimpleNamespace
 import unittest
 from benchmarks.spec import reference_trajectory
@@ -26,7 +27,7 @@ class CostOptimalityReplayTests(unittest.TestCase):
         rec=run_episode('RW03V4','offline/costly:free',1,'offline',1024,'low',0,3,graph_factory=costly_factory)
         self.assertEqual(rec['status'],'completed')
         self.assertTrue(rec['replay_verified'])
-        g=rec['grade']
+        g=_legacy_replay(rec)['grade']
         self.assertEqual(g['score'],1.0)
         self.assertTrue(g['recovery_success'])
         self.assertTrue(g['recovery_safe'])

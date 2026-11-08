@@ -2,7 +2,7 @@
 from __future__ import annotations
 import json
 from fastapi import APIRouter, HTTPException
-from agent_graph import TASK_IDS as GRAPH_TASKS, VERSIONS as GRAPH_VERSIONS, agent_prompt as graph_prompt, source_case as graph_case, task_catalog as graph_catalog
+from agent_graph import ACTIVE_TASK_IDS as GRAPH_TASKS, VERSIONS as GRAPH_VERSIONS, agent_prompt as graph_prompt, source_case as graph_case, task_catalog as graph_catalog
 from oracle import reference_answer, reference_audit, initial_failures, patch_facts
 
 router = APIRouter()

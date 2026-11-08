@@ -40,6 +40,7 @@ from agent_graph import (
     replay_record, source_case,
 )
 from tasks import ROOT
+from benchmarks.grading_policy import replay_record as active_replay_record, contract_for
 
 
 class EpisodeInterrupted(Exception):
@@ -307,6 +308,7 @@ def run_episode(task_id: str, model: str, trial: int, token: str,
         'timestamp_utc': datetime.now(timezone.utc).isoformat(),
         'task_id': task_id, 'benchmark_version': VERSIONS[task_id],
         'agent_framework': ENGINE,
+        'grading_contract': contract_for(task_id),
         'model_requested': model, 'trial': trial,
         'temperature_requested': temperature, 'max_tokens_requested': max_tokens,
         'reasoning_effort_requested': effort, 'delay_seconds': delay,
@@ -390,7 +392,7 @@ def run_episode(task_id: str, model: str, trial: int, token: str,
         # never misrepresented as a raw free-text model output.
         record['raw_output'] = json.dumps({'native_terminal_tool': 'submit_diagnosis',
                                            'arguments': env.final}, sort_keys=True) if env.final else (record['raw_provider_output'] or '[no final submission]')
-    verification = replay_record(record)
+    verification = active_replay_record(record)
     record['replay_verified'] = verification['verified']
     if verification['grade'] is not None:
         record['grade'] = verification['grade']

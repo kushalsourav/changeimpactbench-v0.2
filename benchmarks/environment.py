@@ -194,13 +194,20 @@ class AgentEnvironment:
                 observation = {'service': args['service'], 'timestamp': self.spec.time,
                                'health_probe': 'unavailable' if name in before_down else 'healthy',
                                'synthetic_request_errors_per_minute': 60 if name in before_down else 0,
-                               **({'is_direct_local_fault': name in direct} if self.spec.id.endswith(('V3','V5','V6N','V6CF')) else {})}
+                               **({'is_direct_local_fault': name in direct} if self.spec.id.endswith('V3') else {})}
             else:
+                # V5/V6: do not announce direct versus cascading failures in logs.
+                # Only inspection of local rules and dependencies can distinguish them.
+                if self.spec.id.endswith(('V5', 'V6N', 'V6CF')):
+                    message = ('service unavailable; investigate configuration and dependencies'
+                               if name in before_down else 'health probe passing')
+                else:
+                    message = (('local check violation; inspect the relevant configuration values'
+                                if self.spec.id.endswith('V3') else 'synthetic service health probe failed')
+                               if name in direct else 'upstream request unavailable; trace dependencies'
+                               if name in before_down else 'health probe passing')
                 observation = {'service': args['service'], 'timestamp': self.spec.time,
-                               'lines': [f'{self.spec.time} {args["service"]} ' + (
-                                   ('local check violation; inspect the relevant configuration values' if self.spec.id.endswith(('V3','V5','V6N','V6CF')) else 'synthetic service health probe failed') if name in direct
-                                   else 'upstream request unavailable; trace dependencies' if name in before_down
-                                   else 'health probe passing')]} 
+                               'lines': [f'{self.spec.time} {args["service"]} {message}']}
         elif tool == 'simulate_repair':
             if self.repair_brief is None:
                 raise ProtocolError('Call prepare_repair with an evidence-backed plan before simulation')

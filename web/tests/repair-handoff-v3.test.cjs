@@ -5,7 +5,7 @@ const path=require('node:path');
 const source=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
 test('active scenario selector and typed shared state use v3 only',()=>{
   assert.match(source('lib/presentation.tsx'),/RW01V3', 'RW02V3', 'RW03V3'/);
-  assert.match(source('hooks/useWorkbench.tsx'),/useState\(\['RW01V6N'\]\)/);
+  assert.match(source('hooks/useWorkbench.tsx'),/useState\(\['RW01V6CF'\]\)/);
 });
 test('episode shows recorded agent-written repair brief and prompt hash',()=>{
   const page=source('pages/ExecutionAnalysis.tsx');

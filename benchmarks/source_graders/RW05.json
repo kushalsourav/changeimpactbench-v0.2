@@ -1,0 +1,555 @@
+{
+  "grader_id": "RW05-source-grader-v2",
+  "seed": "RW05",
+  "fixture": "tasks/RW05.json",
+  "source": {
+    "title": "Post mortem on the Cloudflare Control Plane and Analytics Outage",
+    "publisher": "Cloudflare",
+    "url": "https://blog.cloudflare.com/post-mortem-on-cloudflare-control-plane-and-analytics-outage/",
+    "published": "2023-11-04",
+    "retrieved_utc": "2026-11-07",
+    "source_type": "operator first-party postmortem; contains explicitly labeled informed speculation about the colocation provider"
+  },
+  "observed_symptoms": [
+    {
+      "id": "S1",
+      "time_utc": "2023-11-02T11:44",
+      "fact": "Control plane (dashboard, APIs) and analytics/logging services went down; two routers connecting the Portland PDX-04 facility went offline at 11:44 and could not be reached directly or out of band.",
+      "measurement": "incident 2023-11-02 11:44 to 2023-11-04 04:25 UTC"
+    },
+    {
+      "id": "S2",
+      "fact": "Most of the control plane was restored at the disaster recovery facility by 17:57 on Nov 2; raw log services were unavailable for most customers for the whole incident.",
+      "measurement": "control plane mostly restored ~6 h; logs down ~40 h"
+    },
+    {
+      "id": "S3",
+      "fact": "Network and security services kept working and customer traffic was not impacted, though customers could not make changes for periods."
+    },
+    {
+      "id": "S4",
+      "fact": "Turning up services on the disaster recovery site caused a thundering-herd of API calls that required rate limiting."
+    },
+    {
+      "id": "S5",
+      "fact": "Some datasets not replicated to the EU have persistent gaps; log push logs for most of the event were not processed and cannot be recovered."
+    }
+  ],
+  "confirmed_root_cause": {
+    "mechanism": "Total power loss at the Flexential PDX-04 data center took out Cloudflare's largest analytics cluster, more than a third of its high-availability control-plane machines, and the default home of services not yet on the HA cluster. The outage was amplified by Cloudflare design gaps: some services supposedly on the HA cluster depended on Kafka and ClickHouse that existed only in PDX-04, logging was intentionally outside the HA cluster, some newer products were not integrated with HA or tested on DR, and the entire PDX-04 facility had never been tested offline.",
+    "confirmed_elements": [
+      "Power was lost at PDX-04 and the UPS batteries began failing after about 4 minutes instead of the expected 10",
+      "Flexential did not tell Cloudflare it had moved to generators; first provider message came at 12:28",
+      "Kafka and ClickHouse were only in PDX-04 yet HA services depended on them",
+      "Disaster recovery sites do not support some log processing services",
+      "Flexential's circuit breakers for Cloudflare's circuits were found faulty during power-up"
+    ],
+    "contributing_factors": [
+      "Newer products were not required to use the HA cluster before general availability",
+      "Too many services depend on core facilities",
+      "Full PDX-04 failure had not been tested"
+    ],
+    "unconfirmed_or_speculative": [
+      "Why Flexential ran utility and generator power together and whether its grid-support program was involved",
+      "That a ground fault on a utility transformer at about 11:40 tripped the generators",
+      "Whether the faulty breakers failed because of the incident"
+    ]
+  },
+  "investigation_evidence": [
+    {
+      "id": "E1",
+      "time_utc": "2023-11-02T11:44",
+      "kind": "network_monitoring",
+      "evidence": "Two routers connecting the facility went offline; direct and out-of-band management unreachable."
+    },
+    {
+      "id": "E2",
+      "kind": "equipment_observation",
+      "evidence": "Cloudflare's own equipment began failing about 4 minutes after power loss, showing UPS batteries failed early."
+    },
+    {
+      "id": "E3",
+      "time_utc": "2023-11-02T12:28",
+      "kind": "provider_notice",
+      "evidence": "First notice from Flexential reported a power issue."
+    },
+    {
+      "id": "E4",
+      "kind": "dependency_discovery",
+      "evidence": "Services in the HA cluster were found to depend on Kafka and ClickHouse only in PDX-04."
+    },
+    {
+      "id": "E5",
+      "kind": "testing_history",
+      "evidence": "Prior failure tests had removed other facilities and the HA part of PDX-04 but never all of PDX-04."
+    }
+  ],
+  "recovery_actions": [
+    {
+      "id": "R1",
+      "time_utc": "2023-11-02T13:40",
+      "action": "Decided to fail over the affected control plane to disaster recovery sites in Europe; first services were up at 13:43.",
+      "why": "Provider could not give a restoration time.",
+      "phase": "service_restoration"
+    },
+    {
+      "id": "R2",
+      "action": "Implemented rate limits to control the thundering herd.",
+      "why": "API calls that had been failing overwhelmed turned-up services.",
+      "phase": "incident_mitigation"
+    },
+    {
+      "id": "R3",
+      "action": "Worked two tracks for products that did not start on DR: re-implement on DR and migrate to the HA cluster.",
+      "why": "Newer products lacked tested DR procedures.",
+      "phase": "incident_mitigation"
+    },
+    {
+      "id": "R4",
+      "time_utc": "2023-11-02T22:48",
+      "action": "Flexential replaced the failed breakers, restored both utility feeds and confirmed clean power.",
+      "why": "Prerequisite to bring PDX-04 back.",
+      "phase": "service_restoration"
+    },
+    {
+      "id": "R5",
+      "time_utc": "2023-11-03",
+      "action": "Full bootstrap of PDX-04: network gear, configuration management servers (about 3 hours), then rebuild of servers at 10 minutes to 2 hours each, partly in sequence.",
+      "why": "State was unknown after multiple power cycles.",
+      "phase": "service_restoration"
+    }
+  ],
+  "recovery_verification": [
+    {
+      "id": "V1",
+      "time_utc": "2023-11-02T17:57",
+      "method": "Services moved to DR were stable and most customers no longer directly impacted."
+    },
+    {
+      "id": "V2",
+      "time_utc": "2023-11-02T22:48",
+      "method": "Provider confirmed clean power."
+    },
+    {
+      "id": "V3",
+      "time_utc": "2023-11-04T04:25",
+      "method": "Services fully restored for all customers."
+    }
+  ],
+  "acceptable_alternatives": [
+    {
+      "description": "Fail over control plane to DR sites while PDX-04 is down (partial recovery; logs and analytics remain down)",
+      "status": "source_intermediate",
+      "basis": "R1, V1, S2"
+    },
+    {
+      "description": "Restore PDX-04 power and bootstrap the facility (only path that restored all services)",
+      "status": "source_actual",
+      "basis": "R4, R5, V3; power repair was done by the provider"
+    },
+    {
+      "description": "Enable DR for both control plane and analytics so everything recovers during the outage",
+      "status": "source_contradicted",
+      "basis": "DR sites do not support some log processing and Kafka/ClickHouse were only in PDX-04"
+    },
+    {
+      "description": "Move services to the HA cluster; stronger chaos tests; Code Orange reliability focus",
+      "status": "long_term_remediation",
+      "basis": "Remediation list"
+    }
+  ],
+  "not_stated_in_source": [
+    "Any repair cost or relative effort",
+    "Verified root cause of the power chain of events (explicitly speculative)"
+  ],
+  "fixture_alignment": {
+    "reference_root_cause": "H03",
+    "reference_fix": "A03",
+    "hypothesis_alignment": "H03 (primary power loss plus incomplete failover readiness) matches; confirmed power loss is separate from the speculative upstream cause.",
+    "actions": {
+      "A01": {
+        "source_status": "source_intermediate",
+        "note": "DR control-plane failover restored most of the control plane while analytics stayed down."
+      },
+      "A02": {
+        "source_status": "unverified",
+        "note": "Analytics replica alone is not described; analytics failover was not available on DR."
+      },
+      "A03": {
+        "source_status": "source_actual",
+        "note": "Restore primary-site power; done by the provider and followed by about 30 more hours of rebuild."
+      },
+      "A04": {
+        "source_status": "source_contradicted",
+        "note": "The source says analytics and log processing could not run on DR."
+      }
+    },
+    "source_actions_missing_from_fixture": [
+      "Rate limiting the thundering herd",
+      "Full facility bootstrap sequence",
+      "Reimplementing products on DR"
+    ],
+    "fixture_claims_not_in_source": [
+      "analytics_replica_ready as a switch engineers could set",
+      "All repair costs",
+      "Start time 11:43 vs source 11:44 (source gives both)"
+    ]
+  },
+  "scoring_rules": {
+    "claims": [
+      {
+        "id": "C1",
+        "dimension": "observed_symptoms",
+        "critical": false,
+        "polarity": "pos",
+        "text": "Control plane and analytics were down from about 11:44 on Nov 2 to 04:25 on Nov 4.",
+        "subject": [
+          "control plane",
+          "analytics"
+        ],
+        "predicate": [
+          "04:25",
+          "11:44",
+          "11:43",
+          "november 4",
+          "nov 4"
+        ],
+        "ref": [
+          "S1"
+        ]
+      },
+      {
+        "id": "C2",
+        "dimension": "observed_symptoms",
+        "critical": false,
+        "polarity": "neg",
+        "text": "Customer traffic through the network was not impacted.",
+        "subject": [
+          "traffic",
+          "network",
+          "edge"
+        ],
+        "predicate": [
+          "impact",
+          "affected"
+        ],
+        "ref": [
+          "S3"
+        ],
+        "neg_phrases": [
+          "unaffected",
+          "kept working",
+          "continued to work",
+          "continued to operate",
+          "continued to perform"
+        ]
+      },
+      {
+        "id": "C3",
+        "dimension": "observed_symptoms",
+        "critical": false,
+        "polarity": "pos",
+        "text": "Raw logs were unavailable and some log data was lost.",
+        "subject": [
+          "log"
+        ],
+        "predicate": [
+          "unavailable",
+          "not processed",
+          "gap",
+          "lost",
+          "dropped"
+        ],
+        "ref": [
+          "S2",
+          "S5"
+        ]
+      },
+      {
+        "id": "C4",
+        "dimension": "confirmed_root_cause",
+        "critical": true,
+        "polarity": "pos",
+        "text": "Power was lost at the Flexential PDX-04 facility.",
+        "subject": [
+          "pdx",
+          "flexential",
+          "data center",
+          "facility"
+        ],
+        "predicate": [
+          "power"
+        ],
+        "ref": [
+          "S1"
+        ]
+      },
+      {
+        "id": "C5",
+        "dimension": "confirmed_root_cause",
+        "critical": true,
+        "polarity": "pos",
+        "text": "Kafka and ClickHouse existed only in PDX-04 yet HA services depended on them.",
+        "subject": [
+          "kafka",
+          "clickhouse"
+        ],
+        "predicate": [
+          "pdx",
+          "only",
+          "depend"
+        ],
+        "ref": [
+          "E4"
+        ]
+      },
+      {
+        "id": "C6",
+        "dimension": "confirmed_root_cause",
+        "critical": true,
+        "polarity": "pos",
+        "text": "The ground-fault and generator chain of events is unconfirmed speculation.",
+        "subject": [
+          "ground fault",
+          "transformer",
+          "generator",
+          "dsg"
+        ],
+        "predicate": [
+          "speculat",
+          "unconfirmed",
+          "not confirmed",
+          "unclear",
+          "informed",
+          "not been able to confirm",
+          "believe"
+        ],
+        "ref": [
+          "S1"
+        ]
+      },
+      {
+        "id": "C7",
+        "dimension": "investigation_evidence",
+        "critical": false,
+        "polarity": "pos",
+        "text": "Two routers went offline at 11:44 and could not be reached directly or out of band.",
+        "subject": [
+          "router"
+        ],
+        "predicate": [
+          "offline",
+          "unreachable",
+          "11:44",
+          "out-of-band",
+          "out of band"
+        ],
+        "ref": [
+          "E1"
+        ]
+      },
+      {
+        "id": "C8",
+        "dimension": "recovery_actions",
+        "critical": true,
+        "polarity": "pos",
+        "text": "The control plane was failed over to disaster recovery sites in Europe.",
+        "subject": [
+          "disaster recovery",
+          "dr site",
+          "dr facility",
+          "failover",
+          "fail over",
+          "failed over"
+        ],
+        "predicate": [
+          "13:40",
+          "13:43",
+          "europe",
+          "turned up",
+          "fail"
+        ],
+        "ref": [
+          "R1"
+        ]
+      },
+      {
+        "id": "C9",
+        "dimension": "recovery_actions",
+        "critical": false,
+        "polarity": "pos",
+        "text": "Power and breakers were restored by the provider and the facility was bootstrapped.",
+        "subject": [
+          "power",
+          "breaker",
+          "facility",
+          "pdx"
+        ],
+        "predicate": [
+          "restored",
+          "replaced",
+          "bootstrap",
+          "rebuilt",
+          "22:48"
+        ],
+        "ref": [
+          "R4",
+          "R5"
+        ]
+      },
+      {
+        "id": "C10",
+        "dimension": "recovery_verification",
+        "critical": false,
+        "polarity": "pos",
+        "text": "Services were fully restored at 04:25 on Nov 4.",
+        "subject": [
+          "service",
+          "restor"
+        ],
+        "predicate": [
+          "04:25",
+          "november 4",
+          "nov 4"
+        ],
+        "ref": [
+          "V3"
+        ]
+      }
+    ],
+    "traps": [
+      {
+        "id": "T_attack",
+        "text": "States that an attack or breach caused the outage.",
+        "subject": [
+          "attack",
+          "ddos",
+          "malicious",
+          "breach"
+        ],
+        "predicate": [
+          "caused",
+          "cause",
+          "due to",
+          "result of",
+          "triggered by",
+          "because of"
+        ]
+      },
+      {
+        "id": "T_groundfault_confirmed",
+        "text": "Presents the ground-fault chain as confirmed.",
+        "subject": [
+          "ground fault",
+          "transformer"
+        ],
+        "predicate": [
+          "confirmed",
+          "established",
+          "definitely"
+        ]
+      }
+    ],
+    "alternatives_catalog": [
+      {
+        "id": "ALT1",
+        "terms": [
+          "failover to",
+          "fail over",
+          "failed over",
+          "disaster recovery"
+        ],
+        "status": "source_intermediate",
+        "performed_ok": true,
+        "note": "DR failover of control plane"
+      },
+      {
+        "id": "ALT2",
+        "terms": [
+          "breaker",
+          "clean power",
+          "bootstrap",
+          "restore power",
+          "power restor"
+        ],
+        "status": "source_actual",
+        "performed_ok": true,
+        "note": "Restore PDX-04 power"
+      },
+      {
+        "id": "ALT3",
+        "terms": [
+          "analytics on dr",
+          "analytics replica",
+          "dr for analytics",
+          "log processing on dr",
+          "kafka on dr"
+        ],
+        "status": "source_contradicted",
+        "performed_ok": false,
+        "note": "Analytics on DR not possible"
+      },
+      {
+        "id": "ALT4",
+        "terms": [
+          "high availability cluster",
+          "chaos",
+          "code orange"
+        ],
+        "status": "long_term_remediation",
+        "performed_ok": false,
+        "note": "Follow-up work"
+      }
+    ],
+    "required_concepts": [
+      {
+        "id": "primary_site_power_loss",
+        "core": true,
+        "any_of": [
+          "power",
+          "pdx",
+          "flexential",
+          "data center",
+          "datacenter"
+        ]
+      },
+      {
+        "id": "dr_failover_partial",
+        "core": true,
+        "any_of": [
+          "disaster recovery",
+          " dr ",
+          "failover",
+          "fail over",
+          "europe",
+          "standby"
+        ]
+      },
+      {
+        "id": "hidden_dependencies",
+        "core": false,
+        "any_of": [
+          "kafka",
+          "clickhouse",
+          "high availability",
+          "dependenc",
+          "ha cluster"
+        ]
+      },
+      {
+        "id": "analytics_stayed_down",
+        "core": true,
+        "any_of": [
+          "analytics",
+          "log"
+        ]
+      }
+    ]
+  },
+  "source_discrepancies": [
+    {
+      "id": "D1",
+      "note": "Header says the outage began at 11:43 UTC; the incident window says 11:44. Accept either."
+    }
+  ]
+}

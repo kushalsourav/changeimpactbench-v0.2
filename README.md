@@ -1,3 +1,12 @@
+## Current curated evaluation datasets (updated)
+
+**Only two source families are offered for new runs:** original postmortem-inspired
+`RW01V4`–`RW06V4` with named service roles, and synthetic counterfactual
+`RW01V6CF`–`RW06V6CF` (version `agentic-v6-counterfactual-2`).
+V3, V5 and V6-neutral are retired from new experiment selectors; their exact
+fixtures are archived under `legacy/retired_sources/` for historical evidence.
+See `docs/ACTIVE_DATASETS_AND_GRADING.md`.
+
 # ChangeImpactBench V5 — integrated into the original V4 application
 
 **Current source folder remains `changeimpactbench-v0.2`. No replacement UI is present.** The existing Next.js frontend and FastAPI/LangGraph evaluation routes now expose `RW01V5`–`RW06V5` alongside frozen historic V4 task IDs. V5 asks whether tool-using responders can safely investigate ambiguous synthetic production-style incidents and choose the lowest-cost safe single repair without postmortem-title leakage. It uses independently replayed trajectories and outcome-based grading; a mistaken hypothesis or unsafe repair matters to production reliability.

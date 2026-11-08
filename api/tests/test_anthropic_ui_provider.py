@@ -63,9 +63,11 @@ class AnthropicProviderTests(unittest.TestCase):
                 cwd=root, capture_output=True, text=True, check=False,
             )
             self.assertEqual(help_result.returncode, 0, help_result.stderr)
-            for valid in ('RW01V4', 'RW05V5', 'RW03V6N', 'RW04V6CF'):
+            for valid in ('RW01V4', 'RW05V6CF', 'RW03V6CF', 'RW04V6CF'):
                 self.assertIn(valid, help_result.stdout, (adapter, valid))
             self.assertNotIn('RW99V6CF', help_result.stdout)
+            self.assertNotIn('RW05V5', help_result.stdout)
+            self.assertNotIn('RW03V6N', help_result.stdout)
 
     def test_anthropic_v6_counterfactual_dispatch(self):
         task = 'RW04V6CF'

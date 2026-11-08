@@ -1,0 +1,545 @@
+{
+  "grader_id": "RW01-source-grader-v2",
+  "seed": "RW01",
+  "fixture": "tasks/RW01.json",
+  "source": {
+    "title": "October 21 post-incident analysis",
+    "publisher": "GitHub",
+    "url": "https://github.blog/news-insights/company-news/oct21-post-incident-analysis/",
+    "published": "2018-10-30",
+    "page_updated": "2021-12-19",
+    "retrieved_utc": "2026-11-07",
+    "source_type": "operator first-party post-incident analysis"
+  },
+  "observed_symptoms": [
+    {
+      "id": "S1",
+      "time_utc": "2018-10-21T22:52",
+      "fact": "Maintenance replacing failing 100G optical equipment cut connectivity between the US East Coast network hub and the primary US East Coast data center; connectivity returned after 43 seconds.",
+      "measurement": "43 s partition"
+    },
+    {
+      "id": "S2",
+      "time_utc": "2018-10-21T22:54",
+      "fact": "Monitoring began alerting on numerous faults; by 23:02 responders found many MySQL cluster topologies in an unexpected state, with the Orchestrator API showing topologies containing only US West Coast servers."
+    },
+    {
+      "id": "S3",
+      "fact": "Degraded service lasted 24 h 11 min. GitHub displayed out-of-date and inconsistent information and, for most of the incident, could not serve webhook events or build and publish Pages sites.",
+      "measurement": "24h11m"
+    },
+    {
+      "id": "S4",
+      "time_utc": "2018-10-22T16:45",
+      "fact": "Recovery backlog was over five million hook events and 80 thousand Pages builds; about 200,000 webhook payloads outlived an internal TTL and were dropped when processing was first re-enabled.",
+      "measurement": ">5M hook events, 80k Pages builds, ~200k dropped payloads"
+    },
+    {
+      "id": "S5",
+      "fact": "No user data was lost, but a small number of unreplicated writes required manual reconciliation.",
+      "measurement": "954 writes in one busy cluster's window"
+    }
+  ],
+  "confirmed_root_cause": {
+    "mechanism": "A 43-second partition made Orchestrator (Raft-based) deselect its leader in the primary data center. The US West Coast data center and East Coast public-cloud Orchestrator nodes formed a quorum and failed clusters over to West Coast primaries. When connectivity returned, the application tier immediately wrote to those West primaries, while East servers held a few seconds of writes never replicated West. Each side held writes the other lacked, so failing back to East was unsafe. GitHub paused webhook delivery and Pages builds to protect data integrity.",
+    "confirmed_elements": [
+      "Orchestrator behaved as configured; configuration was not aligned with what the application tier could support",
+      "West primaries ingested writes for nearly 40 minutes by 23:13",
+      "Divergent writes on both sides prevented safe failback",
+      "East-coast apps could not tolerate cross-country write latency",
+      "Webhook delivery and Pages builds were deliberately paused at 23:19 to prioritize integrity over usability"
+    ],
+    "contributing_factors": [
+      "Orchestrator allowed cross-region primary promotion",
+      "No prior internal partition of this magnitude",
+      "Full-cluster restore from remote backup had never been needed before; transfer and load took hours"
+    ],
+    "unconfirmed_or_speculative": []
+  },
+  "investigation_evidence": [
+    {
+      "id": "E1",
+      "time_utc": "2018-10-21T22:54",
+      "kind": "alert",
+      "evidence": "Internal monitoring alerts on numerous faults."
+    },
+    {
+      "id": "E2",
+      "time_utc": "2018-10-21T23:02",
+      "kind": "api_query",
+      "evidence": "Orchestrator API query showed replication topology with only West Coast servers."
+    },
+    {
+      "id": "E3",
+      "time_utc": "2018-10-21T23:13",
+      "kind": "cluster_state",
+      "evidence": "Cluster state showed West primaries holding ~40 min of new writes and East holding unreplicated writes that blocked replication back to East."
+    },
+    {
+      "id": "E4",
+      "time_utc": "2018-10-21T23:19",
+      "kind": "cluster_state",
+      "evidence": "Cluster state showed jobs writing metadata (pushes etc.) had to stop."
+    },
+    {
+      "id": "E5",
+      "kind": "binary_logs",
+      "evidence": "MySQL binary logs capturing the unreplicated East writes were preserved for each affected cluster."
+    },
+    {
+      "id": "E6",
+      "kind": "replication_telemetry",
+      "evidence": "Replication telemetry was used for a linear time-to-recover estimate that proved wrong; catch-up followed a power-decay curve as load rose."
+    }
+  ],
+  "recovery_actions": [
+    {
+      "id": "R1",
+      "time_utc": "2018-10-21T23:07",
+      "action": "Manually locked internal deployment tooling.",
+      "why": "Prevent additional changes during the incident.",
+      "phase": "incident_mitigation"
+    },
+    {
+      "id": "R2",
+      "time_utc": "2018-10-21T23:19",
+      "action": "Paused webhook delivery and Pages builds.",
+      "why": "Stop jobs writing metadata; protect already-received user data.",
+      "phase": "incident_mitigation"
+    },
+    {
+      "id": "R3",
+      "time_utc": "2018-10-22T00:05",
+      "action": "Plan: restore from backups, synchronize replicas in both sites, fall back to a stable serving topology, then resume queued jobs; restores started by 00:41.",
+      "why": "Failing forward was the only data-safe option given 30+ minutes of West writes.",
+      "phase": "service_restoration"
+    },
+    {
+      "id": "R4",
+      "time_utc": "2018-10-22T06:51",
+      "action": "East clusters restored from backup began replicating from West; teams found a way to restore directly from West to avoid remote-storage throughput limits.",
+      "why": "Speed up restoration.",
+      "phase": "service_restoration"
+    },
+    {
+      "id": "R5",
+      "time_utc": "2018-10-22T11:12",
+      "action": "All database primaries re-established in US East.",
+      "why": "Writes co-located with application tier.",
+      "phase": "service_restoration"
+    },
+    {
+      "id": "R6",
+      "time_utc": "2018-10-22T13:15",
+      "action": "Provisioned extra read replicas in East public cloud to spread read load.",
+      "why": "Lower per-replica load so replication could catch up.",
+      "phase": "service_restoration"
+    },
+    {
+      "id": "R7",
+      "time_utc": "2018-10-22T16:24",
+      "action": "Failed over to the original topology once replicas were in sync; stayed red while processing backlog.",
+      "why": "Restore latency and availability; protect status accuracy.",
+      "phase": "service_restoration"
+    },
+    {
+      "id": "R8",
+      "time_utc": "2018-10-22T16:45",
+      "action": "Re-enabled backlog processing; paused on discovering TTL drops and increased the TTL.",
+      "why": "Avoid losing webhook payloads.",
+      "phase": "incident_mitigation"
+    }
+  ],
+  "recovery_verification": [
+    {
+      "id": "V1",
+      "time_utc": "2018-10-22T16:24",
+      "method": "Replicas confirmed in sync before failover to original topology."
+    },
+    {
+      "id": "V2",
+      "method": "Service stayed in red/degraded status until the entire backlog was processed and services settled to normal performance."
+    },
+    {
+      "id": "V3",
+      "time_utc": "2018-10-22T23:03",
+      "method": "All pending webhooks and Pages builds processed; integrity and proper operation of all systems confirmed; status set to green."
+    }
+  ],
+  "acceptable_alternatives": [
+    {
+      "description": "Fail forward on West primaries during the incident, then restore East and fall back",
+      "status": "source_actual",
+      "basis": "R3, R5, R7"
+    },
+    {
+      "description": "Restore replicas directly from West instead of remote backups",
+      "status": "source_actual",
+      "basis": "R4; a speed-up, not a different strategy"
+    },
+    {
+      "description": "Immediate failback to East primaries or resuming jobs without reconciling divergent writes",
+      "status": "source_contradicted",
+      "basis": "Source states immediate failback was unsafe because both sides held unreplicated writes"
+    },
+    {
+      "description": "Any other recovery path",
+      "status": "unverified",
+      "basis": "Source does not discuss other options"
+    }
+  ],
+  "not_stated_in_source": [
+    "Whether Git repository storage was unaffected (source only says portions of the platform were unaffected and MySQL holds non-Git metadata)",
+    "Any repair cost or relative effort of recovery steps"
+  ],
+  "fixture_alignment": {
+    "reference_root_cause": "H03",
+    "reference_fix": "A03",
+    "hypothesis_alignment": "H03 (failover divergence plus deliberate job pause) matches the source.",
+    "actions": {
+      "A01": {
+        "source_status": "source_contradicted",
+        "note": "Resuming workers without reconciling divergent MySQL writes contradicts the integrity-first decision."
+      },
+      "A02": {
+        "source_status": "source_intermediate",
+        "note": "Replicas/topology were repaired while jobs stayed paused, but jobs were not resumed until backlog processing."
+      },
+      "A03": {
+        "source_status": "source_actual",
+        "note": "Reconcile topology, then resume deferred jobs after integrity checks; matches R3-R8 and V3."
+      },
+      "A04": {
+        "source_status": "unverified",
+        "note": "Source final state did return primaries to East, but the extra redundancy and higher cost are fixture inventions."
+      }
+    },
+    "source_actions_missing_from_fixture": [
+      "Lock deployment tooling",
+      "Raise webhook TTL",
+      "Add East read replicas"
+    ],
+    "fixture_claims_not_in_source": [
+      "Git repositories healthy (inferred, not stated)",
+      "All repair costs"
+    ]
+  },
+  "scoring_rules": {
+    "claims": [
+      {
+        "id": "C1",
+        "dimension": "observed_symptoms",
+        "critical": false,
+        "polarity": "pos",
+        "text": "Connectivity between the East hub and primary data center was lost for 43 seconds.",
+        "subject": [
+          "connectivity",
+          "network",
+          "partition",
+          "link"
+        ],
+        "predicate": [
+          "43 s",
+          "43-second",
+          "43 second"
+        ],
+        "ref": [
+          "S1"
+        ]
+      },
+      {
+        "id": "C2",
+        "dimension": "observed_symptoms",
+        "critical": true,
+        "polarity": "pos",
+        "text": "Webhook delivery and Pages builds were not served or built.",
+        "subject": [
+          "webhook",
+          "pages"
+        ],
+        "predicate": [
+          "paus",
+          "unavailable",
+          "not serv",
+          "unable",
+          "stopped",
+          "disrupt",
+          "not built"
+        ],
+        "ref": [
+          "S3"
+        ]
+      },
+      {
+        "id": "C3",
+        "dimension": "confirmed_root_cause",
+        "critical": true,
+        "polarity": "pos",
+        "text": "Orchestrator failed clusters over to West Coast primaries.",
+        "subject": [
+          "orchestrator",
+          "failover",
+          "fail over",
+          "failed over"
+        ],
+        "predicate": [
+          "west"
+        ],
+        "ref": [
+          "S2"
+        ]
+      },
+      {
+        "id": "C4",
+        "dimension": "confirmed_root_cause",
+        "critical": true,
+        "polarity": "pos",
+        "text": "Both sides held writes the other lacked (divergent writes).",
+        "subject": [
+          "write"
+        ],
+        "predicate": [
+          "diverg",
+          "unreplicated",
+          "not replicated",
+          "not been replicated",
+          "not present"
+        ],
+        "ref": [
+          "S5"
+        ]
+      },
+      {
+        "id": "C5",
+        "dimension": "confirmed_root_cause",
+        "critical": true,
+        "polarity": "pos",
+        "text": "Failing back to East was unsafe.",
+        "subject": [
+          "fail back",
+          "failback",
+          "fail-back",
+          "failing back"
+        ],
+        "predicate": [
+          "unsafe",
+          "not safe",
+          "could not",
+          "unable",
+          "risk"
+        ],
+        "ref": [
+          "S2"
+        ],
+        "contradict": [
+          {
+            "subject": [
+              "fail back",
+              "failback",
+              "fail-back",
+              "failing back"
+            ],
+            "predicate": [
+              "safe",
+              "straightforward",
+              "easy"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "C6",
+        "dimension": "investigation_evidence",
+        "critical": false,
+        "polarity": "pos",
+        "text": "Orchestrator API showed a topology with only West Coast servers.",
+        "subject": [
+          "orchestrator",
+          "topolog"
+        ],
+        "predicate": [
+          "only",
+          "west-only",
+          "west coast servers"
+        ],
+        "ref": [
+          "E2"
+        ]
+      },
+      {
+        "id": "C7",
+        "dimension": "recovery_actions",
+        "critical": true,
+        "polarity": "pos",
+        "text": "Restored replicas from backup, synchronized sites, fell back to the original topology and resumed queued jobs.",
+        "subject": [
+          "restor",
+          "backup",
+          "replica",
+          "reconcil",
+          "synchron"
+        ],
+        "predicate": [
+          "resum",
+          "backlog",
+          "fall back",
+          "failed over",
+          "fail over",
+          "processed"
+        ],
+        "ref": [
+          "R3",
+          "R7"
+        ]
+      },
+      {
+        "id": "C8",
+        "dimension": "recovery_verification",
+        "critical": false,
+        "polarity": "pos",
+        "text": "Pending webhooks and Pages builds were processed and integrity was confirmed before green.",
+        "subject": [
+          "backlog",
+          "webhook",
+          "pages",
+          "integrity"
+        ],
+        "predicate": [
+          "processed",
+          "confirmed",
+          "green",
+          "integrity"
+        ],
+        "ref": [
+          "V3"
+        ]
+      }
+    ],
+    "traps": [
+      {
+        "id": "T_attack",
+        "text": "States that an attack or breach caused the outage.",
+        "subject": [
+          "attack",
+          "ddos",
+          "malicious",
+          "breach"
+        ],
+        "predicate": [
+          "caused",
+          "cause",
+          "due to",
+          "result of",
+          "triggered by",
+          "because of"
+        ]
+      },
+      {
+        "id": "T_dataloss",
+        "text": "Claims user data was lost.",
+        "subject": [
+          "data"
+        ],
+        "predicate": [
+          "lost",
+          "loss"
+        ]
+      }
+    ],
+    "alternatives_catalog": [
+      {
+        "id": "ALT1",
+        "terms": [
+          "fail forward",
+          "failing forward",
+          "fail-forward"
+        ],
+        "status": "source_actual",
+        "performed_ok": true,
+        "note": "Failing forward on West primaries"
+      },
+      {
+        "id": "ALT2",
+        "terms": [
+          "restore directly",
+          "from the west"
+        ],
+        "status": "source_actual",
+        "performed_ok": true,
+        "note": "Direct restore from West"
+      },
+      {
+        "id": "ALT3",
+        "terms": [
+          "fail back",
+          "failback",
+          "failing back"
+        ],
+        "status": "source_contradicted",
+        "performed_ok": false,
+        "note": "Immediate failback was unsafe"
+      },
+      {
+        "id": "ALT4",
+        "terms": [
+          "without reconcil",
+          "resume workers without"
+        ],
+        "status": "source_contradicted",
+        "performed_ok": false,
+        "note": "Resuming jobs without reconciliation"
+      }
+    ],
+    "required_concepts": [
+      {
+        "id": "partition_triggered_failover",
+        "core": true,
+        "any_of": [
+          "partition",
+          "connectivity",
+          "network event",
+          "orchestrator"
+        ]
+      },
+      {
+        "id": "west_failover_divergent_writes",
+        "core": true,
+        "any_of": [
+          "diverg",
+          "unreplicated",
+          "not replicated",
+          "writes that"
+        ]
+      },
+      {
+        "id": "unsafe_failback_integrity",
+        "core": true,
+        "any_of": [
+          "integrity",
+          "unsafe",
+          "fail back",
+          "failback",
+          "fail forward",
+          "failing forward",
+          "reconcil"
+        ]
+      },
+      {
+        "id": "jobs_paused",
+        "core": true,
+        "any_of": [
+          "paus",
+          "webhook",
+          "pages build",
+          "background job"
+        ]
+      }
+    ]
+  },
+  "source_discrepancies": [
+    {
+      "id": "D1",
+      "note": "Source says West primaries took writes for 'nearly 40 minutes' and also '30+ minutes'; accept either."
+    }
+  ]
+}

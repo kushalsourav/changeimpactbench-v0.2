@@ -51,10 +51,10 @@ export function useWorkbench() {
     [catalogFilter, setCatalogFilter] = useState(''),
     [flowNotice, setFlowNotice] = useState(''),
     [selectedModels, setSelectedModels] = useState<string[]>([]),
-    [selectedTasks, setSelectedTasks] = useState(['RW01V6N']);
-  const [labDataset, setLabDataset] = useState('RW01V6N');
+    [selectedTasks, setSelectedTasks] = useState(['RW01V6CF']);
+  const [labDataset, setLabDataset] = useState('RW01V6CF');
   const [condition] = useState<'agentic'>('agentic');
-  const [comparisonTask, setComparisonTask] = useState('RW01V6N');
+  const [comparisonTask, setComparisonTask] = useState('RW01V6CF');
   const [crossRun, setCrossRun] = useState<AgenticComparison | null>(null);
   const [reviewer, setReviewer] = useState('');
   const [reviewNotes, setReviewNotes] = useState('');

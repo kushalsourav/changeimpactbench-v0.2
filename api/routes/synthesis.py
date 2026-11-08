@@ -55,7 +55,7 @@ def facts_for(records: list[dict]) -> dict:
                      and audit.get('prompt_sha_matches') is True
                      and audit.get('reference_matches') is True
                      and audit.get('stored_grade_matches') is True
-                     and bool(grade))
+                     and bool(grade) and grade.get('source_provisional') is not True)
         committed_cost = costs.get(committed)
         optimal_cost = costs[optimal]
         multi_tool_turns = [turn.get('turn') for turn in record.get('turns', [])

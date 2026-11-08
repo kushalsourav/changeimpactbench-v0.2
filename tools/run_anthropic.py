@@ -17,7 +17,7 @@ from importlib.metadata import PackageNotFoundError, version
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from benchmarks.native_agent import MAX_MODEL_CALLS, MAX_TOOLS, TASK_IDS, agent_prompt
+from benchmarks.native_agent import MAX_MODEL_CALLS, MAX_TOOLS, ACTIVE_TASK_IDS, agent_prompt
 from benchmarks.runner import make_native_tools, run_episode, _stop_signal
 from api.services.anthropic_catalog import MODEL, allowed_model_ids
 
@@ -185,7 +185,7 @@ def anthropic_graph_factory(env, model_id, token, max_tokens, effort, temperatur
 def main():
     parser = argparse.ArgumentParser(description='Direct Anthropic API with frozen V4 LangGraph tool evaluation')
     parser.add_argument('--model', required=True)
-    parser.add_argument('--task', choices=sorted(TASK_IDS), required=True)
+    parser.add_argument('--task', choices=sorted(ACTIVE_TASK_IDS), required=True)
     parser.add_argument('--trials', type=int, default=1)
     parser.add_argument('--max-tokens', type=int, default=8000)
     parser.add_argument('--temperature', type=float, default=0)

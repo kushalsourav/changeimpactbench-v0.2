@@ -40,8 +40,8 @@ export function ControlRoom() {
     <Panel title="Compare incident responders" description="One versioned incident · multiple AI models · independent trials and evidence">
       <div className="simple-launch-fields">
         <Field label="Incident">
-          <select aria-label="Select agentic incident" value={selectedTasks[0] || 'RW01V6N'} onChange={e => {setSelectedTasks([e.target.value]);setApproved(false);}}>
-            {tasks.filter(t => t.id.endsWith('V6CF') || t.id.endsWith('V6N') || t.id.endsWith('V5') || t.id.endsWith('V4')).map(t => <option key={t.id} value={t.id}>{incidentLabel(t.id)}</option>)}
+          <select aria-label="Select agentic incident" value={selectedTasks[0] || 'RW01V6CF'} onChange={e => {setSelectedTasks([e.target.value]);setApproved(false);}}>
+            {tasks.filter(t => t.id.endsWith('V6CF') || t.id.endsWith('V4')).map(t => <option key={t.id} value={t.id}>{incidentLabel(t.id)}</option>)}
           </select>
         </Field>
         <Field label={`Models · ${selectedModels.length} selected (up to 5 across providers)`}>

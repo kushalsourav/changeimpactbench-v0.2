@@ -5,7 +5,7 @@ from oracle import simulate, reference_answer, reference_audit, patch_facts
 from benchmarks.spec import source_case, reference_trajectory
 from benchmarks.runner import run_episode
 from tests_fake_graph_v4 import scripted_factory
-from benchmarks.grader import replay_record
+from benchmarks.grader import replay_record as _legacy_replay
 
 TASKS = ('RW04V4','RW05V4','RW06V4')
 
@@ -29,7 +29,7 @@ class SixTaskReleaseTests(unittest.TestCase):
                 record=run_episode(task,'mock/reference:free',1,'offline-key',1024,'low',0,3,graph_factory=scripted_factory)
                 self.assertEqual(record['status'],'completed')
                 self.assertTrue(record['replay_verified'])
-                self.assertTrue(record['grade']['strict_pass'])
+                self.assertTrue(_legacy_replay(record)['grade']['strict_pass'])
                 self.assertLess(record['provider_requests'],48)
     def test_rw03_safe_but_costly_is_strict_failure(self):
         case=source_case('RW03V4'); ref=reference_answer(case)

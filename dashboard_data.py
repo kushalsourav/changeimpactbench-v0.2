@@ -7,7 +7,8 @@ from datetime import datetime
 import json
 from pathlib import Path
 from typing import Any
-from agent_graph import TASK_IDS as AGENT_TASKS, replay_record, GRAPH_BASE
+from agent_graph import TASK_IDS as AGENT_TASKS, GRAPH_BASE
+from benchmarks.grading_policy import replay_record, SOURCE_CONTRACT
 from oracle import patch_facts, reference_answer, reference_audit, simulate
 from tasks import ROOT
 
@@ -75,7 +76,7 @@ def audit_record(record: dict, cases: dict[str, dict] | None = None) -> dict:
             ref_ok = historical_reference == expected
     except (ValueError, OSError):
         ref_ok = False
-    result.update({'expected': expected,
+    result.update({'grading_contract':record.get('grading_contract', 'legacy-synthetic'), 'expected': expected,
                    'prompt_sha_matches':replay['verified'],
                    'reference_matches':ref_ok, 'grade':replay['grade'],
                    'warnings':list(replay['warnings']),
@@ -84,11 +85,11 @@ def audit_record(record: dict, cases: dict[str, dict] | None = None) -> dict:
         result['warnings'].append(f'Synthetic source reference {seed} mismatches current oracle')
     if replay['grade'] is not None:
         saved = record.get('grade')
-        result['stored_grade_matches'] = isinstance(saved, dict) and all(
+        result['stored_grade_matches'] = isinstance(saved, dict) and (saved == replay['grade'] if record.get('grading_contract') == SOURCE_CONTRACT else all(
             saved.get(key) == replay['grade'].get(key) for key in
             ('pass','strict_pass','score','affected_f1','root_correct','fix_correct',
              'recovery_safe','recovery_success','unsafe_commit','violations',
-             'procedure_score','protocol_errors','counterfactual_checks','commit_was_simulated')
+             'procedure_score','protocol_errors','counterfactual_checks','commit_was_simulated'))
         )
         if not result['stored_grade_matches']:
             result['warnings'].append('Stored score differs from independent replay')
@@ -154,15 +155,16 @@ def summary_rows(records: list[dict], k: int) -> list[dict]:
         api_errors=sum(a['status']=='api_error' for _,a in items)
         incomplete=sum(a['status'] in ('incomplete_generation','empty_generation') for _,a in items)
         unverified=sum(a['status']=='unverified' for _,a in items)
-        passed=sum(a['grade']['strict_pass'] is True for _,a in completed)
+        graded=[(r,a) for r,a in completed if a['grade'].get('strict_pass') is not None]
+        passed=sum(a['grade']['strict_pass'] is True for _,a in graded)
         score=sum(a['grade']['score'] for _,a in completed) / len(completed) if completed else None
         complete_by_task: dict[str,list[dict]]={}
         for record,audit in completed:
             complete_by_task.setdefault(record['task_id'],[]).append({'trial':record.get('trial'), 'pass':audit['grade']['strict_pass']})
         full=[v for v in complete_by_task.values() if len({e['trial'] for e in v})==k]
         rows.append({'model':model,'completed':len(completed),'passed':passed,
-            'wrong':len(completed)-passed,'api_errors':api_errors,'incomplete':incomplete,
-            'unverified':unverified,'exact_pass_rate':round(passed/len(completed),4) if completed else None,
+            'wrong':len(graded)-passed,'api_errors':api_errors,'incomplete':incomplete,
+            'unverified':unverified,'exact_pass_rate':round(passed/len(graded),4) if graded else None,
             'mean_partial':round(score,4) if score is not None else None,
             'pass_power_k':round(sum(all(e['pass'] for e in group) for group in full)/len(full),4) if full and k>=2 else None,
             'full_trial_groups':len(full),

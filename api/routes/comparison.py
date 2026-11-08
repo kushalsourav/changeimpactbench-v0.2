@@ -52,7 +52,7 @@ def compare_agentic(task_id: str = 'RW01V2'):
                 item['root_cause_errors'] += int(g.get('root_correct') is False)
                 item['repair_selection_errors'] += int(g.get('fix_correct') is False)
                 item['protocol_error_episodes'] += int(bool(g.get('protocol_errors')))
-                outcome = 'strict_pass' if g.get('strict_pass') is True else ('unsafe_commit' if g.get('unsafe_commit') else 'strict_fail')
+                outcome = 'source_provisional' if g.get('source_provisional') else ('strict_pass' if g.get('strict_pass') is True else ('unsafe_commit' if g.get('unsafe_commit') else 'strict_fail'))
             elif st == 'api_error':
                 item['api_errors'] += 1
                 outcome = 'api_error'
@@ -68,7 +68,7 @@ def compare_agentic(task_id: str = 'RW01V2'):
                                      'human_review': note['status'] if note else 'pending'})
     groups = sorted(batches.values(), key=lambda x: (str(x['model']), str(x['reasoning_effort'])))
     for g in groups:
-        g['strict_pass_rate_completed'] = (g['strict_passes']/g['completed']) if g['completed'] else None
+        g['strict_pass_rate_completed'] = (g['strict_passes']/sum(e['status'] in ('strict_pass','strict_fail','unsafe_commit') for e in g['evidence'])) if any(e['status'] in ('strict_pass','strict_fail','unsafe_commit') for e in g['evidence']) else None
     return {'task_id': task_id, 'benchmark_version': {
         **GRAPH_VERSIONS}[task_id],
         'groups': groups, 'scope': 'No pooling across task versions or generation settings. Observational aggregate, not a controlled head-to-head study.'}

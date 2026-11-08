@@ -48,8 +48,8 @@ class NativeAgentAPIContracts(unittest.TestCase):
         out=client.get('/api/tasks')
         self.assertEqual(out.status_code,200)
         cases=out.json()
-        self.assertEqual({c['id'] for c in cases},set(TASK_IDS))
-        self.assertEqual(len(cases),27)
+        self.assertEqual({c['id'] for c in cases},{f'RW{i:02d}{suffix}' for i in range(1,7) for suffix in ('V4','V6CF')})
+        self.assertEqual(len(cases),12)
         for task in cases:
             self.assertEqual(task['condition'],'agentic')
             if task['id'].endswith(('V6N','V6CF','V5')):
@@ -71,8 +71,8 @@ class NativeAgentAPIContracts(unittest.TestCase):
 
     def test_only_native_launch_is_accepted_and_requires_approval(self):
         model='nvidia/nemotron-3-ultra-550b-a55b:free'
-        self.assertEqual(LaunchRequest(models=[model],tasks=['RW01V3']).condition,'agentic')
-        req={'models':[model],'tasks':['RW01V3'],'trials':1,'confirm':False}
+        self.assertEqual(LaunchRequest(models=[model],tasks=['RW01V4']).condition,'agentic')
+        req={'models':[model],'tasks':['RW01V4'],'trials':1,'confirm':False}
         self.assertEqual(client.post('/api/experiment/start',json=req).status_code,400)
         self.assertEqual(client.post('/api/experiment/start',json={**req,'condition':'single-turn'}).status_code,422)
         self.assertEqual(client.post('/api/experiment/start',json={**req,'tasks':['AG08V6']}).status_code,422)

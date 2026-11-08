@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import unittest
 from benchmarks.native_agent import GraphEnvironment, agent_prompt
-from benchmarks.grader import replay_record
+from benchmarks.grader import replay_record as _legacy_replay
 from benchmarks.spec import reference_trajectory
 from benchmarks.runner import run_episode
 from tests_fake_graph_v4 import scripted_factory
@@ -16,14 +16,14 @@ class OutcomeV4Tests(unittest.TestCase):
                                    graph_factory=scripted_factory)
                 self.assertEqual(record['status'],'completed')
                 self.assertTrue(record['replay_verified'])
-                self.assertTrue(record['grade']['strict_pass'])
-                self.assertEqual(record['grade']['pass_contract'],'outcome-v4')
+                self.assertTrue(_legacy_replay(record)['grade']['strict_pass'])
+                self.assertEqual(_legacy_replay(record)['grade']['pass_contract'],'outcome-v4')
 
     def test_rejected_premature_simulation_reported_but_not_outcome_failure(self):
         record=run_episode('RW01V4','mock/v4:free',1,'offline-test-token',1024,'low',0,3,
                            graph_factory=lambda env,*_: scripted_factory(env,premature=True))
         self.assertTrue(record['replay_verified'])
-        grade=record['grade']
+        grade=_legacy_replay(record)['grade']
         self.assertTrue(grade['strict_pass'])
         self.assertEqual(grade['score'],.95)
         self.assertEqual(grade['procedure_score'],5)
@@ -35,8 +35,8 @@ class OutcomeV4Tests(unittest.TestCase):
         record=run_episode('RW01V4','mock/v4:free',1,'offline-test-token',1024,'low',0,3,
                            graph_factory=lambda env,*_: scripted_factory(env,wrong_fix=True))
         self.assertTrue(record['replay_verified'])
-        self.assertFalse(record['grade']['strict_pass'])
-        self.assertFalse(record['grade']['recovery_success'])
+        self.assertFalse(_legacy_replay(record)['grade']['strict_pass'])
+        self.assertFalse(_legacy_replay(record)['grade']['recovery_success'])
 
     def test_v4_metrics_do_not_announce_direct_fault(self):
         env=GraphEnvironment('RW01V4')

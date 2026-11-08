@@ -1,3 +1,5 @@
+> **Archived V6 rollout notes:** The active source catalog was narrowed to V4 and V6CF only. Current grading and install details: [ACTIVE_DATASETS_AND_GRADING.md](ACTIVE_DATASETS_AND_GRADING.md). The V6N and V5 conditions described below are historical, not available for new launches.
+
 # V6 integration, checklist coverage, and validity gates
 
 **Architecture:** The original `changeimpactbench-v0.2` app is the only app.

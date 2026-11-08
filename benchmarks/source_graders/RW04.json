@@ -1,0 +1,437 @@
+{
+  "grader_id": "RW04-source-grader-v2",
+  "seed": "RW04",
+  "fixture": "tasks/RW04.json",
+  "source": {
+    "title": "Cloudflare outage on July 17, 2020",
+    "publisher": "Cloudflare",
+    "url": "https://blog.cloudflare.com/cloudflare-outage-on-july-17-2020/",
+    "published": "2020-07-18",
+    "retrieved_utc": "2026-11-07",
+    "source_type": "operator first-party postmortem"
+  },
+  "observed_symptoms": [
+    {
+      "id": "S1",
+      "time_utc": "2020-07-17T21:12",
+      "fact": "A configuration change in Atlanta started the outage; Atlanta attracted traffic from across the backbone until 21:39.",
+      "measurement": "27 min (21:12-21:39)"
+    },
+    {
+      "id": "S2",
+      "fact": "Traffic dropped about 50% across the network. Impact was localized to locations connected to the backbone.",
+      "measurement": "~50% traffic drop"
+    },
+    {
+      "id": "S3",
+      "fact": "Nineteen locations were named as affected, including San Jose, Dallas, Seattle, Los Angeles, Chicago, Washington DC, Richmond, Newark, Atlanta, London, Amsterdam, Frankfurt, Paris, Stockholm, Moscow, St. Petersburg, Sao Paulo, Curitiba and Porto Alegre; other locations were normal.",
+      "measurement": "19 named locations"
+    },
+    {
+      "id": "S4",
+      "fact": "Internal traffic manager showed Atlanta CPU at overload while affected locations' CPU dropped to near zero because they handled no traffic."
+    },
+    {
+      "id": "S5",
+      "time_utc": "2020-07-17T21:47",
+      "fact": "After recovery, congestion at a core data center that processes logs and metrics dropped some logs until 22:10; the edge continued operating normally."
+    }
+  ],
+  "confirmed_root_cause": {
+    "mechanism": "While responding to backbone congestion (loss of the Newark-Chicago link at 20:25), engineers meant to remove Atlanta routes from the backbone. A one-line change instead deactivated the prefix-list inside the 6-SITE-LOCAL term of the 6-BBONE-OUT policy rather than deactivating the term. The term then accepted all BGP routes, tagged with local-preference 200. Local routes from compute nodes had local-preference 100 and local-preference is transitive in iBGP, so all backbone traffic for local compute went to Atlanta compute nodes and overwhelmed the Atlanta router.",
+    "confirmed_elements": [
+      "Trigger was a configuration edit on the Atlanta router",
+      "The correct change would have been to deactivate the term instead of the prefix-list",
+      "Local-preference 200 beat the local servers' 100",
+      "Not an attack or breach"
+    ],
+    "contributing_factors": [
+      "A prior backbone link failure had created congestion that prompted the change",
+      "No maximum-prefix limit on backbone BGP sessions"
+    ],
+    "unconfirmed_or_speculative": []
+  },
+  "investigation_evidence": [
+    {
+      "id": "E1",
+      "kind": "config_diff",
+      "evidence": "Router config comparison showed the prefix-list under the 6-SITE-LOCAL term marked inactive."
+    },
+    {
+      "id": "E2",
+      "kind": "term_definition",
+      "evidence": "The full term set local-preference 200, added communities, and accepted routes matching the prefix-list."
+    },
+    {
+      "id": "E3",
+      "kind": "traffic_manager",
+      "evidence": "Traffic manager tool showed Atlanta CPU overloaded and affected data centers' CPU near zero; unaffected data centers unchanged."
+    }
+  ],
+  "recovery_actions": [
+    {
+      "id": "R1",
+      "time_utc": "2020-07-17T21:39",
+      "action": "Disabled the Atlanta router, dropping it from the backbone.",
+      "why": "Stop it attracting traffic; the network is built to work without a backbone.",
+      "phase": "service_restoration"
+    },
+    {
+      "id": "R2",
+      "kind": "post_incident",
+      "action": "Changed BGP local-preference for local server routes (deployed after the incident) and planned a maximum-prefix limit on backbone BGP sessions (July 20).",
+      "why": "Prevent a single location from attracting other locations' traffic.",
+      "phase": "post_incident_remediation"
+    }
+  ],
+  "recovery_verification": [
+    {
+      "id": "V1",
+      "time_utc": "2020-07-17T21:39",
+      "method": "Traffic began flowing normally once the Atlanta router was disabled."
+    },
+    {
+      "id": "V2",
+      "time_utc": "2020-07-17T21:47",
+      "method": "Atlanta fully dropped from the backbone; service restored."
+    },
+    {
+      "id": "V3",
+      "time_utc": "2020-07-17T22:10",
+      "method": "Full recovery including logs and metrics."
+    }
+  ],
+  "acceptable_alternatives": [
+    {
+      "description": "Disable or isolate the Atlanta router",
+      "status": "source_actual",
+      "basis": "R1"
+    },
+    {
+      "description": "Correct the Atlanta policy by deactivating the term instead of the prefix-list",
+      "status": "unverified",
+      "basis": "Source names this as the correct pre-incident change but does not say it was applied during recovery"
+    },
+    {
+      "description": "Lower local-preference on local server routes; add maximum-prefix limits",
+      "status": "long_term_remediation",
+      "basis": "R2"
+    }
+  ],
+  "not_stated_in_source": [
+    "How the team diagnosed the leak during the incident (no logs or tests described)",
+    "Any repair cost or relative effort"
+  ],
+  "fixture_alignment": {
+    "reference_root_cause": "H02",
+    "reference_fix": "A02",
+    "hypothesis_alignment": "H02 is correct; the mechanism is a route leak with local-preference 200, not generic overload.",
+    "actions": {
+      "A01": {
+        "source_status": "unverified",
+        "note": "Standby readiness is not in the source."
+      },
+      "A02": {
+        "source_status": "source_actual",
+        "note": "Isolate the overloaded Atlanta router; matches R1."
+      },
+      "A03": {
+        "source_status": "unverified",
+        "note": "Undoing the route-attraction policy is plausible but the source did not apply it during recovery."
+      },
+      "A04": {
+        "source_status": "unverified",
+        "note": "Superset of A02 and A03; not described."
+      }
+    },
+    "source_actions_missing_from_fixture": [
+      "Reduce local-preference on local server routes",
+      "Maximum-prefix limit"
+    ],
+    "fixture_claims_not_in_source": [
+      "backup_ready and redundant-ingress modeling",
+      "All repair costs"
+    ]
+  },
+  "scoring_rules": {
+    "claims": [
+      {
+        "id": "C1",
+        "dimension": "observed_symptoms",
+        "critical": false,
+        "polarity": "pos",
+        "text": "Traffic dropped about 50% across the network.",
+        "subject": [
+          "traffic"
+        ],
+        "predicate": [
+          "50%",
+          "half"
+        ],
+        "ref": [
+          "S2"
+        ]
+      },
+      {
+        "id": "C2",
+        "dimension": "observed_symptoms",
+        "critical": false,
+        "polarity": "pos",
+        "text": "The outage ran from 21:12 to 21:39.",
+        "subject": [
+          "outage",
+          "atlanta",
+          "traffic"
+        ],
+        "predicate": [
+          "21:12",
+          "21:39"
+        ],
+        "ref": [
+          "S1"
+        ]
+      },
+      {
+        "id": "C3",
+        "dimension": "confirmed_root_cause",
+        "critical": true,
+        "polarity": "pos",
+        "text": "A one-line change deactivated the prefix-list inside the term.",
+        "subject": [
+          "prefix-list",
+          "prefix list"
+        ],
+        "predicate": [
+          "deactivat",
+          "inactive",
+          "removed",
+          "disabled"
+        ],
+        "ref": [
+          "E1"
+        ]
+      },
+      {
+        "id": "C4",
+        "dimension": "confirmed_root_cause",
+        "critical": true,
+        "polarity": "pos",
+        "text": "Local-preference 200 beat the local servers' 100, pulling traffic to Atlanta.",
+        "subject": [
+          "local-pref",
+          "local pref"
+        ],
+        "predicate": [
+          "200",
+          "higher",
+          "100"
+        ],
+        "ref": [
+          "E2"
+        ]
+      },
+      {
+        "id": "C5",
+        "dimension": "confirmed_root_cause",
+        "critical": false,
+        "polarity": "pos",
+        "text": "All BGP routes were sent into the backbone.",
+        "subject": [
+          "route"
+        ],
+        "predicate": [
+          "all",
+          "leak"
+        ],
+        "ref": [
+          "E2"
+        ]
+      },
+      {
+        "id": "C6",
+        "dimension": "investigation_evidence",
+        "critical": false,
+        "polarity": "pos",
+        "text": "The config diff and traffic manager CPU view showed the cause and impact.",
+        "subject": [
+          "traffic manager",
+          "diff",
+          "compare"
+        ],
+        "predicate": [
+          "cpu",
+          "inactive",
+          "prefix"
+        ],
+        "ref": [
+          "E1",
+          "E3"
+        ]
+      },
+      {
+        "id": "C7",
+        "dimension": "recovery_actions",
+        "critical": true,
+        "polarity": "pos",
+        "text": "The Atlanta router was disabled and dropped from the backbone.",
+        "subject": [
+          "atlanta",
+          "router"
+        ],
+        "predicate": [
+          "disabled",
+          "dropped",
+          "removed from the backbone",
+          "isolated"
+        ],
+        "ref": [
+          "R1"
+        ]
+      },
+      {
+        "id": "C8",
+        "dimension": "recovery_verification",
+        "critical": false,
+        "polarity": "pos",
+        "text": "Traffic normalized at 21:39 and logs and metrics fully recovered at 22:10.",
+        "subject": [
+          "traffic",
+          "logs",
+          "recover"
+        ],
+        "predicate": [
+          "21:39",
+          "21:47",
+          "22:10"
+        ],
+        "ref": [
+          "V1",
+          "V3"
+        ]
+      }
+    ],
+    "traps": [
+      {
+        "id": "T_attack",
+        "text": "States that an attack or breach caused the outage.",
+        "subject": [
+          "attack",
+          "ddos",
+          "malicious",
+          "breach"
+        ],
+        "predicate": [
+          "caused",
+          "cause",
+          "due to",
+          "result of",
+          "triggered by",
+          "because of"
+        ]
+      },
+      {
+        "id": "T_remediation_as_recovery",
+        "text": "Claims post-incident safeguards restored service.",
+        "subject": [
+          "local-pref",
+          "maximum-prefix",
+          "max-prefix"
+        ],
+        "predicate": [
+          "restored",
+          "fixed the outage",
+          "ended the outage"
+        ]
+      }
+    ],
+    "alternatives_catalog": [
+      {
+        "id": "ALT1",
+        "terms": [
+          "disable the atlanta",
+          "disabled the atlanta",
+          "isolate",
+          "dropped atlanta",
+          "drop atlanta"
+        ],
+        "status": "source_actual",
+        "performed_ok": true,
+        "note": "Disable Atlanta router"
+      },
+      {
+        "id": "ALT2",
+        "terms": [
+          "deactivate the term",
+          "deactivating the term",
+          "revert the config",
+          "undo the"
+        ],
+        "status": "unverified",
+        "performed_ok": false,
+        "note": "Correcting policy not shown as applied"
+      },
+      {
+        "id": "ALT3",
+        "terms": [
+          "local-pref",
+          "maximum-prefix",
+          "max-prefix"
+        ],
+        "status": "long_term_remediation",
+        "performed_ok": false,
+        "note": "Post-incident safeguards"
+      }
+    ],
+    "required_concepts": [
+      {
+        "id": "atlanta_router_change",
+        "core": true,
+        "any_of": [
+          "atlanta",
+          "atl"
+        ]
+      },
+      {
+        "id": "route_leak_prefix_list",
+        "core": true,
+        "any_of": [
+          "prefix-list",
+          "prefix list",
+          "all routes",
+          "all bgp",
+          "leak"
+        ]
+      },
+      {
+        "id": "local_preference",
+        "core": false,
+        "any_of": [
+          "local-pref",
+          "local pref",
+          "preference"
+        ]
+      },
+      {
+        "id": "traffic_overload",
+        "core": true,
+        "any_of": [
+          "overload",
+          "attract",
+          "all traffic",
+          "congest"
+        ]
+      },
+      {
+        "id": "router_disabled",
+        "core": true,
+        "any_of": [
+          "disable",
+          "isolat",
+          "drop",
+          "remove"
+        ]
+      }
+    ]
+  },
+  "source_discrepancies": []
+}

@@ -38,6 +38,7 @@ import { observedEventSummary, eventArguments } from '../lib/trace-summary';
 import { incidentName } from '../lib/presentation';
 export function ExecutionAnalysis() {
   const { runs, run, task, recordIndex, setRecordIndex, trial, setTrial, analysisTab, setAnalysisTab, expandedEvent, setExpandedEvent, error, search, filter, setFilter, modelFilter, setModelFilter, models, reviewer, setReviewer, reviewNotes, setReviewNotes, reviewStatus, setReviewStatus, reviewChecks, setReviewChecks, reviewBusy, setReviewBusy, reviewMessage, setReviewMessage, refreshRun, launch, rows, matching, summaries, completed, incomplete, selected, affected, repair, explanation } = useWorkbenchState();
+  const sourceProvisional = trial?.audit.grade?.source_provisional === true;
   const scoring = (trial?.audit.grade?.criterion_scores || {}) as Record<string, {earned:number;available:number;measurement:string}>;
   const rejectedReasons = (trial?.audit.grade?.strict_failure_reasons || []) as string[];
   const reasonLabels: Record<string,string> = {
@@ -70,7 +71,7 @@ export function ExecutionAnalysis() {
                 <Panel title="Saved episodes" description="Select an actual recorded investigation">
                   <div className="trial-list">
                     {matching.map((r)=><button className={`record-button ${recordIndex===r.index?'active':''}`} key={r.index} onClick={()=>{setRecordIndex(r.index);setAnalysisTab('Summary');}}>
-                      <span><strong>{incidentName(r.task)} · trial {r.trial}</strong><small style={{display:'block'}}>{short(r.model)}</small><small className="muted">{r.pass === null ? 'Not gradeable' : r.pass ? 'Strict pass' : 'Strict fail'} · {p100(r.score)}</small></span>
+                      <span><strong>{incidentName(r.task)} · trial {r.trial}</strong><small style={{display:'block'}}>{short(r.model)}</small><small className="muted">{r.pass === null ? (r.score != null ? 'Historical score · provisional' : 'Not gradeable') : r.pass ? 'Strict pass' : 'Strict fail'} · {p100(r.score)}</small></span>
                     </button>)}
                     {!matching.length && <Empty title="No matching attempts"/>}
                   </div>
@@ -88,21 +89,22 @@ export function ExecutionAnalysis() {
                         <div className="row-gap">
                           <div className="story-verdict">
                             <div><span className="label">Automatically derived from recorded evidence</span><h2>{explanation?.title || (selected.pass ? 'Exact answer verified' : selected.status === 'completed' ? 'Diagnosis differs from reference' : 'Not gradeable')}</h2><p>{explanation?.summary || (selected.status === 'completed' ? 'One or more predicted fields differ from the independent reference. See exact differences below.' : 'The provider did not produce a complete, gradeable response.')}</p></div>
-                            <div className="verdict-score"><span className="label">Strict result</span><strong className={selected.pass ? 'text-success' : 'text-error'}>{selected.pass == null ? 'N/A' : selected.pass ? 'PASS' : 'FAIL'}</strong><span className="muted">Partial {p100(selected.score)}</span></div>
+                            <div className="verdict-score"><span className="label">{sourceProvisional ? 'Historical verdict' : 'Strict result'}</span><strong className={selected.pass ? 'text-success' : selected.pass === false ? 'text-error' : ''}>{sourceProvisional ? 'PROVISIONAL' : selected.pass == null ? 'N/A' : selected.pass ? 'PASS' : 'FAIL'}</strong><span className="muted">Partial {p100(selected.score)}</span></div>
                           </div>
-                          {selected.status === 'completed' && <p className="muted" role="status"><strong>Outcome checks:</strong> Recovery {trial.audit.grade?.recovery_success === true && trial.audit.grade?.recovery_safe === true ? 'PASS' : 'FAIL'} · Lowest-cost safe repair {trial.audit.grade?.fix_correct === true ? 'PASS' : 'FAIL'} · Strict {trial.audit.grade?.strict_pass === true ? 'PASS' : 'FAIL'} · Weighted component score {p100(selected.score)}. A 100% component score does not override a strict optimality failure.</p>}
+                          {sourceProvisional && <p className="muted" role="status"><strong>Source-grounded V4 score:</strong> {p100(selected.score)} (lexical, provisional). Only root-cause explanation and rationale are supplied to this scorer; other historical dimensions lack dedicated agent fields. Human verification required. Historical PASS/FAIL is not assigned. Sandbox repair costs and optimality are not scored here.</p>}
+                          {selected.status === 'completed' && !sourceProvisional && <p className="muted" role="status"><strong>Outcome checks:</strong> Recovery {trial.audit.grade?.recovery_success === true && trial.audit.grade?.recovery_safe === true ? 'PASS' : 'FAIL'} · Lowest-cost safe repair {trial.audit.grade?.fix_correct === true ? 'PASS' : 'FAIL'} · Strict {trial.audit.grade?.strict_pass === true ? 'PASS' : 'FAIL'} · Weighted component score {p100(selected.score)}. A 100% component score does not override a strict optimality failure.</p>}
                           <div className="analysis-first-insight"><strong>Why this result matters</strong><p>{explanation?.interpretation || 'The strict grade and partial score measure different aspects of the result.'}</p><small>Derived from the recorded agent trajectory and independently recomputed grade. Human interpretation review remains separate.</small></div>
                           {rejectedReasons.length > 0 && <section className="story-diff row-gap" aria-label="Reasons for strict failure">
                             <h3>Why strict evaluation failed</h3>
                             <ul>{rejectedReasons.map(reason=><li key={reason}>{reasonLabels[reason] || reason.replaceAll('_',' ')}</li>)}</ul>
                             <p className="muted">Diagnostic classification, recovery safety, and protocol compliance are distinct checks. A rejected tool call does not mean the committed repair was unsafe.</p>
                           </section>}
-                          <div className="story-metrics">
+                          {!sourceProvisional && <div className="story-metrics">
                             <div><small>Root cause ID</small><strong>{selected.root_correct == null ? 'N/A' : selected.root_correct ? 'Correct' : 'Incorrect'}</strong></div>
                             <div><small>Initial service F1</small><strong>{p100(selected.affected_f1)}</strong></div>
                             <div><small>Lowest-cost safe repair</small><strong>{selected.fix_correct == null ? 'N/A' : selected.fix_correct ? 'PASS' : 'FAIL'}</strong></div>
                             <div><small>Recovered</small><strong>{explanation?.restored == null ? 'N/A' : `${explanation.restored}/${explanation.initialAffected ?? '?'}`}</strong></div>
-                          </div>
+                          </div>}
                           {trial.record.repair_brief && <section className="story-diff row-gap" aria-label="Agent-authored repair handoff">
                             <h3>Investigation → repair · the agent's own plan</h3>
                             <p className="muted">The model wrote this repair brief from observed tool evidence. LangGraph activates the versioned repair skill afterward; the brief does not override sandbox safety rules. The independent oracle checks the actual committed result.</p>
@@ -179,7 +181,7 @@ export function ExecutionAnalysis() {
                             <details className="story-raw"><summary>Provider-exposed reasoning metadata (if available)</summary><p>Provider summaries are observations, not unrestricted internal reasoning.</p><Json value={Array.isArray(trial.record.turns) ? (trial.record.turns as Array<Record<string,unknown>>).map(t=>({turn:t.turn,reasoning:t.provider_exposed_reasoning || null})).filter(t=>t.reasoning) : []}/></details>
                           </section>}
 
-                          <div className="story-metrics"><div><small>Strict result</small><strong>{selected.pass == null ? 'N/A' : selected.pass?'PASS':'FAIL'}</strong></div><div><small>Partial score</small><strong>{p100(selected.score)}</strong></div><div><small>Automated citations</small><strong>{trial.audit.grade?.evidence_score == null ? 'N/A' : `${trial.audit.grade.evidence_score}/10`}</strong></div><div><small>Human review</small><strong>{trial.human_review?.status || 'Pending'}</strong></div></div>
+                          {!sourceProvisional && <div className="story-metrics"><div><small>Strict result</small><strong>{selected.pass == null ? 'N/A' : selected.pass?'PASS':'FAIL'}</strong></div><div><small>Partial score</small><strong>{p100(selected.score)}</strong></div><div><small>Automated citations</small><strong>{trial.audit.grade?.evidence_score == null ? 'N/A' : `${trial.audit.grade.evidence_score}/10`}</strong></div><div><small>Human review</small><strong>{trial.human_review?.status || 'Pending'}</strong></div></div>}
                           <Integrity label="Prompt SHA-256 matches frozen source" status={trial.audit.prompt_sha_matches===true?'pass':trial.audit.prompt_sha_matches===false?'fail':'warning'}/>
                           <Integrity label="Stored grade matches independent replay" status={trial.audit.stored_grade_matches===true?'pass':trial.audit.stored_grade_matches===false?'fail':'warning'}/>
                           <Integrity label="Reference matches deterministic oracle" status={trial.audit.reference_matches===true?'pass':trial.audit.reference_matches===false?'fail':'warning'}/>

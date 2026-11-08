@@ -21,7 +21,8 @@ from oracle import reference_answer, reference_audit
 
 # New IDs make the change of agent harness AND discovery affordances explicit.
 GRAPH_BASE: dict[str, str] = {name: spec.seed for name, spec in {**REGISTRY, **V5_REGISTRY, **V6_REGISTRY}.items()}
-TASK_IDS = frozenset(GRAPH_BASE)
+TASK_IDS = frozenset(GRAPH_BASE)  # Historical replay/test registry, not live launch catalog.
+ACTIVE_TASK_IDS = frozenset(task_id for task_id in TASK_IDS if task_id.endswith(('V4', 'V6CF')))
 VERSIONS = {name: spec.version for name, spec in {**REGISTRY, **V5_REGISTRY, **V6_REGISTRY}.items()}
 MAX_MODEL_CALLS = 48
 MAX_TOOLS = 47
@@ -37,16 +38,16 @@ ENGINE = 'langchain-create-agent/langgraph-checkpointed'
 
 def implementation_hashes() -> dict[str, str]:
     root = Path(__file__).resolve().parent.parent
-    names = ('benchmarks/v5_fixtures/RW01.json', 'benchmarks/v5_fixtures/RW02.json',
-             'benchmarks/v5_fixtures/RW03.json', 'benchmarks/v5_fixtures/RW04.json',
-             'benchmarks/v5_fixtures/RW05.json', 'benchmarks/v5_fixtures/RW06.json',
+    names = ('legacy/retired_sources/v5/RW01.json', 'legacy/retired_sources/v5/RW02.json',
+             'legacy/retired_sources/v5/RW03.json', 'legacy/retired_sources/v5/RW04.json',
+             'legacy/retired_sources/v5/RW05.json', 'legacy/retired_sources/v5/RW06.json',
              'benchmarks/native_agent.py', 'benchmarks/runner.py',
              'benchmarks/grader.py', 'benchmarks/spec.py', 'benchmarks/environment.py',
              'agent_graph.py', 'run_graph_agent.py', 'oracle.py',
              'benchmarks/public_sources.json',
              'benchmarks/skills.py', 'skills/incident-investigation/SKILL.md',
              'skills/repair-verification/SKILL.md', 'skills/repair-verification/V6.md')
-    names = names + tuple(f'benchmarks/v6_fixtures/{cond}/RW{i:02d}.json' for cond in ('neutral','counterfactual') for i in range(1,7))
+    names = names + tuple(f'legacy/retired_sources/v6-neutral/RW{i:02d}.json' for i in range(1,7)) + tuple(f'benchmarks/v6_fixtures/counterfactual/RW{i:02d}.json' for i in range(1,7))
     return {name: hashlib.sha256((root / name).read_bytes()).hexdigest() for name in names}
 
 
@@ -129,7 +130,7 @@ def agent_prompt(task_id: str) -> str:
         'rules': [
             ('All service incidents and repairs are synthetic, with no access to real infrastructure.' if synthetic_task(task_id) else 'Incident mechanisms are documented by the source, but service states/rules/repair costs are reconstructed; no tool accesses live infrastructure.'),
             'Use native tool calls, not JSON-only messages; issue only ONE tool call per model response.',
-            ('Call read_alert and scan_service_health early. The scan reports ONLY external entrypoint probes; inspect_metrics for every inventory service to determine internal initial availability.' if task_id.endswith(('V6N','V6CF')) else 'Call read_alert and scan_service_health early. The health scan is a complete INITIAL snapshot but does not reveal causes or repairs.'),
+            ('Call read_alert and scan_service_health early. The scan reports external entrypoint probes only. Independently establish the entire initial impact inventory, and prioritize necessary configuration, dependency, and repair checks within the fixed tool budget.' if task_id.endswith(('V6N','V6CF')) else 'Call read_alert and scan_service_health early. The health scan is a complete INITIAL snapshot but does not reveal causes or repairs.'),
             'Local checks use declarative eq/ne/gt/ge/lt/le and all/any/not; investigate their actual values.',
             'A service fails if a local check fails, any needs_all dependency fails, all nonempty needs_any fail, or a needs_at_least quorum fails.',
             'Inspect configuration/dependencies to establish causes; local details are one service at a time.',
@@ -144,7 +145,7 @@ def agent_prompt(task_id: str) -> str:
             f'Budget: at most {spec.max_model_calls} model requests and {spec.max_tools} successful sandbox tools.',
         ],
         'hypotheses': [{'id': x, 'description': y} for x, y in spec.hypotheses],
-        **({'service_mapping': ('read_alert shows code-to-role inventory. Health scan is limited to externally observable probes; inspect_metrics for complete initial impact.' if task_id.endswith(('V6N','V6CF')) else 'read_alert shows the code-to-role inventory. Health scan uses codes. All service arguments and failed_services use codes.')} if synthetic_task(task_id) else {}),
+        **({'service_mapping': ('read_alert shows code-to-role inventory. Health scan covers external probes only; the full internal impact requires investigation.' if task_id.endswith(('V6N','V6CF')) else 'read_alert shows the code-to-role inventory. Health scan uses codes. All service arguments and failed_services use codes.')} if synthetic_task(task_id) else {}),
     }
     if task_id.endswith(('V4', 'V5', 'V6N', 'V6CF')):
         content['evaluation_contract'] = ('Strict pass assesses initial impact, cause, safe complete lowest-cost repair, and provenance. '

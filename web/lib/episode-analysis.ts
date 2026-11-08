@@ -45,7 +45,7 @@ export function explainEpisode(row: EvidenceRow, detail: TrialDetail): EpisodeEx
   const missing = detail.diagnosis?.missed_services || [];
   const extra = detail.diagnosis?.extra_services || [];
   const exactImpact = predicted ? missing.length === 0 && extra.length === 0 : null;
-  const strictlyPassed = row.status === 'completed' ? g.strict_pass === true : null;
+  const strictlyPassed = row.status === 'completed' && typeof g.strict_pass === 'boolean' ? g.strict_pass : null;
   const recoverySuccess = typeof g.recovery_success === 'boolean' ? g.recovery_success : null;
   const recoverySafe = typeof g.recovery_safe === 'boolean' ? g.recovery_safe : null;
   const steps: DecisionStep[] = events
@@ -98,7 +98,11 @@ export function explainEpisode(row: EvidenceRow, detail: TrialDetail): EpisodeEx
   let title: string;
   let summary: string;
   let interpretation: string;
-  if (row.status !== 'completed') {
+  if (g.source_provisional === true && row.status === 'completed') {
+    title = 'Historical incident evidence · provisional score';
+    summary = 'Source-grounded lexical checks ran against the submitted explanation and rationale. This is not a verified historical PASS or FAIL.';
+    interpretation = 'The source contract is not a semantic judge; unsubmitted historical dimensions cannot be inferred. Human source review is required.';
+  } else if (row.status !== 'completed') {
     title = 'No complete, gradeable episode';
     summary = `The attempt ended as ${row.status.replaceAll('_', ' ')}. A transport or generation outcome must not be scored as a reasoning failure.`;
     interpretation = 'Inspect the provider log and original turns. This record does not establish a diagnosis limitation.';

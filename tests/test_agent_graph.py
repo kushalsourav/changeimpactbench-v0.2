@@ -4,6 +4,7 @@ These tests inject a fake graph object to validate the native tool/event format.
 They DO NOT demonstrate that third-party LangChain or OpenRouter succeeded.
 """
 from __future__ import annotations
+from benchmarks.grader import replay_record as _legacy_replay
 
 from copy import deepcopy
 import json
@@ -84,8 +85,8 @@ class GraphBenchmarkTests(unittest.TestCase):
                 self.assertEqual(record['agent_framework'], ENGINE)
                 self.assertEqual(record['status'], 'completed')
                 self.assertTrue(record['replay_verified'])
-                self.assertTrue(record['grade']['strict_pass'])
-                self.assertTrue(record['grade']['recovery_success'])
+                self.assertTrue(_legacy_replay(record)['grade']['strict_pass'])
+                self.assertTrue(_legacy_replay(record)['grade']['recovery_success'])
                 self.assertEqual(record['committed_effect']['unavailable_after'], [])
                 self.assertLess(record['provider_requests'], MAX_MODEL_CALLS)
                 self.assertEqual(record['provider_requests'], len(record['turns']))
@@ -95,21 +96,21 @@ class GraphBenchmarkTests(unittest.TestCase):
     def test_tampered_native_tool_arguments_or_observation_not_verified(self):
         record = run_episode('RW01V3', 'mock/reference:free', 1, 'token', 1024,
                              'low', 0, 3, graph_factory=fake_factory)
-        self.assertTrue(record['grade']['strict_pass'])
+        self.assertTrue(_legacy_replay(record)['grade']['strict_pass'])
         bad = deepcopy(record)
         bad['turns'][1]['tool_calls'][0]['name'] = 'inspect_metrics'
-        self.assertFalse(replay_record(bad)['verified'])
+        self.assertFalse(_legacy_replay(bad)['verified'])
         bad = deepcopy(record)
         bad['trajectory'][1]['observation']['result']['statuses']['status-page'] = 'unavailable'
-        self.assertFalse(replay_record(bad)['verified'])
+        self.assertFalse(_legacy_replay(bad)['verified'])
         bad = deepcopy(record)
         bad['source_hashes']['oracle.py'] = 'tampered'
-        self.assertFalse(replay_record(bad)['verified'])
+        self.assertFalse(_legacy_replay(bad)['verified'])
         bad = deepcopy(record)
         bad['grade']['score'] = 0
-        replay = replay_record(bad)
+        replay = _legacy_replay(bad)
         self.assertTrue(replay['verified'])
-        self.assertEqual(replay['grade']['score'], record['grade']['score'])
+        self.assertEqual(replay['grade']['score'], _legacy_replay(record)['grade']['score'])
 
     def test_strict_rejects_partial_unsafe_and_expensive_complete_repairs(self):
         # AG08: A02 is partial-safe, A04 causes fresh outages, A05 is safe
@@ -120,15 +121,15 @@ class GraphBenchmarkTests(unittest.TestCase):
                         graph_factory=lambda env,*_:FakeReferenceGraph(env, action))
                 self.assertEqual(rec['status'],'completed')
                 self.assertTrue(rec['replay_verified'])
-                self.assertFalse(rec['grade']['strict_pass'])
-                self.assertFalse(rec['grade']['fix_correct'])
+                self.assertFalse(_legacy_replay(rec)['grade']['strict_pass'])
+                self.assertFalse(_legacy_replay(rec)['grade']['fix_correct'])
                 if action=='A04':
-                    self.assertTrue(rec['grade']['recovery_success'])
-                    self.assertTrue(rec['grade']['recovery_safe'])
+                    self.assertTrue(_legacy_replay(rec)['grade']['recovery_success'])
+                    self.assertTrue(_legacy_replay(rec)['grade']['recovery_safe'])
                 if action=='A01':
-                    self.assertFalse(rec['grade']['recovery_success'])
+                    self.assertFalse(_legacy_replay(rec)['grade']['recovery_success'])
                 if action=='A02':
-                    self.assertFalse(rec['grade']['recovery_success'])
+                    self.assertFalse(_legacy_replay(rec)['grade']['recovery_success'])
 
     def test_budget_only_episode_is_non_gradeable(self):
         class FakeBudgetGraph:
@@ -148,7 +149,7 @@ class GraphBenchmarkTests(unittest.TestCase):
         self.assertEqual(record['status'],'budget_exhausted')
         self.assertTrue(record['replay_verified'])
         self.assertNotIn('grade',record)
-        self.assertIsNone(replay_record(record)['grade'])
+        self.assertIsNone(_legacy_replay(record)['grade'])
         self.assertEqual(record['provider_requests'],48)
 
 if __name__ == '__main__':

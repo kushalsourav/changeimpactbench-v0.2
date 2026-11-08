@@ -50,7 +50,7 @@ REGISTRY: dict[str, TaskSpec] = {
 }
 
 # V5 cases have neutral public wording; original source records remain untouched.
-V5_FIXTURES = Path(__file__).with_name('v5_fixtures')
+V5_FIXTURES = Path(__file__).resolve().parent.parent / 'legacy' / 'retired_sources' / 'v5'
 V5_REGISTRY: dict[str, TaskSpec] = {}
 for _path in sorted(V5_FIXTURES.glob('RW*.json')):
     _fixture = json.loads(_path.read_text(encoding='utf-8'))
@@ -69,11 +69,11 @@ for _path in sorted(V5_FIXTURES.glob('RW*.json')):
 V6_FIXTURES = Path(__file__).with_name('v6_fixtures')
 V6_REGISTRY: dict[str, TaskSpec] = {}
 for _condition, _suffix in (('neutral', 'V6N'), ('counterfactual', 'V6CF')):
-    for _path in sorted((V6_FIXTURES / _condition).glob('RW*.json')):
+    for _path in sorted(((Path(__file__).resolve().parent.parent / 'legacy' / 'retired_sources' / 'v6-neutral') if _condition == 'neutral' else (V6_FIXTURES / _condition)).glob('RW*.json')):
         _public = json.loads(_path.read_text(encoding='utf-8'))['task']
         _task_id = _path.stem + _suffix
         V6_REGISTRY[_task_id] = TaskSpec(
-            id=_task_id, version='agentic-v6-' + _condition + '-1', seed=_path.stem,
+            id=_task_id, version='agentic-v6-' + _condition + ('-2' if _condition == 'counterfactual' else '-1'), seed=_path.stem,
             time=_public['time'], alert=_public['alert'], observations=(),
             hypotheses=tuple((h['id'], h['description']) for h in _public['hypotheses']),
             max_model_calls=48, max_tools=47, max_simulations=7,
@@ -88,7 +88,7 @@ def fixture_path(task_id: str) -> Path:
     if task_id.endswith('V5'):
         return V5_FIXTURES / (get_spec(task_id).seed + '.json')
     if task_id.endswith('V6N'):
-        return V6_FIXTURES / 'neutral' / (get_spec(task_id).seed + '.json')
+        return Path(__file__).resolve().parent.parent / 'legacy' / 'retired_sources' / 'v6-neutral' / (get_spec(task_id).seed + '.json')
     if task_id.endswith('V6CF'):
         return V6_FIXTURES / 'counterfactual' / (get_spec(task_id).seed + '.json')
     raise ValueError('Not a versioned synthetic task')

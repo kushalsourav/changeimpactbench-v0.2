@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Audit real-recorded three-condition trials. Never synthesize model outputs.
+"""Audit real-recorded two active-condition trials. Never synthesize model outputs.
 
 Usage:
  python scripts/v6_ablation_report.py results/ui_*.jsonl --out reports/ablation.json
 
-V4/V6 task conditions are intentionally not identical; gaps are descriptive
+V4/V6CF task conditions are intentionally not identical; gaps are descriptive
 and are NOT an identified causal effect of prompt leakage alone.
 """
 from __future__ import annotations
@@ -28,7 +28,6 @@ def ci_wilson(pass_count: int, n: int) -> list[float] | None:
 
 def condition(task_id: str) -> str | None:
     return ('v4' if task_id.endswith('V4') else
-            'v6_neutral' if task_id.endswith('V6N') else
             'v6_counterfactual' if task_id.endswith('V6CF') else None)
 
 def build_report(files: list[str]) -> dict:
@@ -72,14 +71,13 @@ def build_report(files: list[str]) -> dict:
     for cell in cells:
         grouped[(cell['model'],cell['seed'],tuple(cell['settings']))][cell['condition']]=cell
     for (model,seed,config),by_condition in sorted(grouped.items(),key=lambda x:str(x[0])):
-        if all(x in by_condition for x in ('v4','v6_neutral','v6_counterfactual')):
-            a,b,c=(by_condition[x] for x in ('v4','v6_neutral','v6_counterfactual'))
-            valid=all(x['meets_min_3_trials'] and x['unverified_or_transport']==0 for x in (a,b,c))
+        if all(x in by_condition for x in ('v4','v6_counterfactual')):
+            a,c=(by_condition[x] for x in ('v4','v6_counterfactual'))
+            valid=all(x['meets_min_3_trials'] and x['unverified_or_transport']==0 for x in (a,c))
             comparisons.append({
                 'model':model,'seed':seed,'settings':config,
                 'valid_three_trial_cells':valid,
-                'v4_minus_v6_neutral':round(a['strict_pass_rate']-b['strict_pass_rate'],4) if valid else None,
-                'v6_neutral_minus_v6_counterfactual':round(b['strict_pass_rate']-c['strict_pass_rate'],4) if valid else None,
+                'v4_minus_v6_counterfactual':round(a['strict_pass_rate']-c['strict_pass_rate'],4) if valid else None,
                 'interpretation':'Descriptive condition difference, not a causal estimate of answer leakage.'
             })
     return {'method':'independent-record-replay; V4 and V6 conditions differ in task structure',
@@ -87,7 +85,7 @@ def build_report(files: list[str]) -> dict:
             'minimum_required_trials_per_model_seed_condition':3,
             'ready_to_claim_ablation':bool(cells) and all(c['meets_min_3_trials'] and c['unverified_or_transport']==0 for c in cells)
               and len({c['model'].split('/')[0] for c in cells}) >= 2
-              and all({c['condition'] for c in cells if c['model']==model and c['seed']==seed} == {'v4','v6_neutral','v6_counterfactual'}
+              and all({c['condition'] for c in cells if c['model']==model and c['seed']==seed} == {'v4','v6_counterfactual'}
                       for model,seed in {(c['model'],c['seed']) for c in cells}),
             'cells':cells,'comparisons':comparisons,'all_trials':included}
 

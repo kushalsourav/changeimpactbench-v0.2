@@ -130,7 +130,7 @@ export const runLabel = (r: RunFile): string => {
 };
 export const runDisplay = runLabel;
 export const date = (v?: string) => (v ? new Date(v).toLocaleString() : 'Not recorded');
-export const GRAPH_TASKS = ['RW01V6N', 'RW02V6N', 'RW03V6N', 'RW04V6N', 'RW05V6N', 'RW06V6N', 'RW01V6CF', 'RW02V6CF', 'RW03V6CF', 'RW04V6CF', 'RW05V6CF', 'RW06V6CF', 'RW01V5', 'RW02V5', 'RW03V5', 'RW04V5', 'RW05V5', 'RW06V5', 'RW01V4', 'RW02V4', 'RW03V4', 'RW04V4', 'RW05V4', 'RW06V4'];
+export const GRAPH_TASKS = ['RW01V4', 'RW02V4', 'RW03V4', 'RW04V4', 'RW05V4', 'RW06V4', 'RW01V6CF', 'RW02V6CF', 'RW03V6CF', 'RW04V6CF', 'RW05V6CF', 'RW06V6CF'];
 export const isGraphTask = (id: string) => GRAPH_TASKS.includes(id) || ['RW01V3', 'RW02V3', 'RW03V3'].includes(id);
 export const isAgenticTask = (id: string) => isGraphTask(id);
 export const agentTraceItems = (record: Record<string, unknown>) => {

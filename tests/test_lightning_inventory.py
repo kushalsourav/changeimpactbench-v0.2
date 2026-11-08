@@ -1,4 +1,5 @@
 """A strict evaluation must not confuse safe recovery with complete reporting."""
+from benchmarks.grader import replay_record as _legacy_replay
 import unittest
 from benchmarks.runner import run_episode
 from benchmarks.grader_v5 import audit_v5
@@ -10,7 +11,7 @@ class LightningInventoryRegression(unittest.TestCase):
         rec = run_episode('RW01V4', 'offline/inventory-fixture', 1, 'fixture',
                           1024, 'low', 0, 3,
                           graph_factory=lambda env, *_: scripted_factory(env))
-        self.assertTrue(rec['grade']['strict_pass'])
+        self.assertTrue(_legacy_replay(rec)['grade']['strict_pass'])
         self.assertEqual(len(rec['committed_effect']['restored']), 9)
         omitted = 'pull-request-metadata'
         for tool in ('prepare_repair', 'submit_diagnosis'):
